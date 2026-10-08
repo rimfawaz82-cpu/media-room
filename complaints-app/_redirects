@@ -1,0 +1,4 @@
+# لا تُنشر ملفات قاعدة البيانات والدليل للعامة
+/supabase/*  /index.html  404!
+/README.md   /index.html  404!
+/readme.md   /index.html  404!
