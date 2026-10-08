@@ -37,6 +37,7 @@
   const PR = { normal: 'عادية', urgent: 'مستعجلة', emergency: 'طارئة' };
   const ROLE = { admin: 'مسؤول الشكاوى', department: 'قسم', deputy: 'نائب الرئيس' };
   const OPEN = ['new', 'seen', 'in_progress'];
+  const APPROVAL = { none: '', pending: 'بانتظار الموافقة', approved: 'موافَق عليها', rejected: 'مرفوضة' };
 
   // ------------------------------------------------------------------
   // الحالة العامة
@@ -179,6 +180,9 @@
     });
     return r;
   }
+
+  const pendingApproval = (c) => (c.assignments || []).some((a) => a.approval_status === 'pending');
+  const SOURCE_BADGE = { whatsapp: '<span class="badge">واتساب</span>', citizen: '<span class="badge src-citizen">👤 من المواطن</span>' };
 
   const stBadge = (st) => `<span class="badge st-${st}">${esc(ST[st] || st)}</span>`;
   const prBadge = (p) => `<span class="badge pr-${p}">${p === 'emergency' ? '🚨 ' : ''}${esc(PR[p] || p)}</span>`;
@@ -334,7 +338,7 @@
     $app.innerHTML = `
       <header class="topbar">
         <a class="brand" href="#/" style="color:#fff;text-decoration:none">
-          <img src="icons/icon-192.png" alt="">
+          <img src="icons/logo.png" alt="">
           <span>${esc(S.settings.municipality_name)} — الشكاوى</span>
         </a>
         <span class="user">${esc(S.me.full_name)} · ${esc(sub)}</span>
@@ -390,7 +394,7 @@
     $app.innerHTML = `
       <div class="login-wrap">
         <form class="login-card" id="login-form" autocomplete="on">
-          <img class="logo" src="icons/icon-192.png" alt="">
+          <img class="logo" src="icons/logo.png" alt="شعار بلدية حارة حريك">
           <h1>${esc(S.settings.municipality_name || 'بلدية حارة حريك')}</h1>
           <p class="sub">نظام إدارة شكاوى المواطنين</p>
           <label class="f" for="lg-user">اسم الدخول</label>
@@ -399,6 +403,7 @@
           <input type="password" id="lg-pass" autocomplete="current-password" dir="ltr" required>
           <button class="btn big block mt" type="submit" id="lg-btn">دخول</button>
           <div id="lg-err" class="err-box ${msg ? '' : 'hidden'}">${esc(msg || '')}</div>
+          <p class="sub mt"><a href="shakwa.html">هل أنت مواطن؟ قدّم شكوى أو تابع شكواك من هنا</a></p>
         </form>
       </div>`;
     document.getElementById('login-form').onsubmit = async (ev) => {
@@ -491,7 +496,8 @@
           ${prBadge(c.priority)} ${stBadge(st)}
           ${late ? '<span class="badge late">⏰ متأخرة</span>' : ''}
           ${!isDept() && c.deputy_seen_at ? '<span class="badge deputy">👁️ نائب الرئيس</span>' : ''}
-          ${c.source === 'whatsapp' ? '<span class="badge">واتساب</span>' : ''}
+          ${pendingApproval(c) ? '<span class="badge approval">⏳ بانتظار موافقة نائب الرئيس</span>' : ''}
+          ${SOURCE_BADGE[c.source] || ''}
           <span class="c-date">${esc(fmtDT(c.created_at))}</span>
         </div>
         <div class="c-body">${esc(c.body)}</div>
@@ -546,6 +552,7 @@
     }
 
     const attention = isAdmin() ? cs.filter((c) => ['pending', 'returned'].includes(complaintStatus(c))) : [];
+    const awaiting = cs.filter(pendingApproval);
     const newOnes = isDept() ? cs.filter((c) => complaintStatus(c) === 'new') : [];
 
     main.innerHTML = `
@@ -556,9 +563,11 @@
       <div class="grid stats mb">
         <a class="stat" href="#/list"><div class="num">${cs.length}</div><div class="lbl">كل الشكاوى</div></a>
         <a class="stat" href="#/list?today=1"><div class="num">${today}</div><div class="lbl">وردت اليوم</div></a>
+        ${!isDept() || awaiting.length ? `<a class="stat st-approval" href="#/list?approval=1"><div class="num">${awaiting.length}</div><div class="lbl">⏳ بانتظار موافقة نائب الرئيس</div></a>` : ''}
         <a class="stat late" href="#/list?late=1"><div class="num">${lateList.length}</div><div class="lbl">⏰ متأخرة</div></a>
         ${cards}
       </div>
+      ${isDeputy() && awaiting.length ? `<h2>⏳ بانتظار موافقتك (${awaiting.length})</h2>${awaiting.map(complaintCard).join('')}` : ''}
       ${newOnes.length ? `<h2>🆕 شكاوى جديدة لم تفتحها بعد (${newOnes.length})</h2>${newOnes.slice(0, 20).map(complaintCard).join('')}` : ''}
       ${attention.length ? `<h2>⚠️ تحتاج انتباهك (${attention.length})</h2>${attention.slice(0, 20).map(complaintCard).join('')}` : ''}
       ${deptTable}
@@ -585,6 +594,8 @@
       if (f.area && c.area !== f.area) return false;
       if (f.priority && c.priority !== f.priority) return false;
       if (f.late && !isLate(c)) return false;
+      if (f.approval && !pendingApproval(c)) return false;
+      if (f.source && c.source !== f.source) return false;
       if (f.dept) {
         const a = (c.assignments || []).find((x) => x.department_id === f.dept);
         if (!a) return false;
@@ -621,6 +632,8 @@
           <div><label>من تاريخ</label><input type="date" id="f-from" value="${esc(f.from || '')}"></div>
           <div><label>إلى تاريخ</label><input type="date" id="f-to" value="${esc(f.to || '')}"></div>
           <div><label>&nbsp;</label><label class="check-row"><input type="checkbox" id="f-late" ${f.late ? 'checked' : ''}> المتأخرة فقط</label></div>
+          <div><label>&nbsp;</label><label class="check-row"><input type="checkbox" id="f-approval" ${f.approval ? 'checked' : ''}> بانتظار الموافقة</label></div>
+          ${isDept() ? '' : `<div><label>المصدر</label><select id="f-source"><option value="">الكل</option>${opts([['manual', 'إدخال يدوي'], ['citizen', 'من المواطن'], ['whatsapp', 'واتساب']], f.source)}</select></div>`}
           <div><label>&nbsp;</label><button class="btn gray sm block" id="f-clear">مسح الفلاتر</button></div>
         </div>
       </div>
@@ -655,7 +668,7 @@
       });
     };
     bind('f-q', 'q', 'input'); bind('f-dept', 'dept'); bind('f-status', 'status'); bind('f-area', 'area');
-    bind('f-priority', 'priority'); bind('f-from', 'from'); bind('f-to', 'to'); bind('f-late', 'late');
+    bind('f-priority', 'priority'); bind('f-from', 'from'); bind('f-to', 'to'); bind('f-late', 'late'); bind('f-approval', 'approval'); bind('f-source', 'source');
     document.getElementById('f-clear').onclick = () => go('#/list');
     document.getElementById('x-excel').onclick = () => exportExcel(filtered, 'الشكاوى');
     document.getElementById('x-pdf').onclick = () => printList(filtered, f);
@@ -685,6 +698,8 @@
         'النتيجة': as.filter((a) => a.result).map((a) => deptName(a.department_id) + ': ' + a.result).join(' | '),
         'تاريخ الإقفال': fmtDT(c.closed_at),
         'مدة المعالجة': c.closed_at ? fmtDuration(new Date(c.closed_at) - new Date(c.created_at)) : '',
+        'المصدر': c.source === 'citizen' ? 'من المواطن' : c.source === 'whatsapp' ? 'واتساب' : 'إدخال يدوي',
+        'موافقة نائب الرئيس': as.filter((a) => a.approval_status !== 'none').map((a) => deptName(a.department_id) + ': ' + APPROVAL[a.approval_status]).join(' | '),
         'اطّلاع نائب الرئيس': isDept() ? '' : (c.deputy_seen_at ? fmtDT(c.deputy_seen_at) : 'لا')
       };
     });
@@ -709,6 +724,7 @@
     if (f.priority) desc.push('الأولوية: ' + PR[f.priority]);
     if (f.from || f.to) desc.push('الفترة: ' + (f.from || '…') + ' إلى ' + (f.to || '…'));
     if (f.late) desc.push('المتأخرة فقط');
+    if (f.approval) desc.push('بانتظار موافقة نائب الرئيس');
     const area = document.getElementById('print-area');
     area.innerHTML = `<div class="report">
       <h1>${esc(S.settings.municipality_name)} — قائمة الشكاوى</h1>
@@ -949,11 +965,19 @@
       const afterAtts = atts.filter((x) => x.kind === 'after' && x.department_id === a.department_id);
       const dep = S.deptMap[a.department_id] || {};
       let actions = '';
+      const pend = a.approval_status === 'pending';
       if (canAct && open) {
         if (a.status !== 'in_progress') actions += `<button class="btn warn" data-act="in_progress" data-a="${a.id}">▶️ بدء المتابعة</button>`;
-        actions += `<button class="btn ok" data-act="resolved" data-a="${a.id}">✅ تمت المعالجة</button>`;
-        actions += `<button class="btn danger" data-act="failed" data-a="${a.id}">⛔ تعذّرت المعالجة</button>`;
+        if (!pend) {
+          actions += `<button class="btn ok" data-act="resolved" data-a="${a.id}">✅ تمت المعالجة</button>`;
+          actions += `<button class="btn danger" data-act="failed" data-a="${a.id}">⛔ تعذّرت المعالجة</button>`;
+          actions += `<button class="btn purple" data-act="req_approval" data-a="${a.id}">🖊️ طلب موافقة نائب الرئيس</button>`;
+        }
         if (isDept()) actions += `<button class="btn gray" data-act="returned" data-a="${a.id}">↩️ ليست من اختصاصنا</button>`;
+      }
+      if (isDeputy() && pend) {
+        actions += `<button class="btn ok" data-act="approve" data-a="${a.id}">✅ موافقة</button>`;
+        actions += `<button class="btn danger" data-act="reject" data-a="${a.id}">❌ رفض</button>`;
       }
       if (isAdmin()) {
         if (!open) actions += `<button class="btn light" data-act="reopen" data-a="${a.id}">🔄 إعادة فتح</button>`;
@@ -977,6 +1001,14 @@
           </div>
           ${a.result ? `<div class="result-box ${a.status}"><b>${a.status === 'resolved' ? 'النتيجة' : a.status === 'failed' ? 'سبب التعذّر' : 'سبب الإعادة'}:</b>
             <div class="pre">${esc(a.result)}</div></div>` : ''}
+          ${a.approval_status !== 'none' ? `<div class="approval-box ${a.approval_status}">
+            <b>${a.approval_status === 'pending' ? '⏳ بانتظار موافقة نائب الرئيس' : a.approval_status === 'approved' ? '✅ وافق نائب الرئيس' : '❌ رفض نائب الرئيس'}</b>
+            <div class="small">طلبها: ${esc(userName(a.approval_requested_by))} — ${esc(fmtDT(a.approval_requested_at))}</div>
+            <div class="pre"><b>السبب:</b> ${esc(a.approval_reason || '')}</div>
+            ${a.approval_decided_at ? `<div class="small mt">القرار: ${esc(fmtDT(a.approval_decided_at))}</div>` : ''}
+            ${a.approval_note ? `<div class="pre"><b>ملاحظة نائب الرئيس:</b> ${esc(a.approval_note)}</div>` : ''}
+            ${pend && canAct ? '<div class="small mt">لا يمكن إقفال الشكوى قبل قرار نائب الرئيس.</div>' : ''}
+          </div>` : ''}
           ${afterAtts.length ? `<div class="mt"><b>صور بعد المعالجة:</b><div class="thumbs mt">${afterAtts.map(thumb).join('')}</div></div>` : ''}
           ${actions ? `<div class="actions no-print">${actions}</div>` : ''}
         </div>`;
@@ -1014,6 +1046,7 @@
           <span class="c-serial" style="font-size:1.4rem">${esc(c.serial)}</span>
           ${prBadge(c.priority)} ${stBadge(st)} ${late ? '<span class="badge late">⏰ متأخرة</span>' : ''}
           ${c.source === 'whatsapp' ? '<span class="badge">وصلت تلقائياً من واتساب</span>' : ''}
+          ${c.source === 'citizen' ? '<span class="badge src-citizen">👤 قدّمها المواطن عبر الموقع</span>' : ''}
         </div>
         ${reasons.length ? `<div class="err-box">${reasons.map(esc).join('<br>')}</div>` : ''}
         <div class="pre mt" style="font-size:1.08rem">${esc(c.body)}</div>
@@ -1164,6 +1197,25 @@
       }, 'image/*');
       return;
     }
+    if (act === 'req_approval' || act === 'approve' || act === 'reject') {
+      const ac = {
+        req_approval: { t: '🖊️ طلب موافقة نائب الرئيس — ' + dn, l: 'سبب طلب الموافقة * (مثال: تحتاج صرف مواد / قرار إداري)', ok: 'إرسال الطلب', cls: 'purple', req: true },
+        approve: { t: '✅ الموافقة — ' + dn, l: 'ملاحظة أو توجيه (اختياري)', ok: 'موافقة', cls: 'ok', req: false },
+        reject: { t: '❌ رفض الطلب — ' + dn, l: 'سبب الرفض * (إلزامي)', ok: 'رفض', cls: 'danger', req: true }
+      }[act];
+      dialog(`<h2>${esc(ac.t)}</h2>
+        ${a && a.approval_reason && act !== 'req_approval' ? `<div class="approval-box pending"><b>سبب الطلب:</b> <span class="pre">${esc(a.approval_reason)}</span></div>` : ''}
+        <label class="f" for="d-text">${esc(ac.l)}</label><textarea id="d-text" ${ac.req ? 'required minlength="3"' : ''}></textarea>`,
+      async (d) => {
+        const text = d.querySelector('#d-text').value.trim();
+        if (ac.req && text.length < 3) throw new Error('هذا الحقل إلزامي');
+        if (act === 'req_approval') await rpc('request_approval', { p_assignment: aid, p_reason: text });
+        else await rpc('decide_approval', { p_assignment: aid, p_approve: act === 'approve', p_note: text });
+        toast(act === 'req_approval' ? 'تم إرسال الطلب لنائب الرئيس' : 'تم تسجيل القرار', 'ok');
+        after();
+      }, ac.ok, ac.cls);
+      return;
+    }
     const conf = {
       in_progress: { t: '▶️ بدء المتابعة — ' + dn, l: 'ملاحظة المتابعة (اختياري)', req: false, ok: 'بدء المتابعة', cls: 'warn' },
       resolved: { t: '✅ تمت المعالجة — ' + dn, l: 'النتيجة النهائية * (إلزامي)', req: true, ok: 'إقفال: تمت المعالجة', cls: 'ok', photo: true },
@@ -1274,6 +1326,7 @@
         </div>
       </div>
       <div class="report">
+        <img src="icons/logo.png" alt="" style="display:block;width:90px;height:90px;margin:0 auto 6px">
         <h1>${esc(S.settings.municipality_name)}</h1>
         <div class="sub">تقرير شكاوى المواطنين — ${esc(monthName)}<br>تاريخ الإصدار: ${esc(fmtDT(new Date()))}</div>
         <div class="grid stats mb">

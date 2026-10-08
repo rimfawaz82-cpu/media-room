@@ -1,9 +1,9 @@
 // Service Worker: يجعل التطبيق قابلاً للتثبيت ويُظهر الإشعارات
-const CACHE = 'complaints-v1';
+const CACHE = 'complaints-v2';
 const SHELL = [
   './', './index.html', './css/app.css', './js/app.js', './js/config.js',
   './vendor/supabase.js', './vendor/xlsx.core.min.js', './manifest.webmanifest',
-  './icons/icon-192.png', './icons/icon-512.png'
+  './icons/icon-192.png', './icons/icon-512.png', './icons/logo.png', './shakwa.html', './js/citizen.js'
 ];
 
 self.addEventListener('install', (e) => {

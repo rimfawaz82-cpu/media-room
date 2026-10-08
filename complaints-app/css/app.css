@@ -1,8 +1,8 @@
 /* نظام شكاوى بلدية حارة حريك - التصميم */
 :root {
-  --primary: #0f766e;
-  --primary-dark: #115e59;
-  --primary-soft: #ccfbf1;
+  --primary: #157a3c;
+  --primary-dark: #0f5e2d;
+  --primary-soft: #dcfce7;
   --bg: #f1f5f4;
   --card: #ffffff;
   --text: #1f2937;
@@ -111,6 +111,7 @@ main { max-width: 1200px; margin: 0 auto; padding: 18px 16px 40px; }
 .stat.st-failed { border-color: #b91c1c; }
 .stat.st-returned { border-color: #9333ea; }
 .stat.st-pending { border-color: #0ea5e9; }
+.stat.st-approval { border-color: #7c3aed; }
 .stat.late { border-color: var(--danger); background: var(--danger-soft); }
 .stat.late .num { color: var(--danger); }
 
@@ -132,6 +133,8 @@ main { max-width: 1200px; margin: 0 auto; padding: 18px 16px 40px; }
 .badge.late { background: var(--danger); color: #fff; }
 .badge.unseen { background: #fff; color: var(--danger); border: 1.5px solid var(--danger); }
 .badge.seen-ok { background: #ecfdf5; color: #065f46; }
+.badge.approval { background: #ede9fe; color: #5b21b6; border: 1.5px solid #a78bfa; }
+.badge.src-citizen { background: #fff7ed; color: #9a3412; }
 .badge.deputy { background: #fdf4ff; color: #86198f; }
 
 /* ---------- قائمة الشكاوى ---------- */
@@ -172,6 +175,8 @@ input:focus, select:focus, textarea:focus { outline: 3px solid var(--primary-sof
 .btn.warn { background: var(--warn); }
 .btn.ok { background: var(--ok); }
 .btn.ok:hover { background: #15803d; }
+.btn.purple { background: #7c3aed; }
+.btn.purple:hover { background: #6d28d9; }
 .btn.wa { background: #25d366; color: #073b1f; }
 .btn.wa:hover { background: #1ebe5b; }
 .btn.sm { min-height: 40px; padding: 8px 14px; font-size: .9rem; }
@@ -210,6 +215,9 @@ table.t th.num { text-align: center; }
 .result-box { background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 10px; padding: 10px; margin-top: 8px; }
 .result-box.failed { background: #fef2f2; border-color: #fecaca; }
 .result-box.returned { background: #faf5ff; border-color: #e9d5ff; }
+.approval-box { border-radius: 10px; padding: 10px; margin-top: 8px; border: 1.5px solid #c4b5fd; background: #f5f3ff; }
+.approval-box.approved { border-color: #86efac; background: #f0fdf4; }
+.approval-box.rejected { border-color: #fca5a5; background: #fef2f2; }
 .thumbs { display: flex; flex-wrap: wrap; gap: 10px; }
 .thumbs a { display: block; width: 110px; height: 110px; border-radius: 10px; overflow: hidden; border: 1px solid var(--border); background: #f3f4f6; text-align: center; font-size: .8rem; text-decoration: none; color: var(--text); }
 .thumbs img { width: 100%; height: 100%; object-fit: cover; }
@@ -241,9 +249,9 @@ dialog .dlg-actions .btn { flex: 1 1 auto; }
 .notif .dot { font-size: 1.4rem; }
 
 /* ---------- تسجيل الدخول ---------- */
-.login-wrap { min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 20px; background: linear-gradient(160deg, #0f766e, #134e4a); }
+.login-wrap { min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 20px; background: linear-gradient(160deg, #157a3c, #0b4a24); }
 .login-card { background: #fff; border-radius: 20px; padding: 28px 22px; width: min(100%, 420px); box-shadow: 0 20px 50px rgba(0,0,0,.25); }
-.login-card .logo { display: block; width: 84px; height: 84px; margin: 0 auto 10px; border-radius: 20px; }
+.login-card .logo { display: block; width: 130px; height: 130px; margin: 0 auto 10px; object-fit: contain; }
 .login-card h1 { text-align: center; font-size: 1.35rem; margin-bottom: 2px; }
 .login-card p.sub { text-align: center; color: var(--muted); margin: 0 0 14px; }
 .err-box { background: var(--danger-soft); color: #991b1b; border-radius: 10px; padding: 10px 12px; margin-top: 12px; font-weight: 600; }
