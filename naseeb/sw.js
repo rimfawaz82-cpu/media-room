@@ -1,5 +1,5 @@
 // Offline cache for the Naseeb ledger app. Bump VERSION when files change.
-const VERSION = 'naseeb-v3';
+const VERSION = 'naseeb-v4';
 const CORE = ['./', 'index.html', 'config.js', 'cloud.js', 'vendor/supabase.js', 'manifest.webmanifest', 'icons/icon-192.png', 'icons/icon-512.png', 'icons/maskable-512.png', 'icons/apple-touch-icon.png'];
 const FONT_HOSTS = ['fonts.googleapis.com', 'fonts.gstatic.com'];
 
@@ -17,7 +17,7 @@ self.addEventListener('fetch', e => {
   const req = e.request;
   if (req.method !== 'GET') return;
   const url = new URL(req.url);
-  if (url.origin === location.origin) {
+  if (url.origin === location.origin && !url.pathname.includes('/migration/')) {
     e.respondWith(fetch(req).then(r => {
       if (r.ok) { const copy = r.clone(); caches.open(VERSION).then(c => c.put(req.mode === 'navigate' ? 'index.html' : req, copy)); }
       return r;
