@@ -1,0 +1,37 @@
+# نسخ احتياطي يومي مشفّر لقاعدة بيانات الشكاوى
+# يحتاج إلى سرّين في GitHub: Settings > Secrets and variables > Actions
+#   SUPABASE_DB_URL  : رابط الاتصال بقاعدة البيانات (Supabase > Connect > Session pooler)
+#   BACKUP_PASSWORD  : كلمة سر تختارها لتشفير النسخة (احفظها جيداً!)
+name: complaints-backup
+on:
+  schedule:
+    - cron: '17 1 * * *'   # يومياً الساعة 4:17 فجراً بتوقيت بيروت تقريباً
+  workflow_dispatch: {}
+
+jobs:
+  backup:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Install PostgreSQL 17 client
+        run: |
+          sudo apt-get install -y postgresql-common
+          sudo /usr/share/postgresql-common/pgdg/apt.postgresql.org.sh -y
+          sudo apt-get install -y postgresql-client-17
+      - name: Dump and encrypt
+        env:
+          DB_URL: ${{ secrets.SUPABASE_DB_URL }}
+          BACKUP_PASSWORD: ${{ secrets.BACKUP_PASSWORD }}
+        run: |
+          set -euo pipefail
+          FILE="complaints-$(date +%F).sql.gz"
+          /usr/lib/postgresql/17/bin/pg_dump "$DB_URL" --no-owner --no-privileges \
+            --schema=public --schema=auth --data-only | gzip > "$FILE"
+          /usr/lib/postgresql/17/bin/pg_dump "$DB_URL" --no-owner --no-privileges --schema=public --schema-only | gzip > "schema-$(date +%F).sql.gz"
+          tar cf backup.tar "$FILE" schema-*.sql.gz
+          gpg --batch --yes --pinentry-mode loopback --passphrase "$BACKUP_PASSWORD" --symmetric --cipher-algo AES256 -o "backup-$(date +%F).tar.gpg" backup.tar
+          rm -f backup.tar "$FILE" schema-*.sql.gz
+      - uses: actions/upload-artifact@v4
+        with:
+          name: complaints-backup
+          path: backup-*.tar.gpg
+          retention-days: 30
