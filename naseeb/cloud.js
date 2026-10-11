@@ -6,6 +6,7 @@
 // =====================================================================
 (function () {
   const CFG = window.NASEEB_CFG || {};
+  window.NB_BLOB = '/_blob/';   // وين بتنقرا الصور (بيتغيّر لـ Supabase Storage تحت)
   if (!CFG.SUPABASE_URL || !CFG.SUPABASE_ANON_KEY || !window.supabase) return; // بيضل يحفظ على الجهاز
 
   const sb = window.supabase.createClient(CFG.SUPABASE_URL, CFG.SUPABASE_ANON_KEY, {
@@ -15,6 +16,8 @@
   // أنواع السجلات: الدفتر بيجمعها بـ"سلال" (cartons/b3 = {r: {id: rec}}) — هون كل سجل صف لحاله
   const RECS = new Set(['cartons', 'items', 'sales', 'orders', 'customers', 'dpay', 'moves', 'expenses']);
   const PAGE = 1000, CHUNK = 500;
+  const BUCKET = 'naseeb';
+  window.NB_BLOB = CFG.SUPABASE_URL + '/storage/v1/object/public/' + BUCKET + '/';
 
   const mkErr = (code, msg) => Object.assign(new Error(msg || code), { code });
   const wrap = e => mkErr('unavailable', (e && e.message) || String(e));
@@ -227,10 +230,30 @@
     put(); new MutationObserver(put).observe(foot, { childList: true });
   }
 
+  // ---------- photos (Supabase Storage) ----------
+  // بيقدّم نفس واجهة assets تبع claude.ai: كل صورة ملف بإسم عشوائي (32 حرف) بالـ bucket
+  const assets = {
+    async upload(blob) {
+      const id = [...crypto.getRandomValues(new Uint8Array(16))].map(b => b.toString(16).padStart(2, '0')).join('');
+      const { error } = await sb.storage.from(BUCKET).upload(id, blob, { contentType: blob.type || 'image/jpeg', cacheControl: '31536000' });
+      if (error) throw mkErr(/quota|size|exceed/i.test(error.message || '') ? 'quota_or_state' : 'unavailable', error.message);
+      return { id, url: window.NB_BLOB + id };
+    },
+    async delete(id) {
+      const { error } = await sb.storage.from(BUCKET).remove([id]);
+      if (error) throw wrap(error);
+    },
+    async list() { return { usage: null, assets: [] }; }
+  };
+
   let ready = null;
   const getDb = () => ready || (ready = signedIn().then(() => { startRealtime(); addSignOut(); return db; }));
 
   window.claude = {
-    async use(name) { return name === 'db' ? getDb() : null; }
+    async use(name) {
+      if (name === 'db') return getDb();
+      if (name === 'assets') return getDb().then(() => assets);
+      return null;
+    }
   };
 })();
