@@ -1877,7 +1877,7 @@ async function nxProcess(d) {
 async function nxBlobs(d, have) {
   if (have && have.length) return have.slice(0, 4);
   if (NX.local[d.id]) { const out = []; for (const p of NX.local[d.id].slice(0, 4)) { const b = await nxShrink(p.file, 1080, 0.84); if (b) out.push(b); } if (out.length) return out; }
-  const out = []; for (const a of (d.imgs || []).slice(0, 4)) { if (NX.localBlob[a]) { out.push(NX.localBlob[a]); continue; } try { const r = await fetch('/_blob/' + a); if (r.ok) out.push(await r.blob()); } catch (e) {} } return out;
+  const out = []; for (const a of (d.imgs || []).slice(0, 4)) { if (NX.localBlob[a]) { out.push(NX.localBlob[a]); continue; } try { const r = await fetch(NB_BLOB + a); if (r.ok) out.push(await r.blob()); } catch (e) {} } return out;
 }
 // What makes the caption copy ours: specific to the piece, no empty praise, nothing invented.
 const NX_COPY_RULES = `Write in Lebanese Arabic dialect, the way a sharp shop owner talks to his customers: warm, specific, sure of himself.
@@ -1891,7 +1891,7 @@ const nxEanOk = v => { const d = String(v || '').replace(/\D/g, ''); if (d.lengt
 async function nxReadEan(it) {                    // once per saved item: look at its photos for the barcode and the IAN
   if (!it || it.ean || it.eanTried || readOnly || !nxCanSee()) return false;
   const ids = ((it.imgs && it.imgs.length) ? it.imgs : (it.img0 ? [it.img0] : [])).slice(0, 4), imgs = [];
-  for (const a of ids) { if (NX.localBlob[a]) { imgs.push(NX.localBlob[a]); continue; } try { const r = await fetch('/_blob/' + a); if (r.ok) imgs.push(await r.blob()); } catch (e) {} }
+  for (const a of ids) { if (NX.localBlob[a]) { imgs.push(NX.localBlob[a]); continue; } try { const r = await fetch(NB_BLOB + a); if (r.ok) imgs.push(await r.blob()); } catch (e) {} }
   if (!imgs.length) return false;
   const prompt = `These photos show one product. Find the barcode and read the number printed under it (EAN, 13 digits), and the IAN number if one is printed (Lidl products).
 Return JSON only: {"ean": "", "ian": ""}
@@ -2000,9 +2000,9 @@ async function nxRegroup() {
   const photos = []; let k = 0;
   await nxPool(ids, 4, async (a, i) => {
     let blob = NX.localBlob[a] || null;
-    if (!blob) { try { const r = await fetch('/_blob/' + a); if (r.ok) blob = await r.blob(); } catch (e) {} }
+    if (!blob) { try { const r = await fetch(NB_BLOB + a); if (r.ok) blob = await r.blob(); } catch (e) {} }
     const thumb = blob ? await nxShrink(blob, 256, 0.72) : null;
-    photos[i] = thumb ? { a, thumb, t: 0, file: { name: '' }, url: NX.thumbOf[a] || '/_blob/' + a } : null;
+    photos[i] = thumb ? { a, thumb, t: 0, file: { name: '' }, url: NX.thumbOf[a] || NB_BLOB + a } : null;
     k++; nxSetProg(k / ids.length * 0.3, `عم جهّز الصور… ${k} من ${ids.length}`);
   });
   const ph = photos.filter(Boolean);
@@ -2128,7 +2128,7 @@ V.intake = C => {
        <div class="nx-save"><span>${mine.length} قطعة · ${nPh} صورة · ${ready} جاهزة${working ? ` · ${working} بعد` : ''}</span>
        <span style="display:flex;gap:8px;flex-wrap:wrap">${NX.sel ? `<button class="btn sm" data-nx="unsel">إلغاء التحديد</button>` : ''}<button class="btn pri" data-nx="save"${NX.saving || !ready ? ' disabled' : ''}>${ico('check')}احفظ ${ready || ''} بالدفتر</button></span></div>` : '');
 };
-function nxThumb(d, i) { const a = (d.imgs || [])[i]; if (a) return NX.thumbOf[a] || '/_blob/' + a; const l = NX.local[d.id]; return l && l[i] ? l[i].url : ''; }
+function nxThumb(d, i) { const a = (d.imgs || [])[i]; if (a) return NX.thumbOf[a] || NB_BLOB + a; const l = NX.local[d.id]; return l && l[i] ? l[i].url : ''; }
 function nxCard(d, gi, mine) {
   const S0 = nxSt(d);
   const st = { up: ['عم ترتفع الصور…', 't-neu'], wait: ['بالدور', 't-neu'], busy: ['Claude عم يقرا…', 't-info'], ready: ['جاهزة', 't-good'], manual: [nxDone && !nxCanSee() ? 'ناطرة «اقرا الكرتونة»' : 'عبّي بإيدك', 't-warn'], fail: ['ما زبطت القراءة', 't-bad'], lost: ['الصور ضاعت', 't-bad'] }[S0] || ['', ''];
@@ -2177,7 +2177,7 @@ V.studio = C => {
   const c = NX.studioCarton && C.cartonsMap[NX.studioCarton];
   const warn = c && (c.status === 'قيد الفرز' || c.status === 'جديدة') ? `<div class="banner warn"><span>${ico('alert')}الكرتونة ${esc(c.code)} لسّا قيد الفرز — الأسعار مبدئية وبتتغيّر كل ما تزيد قطع. لما تخلص كل قطعها سكّر الفرز.</span>${readOnly ? '' : `<button class="btn sm" data-nx="closesort" data-id="${esc(c.id)}">خلص الفرز</button>`}</div>` : '';
   const lvl = c && c.level ? `<div class="banner ${c.level === 'bad' ? 'warn' : 'info'}"><span>بالكرتونة ${esc(c.code)} منبيع بـ ${pct0(c.ratio)} من سعر السوق — ${LV_T[c.level]}${c.level === 'bad' ? '. قيمة القطع بالسوق يا دوب بتغطّي هدف الربح.' : ''}</span></div>` : '';
-  const cards = withImg.map(it => `<button class="nx-it" data-nx="open" data-id="${esc(it.id)}" type="button"><span class="im" style="background-image:url('${esc(NX.thumbOf[cov(it)] || '/_blob/' + cov(it))}')"><span class="lt">#${nxPad(it.lot || (/(\d+)/.exec(it.code || '') || [0, 0])[1])}</span></span>
+  const cards = withImg.map(it => `<button class="nx-it" data-nx="open" data-id="${esc(it.id)}" type="button"><span class="im" style="background-image:url('${esc(NX.thumbOf[cov(it)] || NB_BLOB + cov(it))}')"><span class="lt">#${nxPad(it.lot || (/(\d+)/.exec(it.code || '') || [0, 0])[1])}</span></span>
      <span class="tx"><b>${esc(it.name)}</b><span><span class="pr">${it.suggested ? money(it.suggested) : '—'}</span>${pill(it.status)}${it.channel === 'كمية ثابتة' ? '<span class="st t-warn">سعر ثابت</span>' : ''}${nxVerified(it) ? '<span class="st t-good">سعر مأكّد</span>' : n(it.marketPrice) > 0 ? '<span class="st t-neu">سعر تقديري</span>' : ''}${it.store ? '<span class="st t-info">للمتجر</span>' : ''}</span></span></button>`).join('');
   const ver = withImg.filter(nxVerified).length;
   const noImg = list.length - withImg.length;
@@ -2340,7 +2340,7 @@ async function nxArtLoad() {
 async function nxLoadImg(id) {
   if (nxBmp.has(id)) return nxBmp.get(id);
   if (NX.localBlob[id]) { const bm = await createImageBitmap(NX.localBlob[id]); nxBmp.set(id, bm); return bm; }
-  const r = await fetch('/_blob/' + id); if (!r.ok) throw new Error('img'); const b = await r.blob(); const bmp = await createImageBitmap(b);
+  const r = await fetch(NB_BLOB + id); if (!r.ok) throw new Error('img'); const b = await r.blob(); const bmp = await createImageBitmap(b);
   nxBmp.set(id, bmp); return bmp;
 }
 function nxRR(x, X, y, w, h, r) { x.beginPath(); x.roundRect ? x.roundRect(X, y, w, h, r) : x.rect(X, y, w, h); }
@@ -2642,7 +2642,7 @@ async function nxPaint(it, price) {
   }
   // extra images kept in itemx: the «شو مكتوب عالعلبة؟» card (6) and the owner's extra photos (7…)
   const extra = [[6, it.info], ...(Array.isArray(it.more) ? it.more : []).map((a, k) => [7 + k, a])].filter(e => e[1]);
-  for (const [i, a] of extra) { try { const r = await fetch('/_blob/' + a); if (nxPost !== my) return; if (r.ok) show(i, await r.blob()); } catch (e) {} }
+  for (const [i, a] of extra) { try { const r = await fetch(NB_BLOB + a); if (nxPost !== my) return; if (r.ok) show(i, await r.blob()); } catch (e) {} }
 }
 function nxClose() { const ov = document.getElementById('nx-ov'); if (ov) { ov.hidden = true; ov.innerHTML = ''; } if (nxPost) nxPost.urls.forEach(u => URL.revokeObjectURL(u)); nxPost = null; }
 document.addEventListener('click', async e => {

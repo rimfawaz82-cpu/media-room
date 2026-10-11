@@ -68,3 +68,25 @@ insert into public.naseeb_members (email) values
   (lower('my-email@example.com')),
   (lower('partner-email@example.com'))
 on conflict do nothing;
+
+-- =====================================================================
+--  صور القطع (Supabase Storage)
+--  الصور بتنقرا برابط مباشر (أسماءها عشوائية 32 حرف)، بس الأعضاء بيرفعوا وبيمحوا
+-- =====================================================================
+insert into storage.buckets (id, name, public) values ('naseeb', 'naseeb', true)
+on conflict (id) do nothing;
+
+drop policy if exists naseeb_photos_insert on storage.objects;
+create policy naseeb_photos_insert on storage.objects
+  for insert to authenticated
+  with check (bucket_id = 'naseeb' and public.naseeb_is_member());
+
+drop policy if exists naseeb_photos_update on storage.objects;
+create policy naseeb_photos_update on storage.objects
+  for update to authenticated
+  using (bucket_id = 'naseeb' and public.naseeb_is_member());
+
+drop policy if exists naseeb_photos_delete on storage.objects;
+create policy naseeb_photos_delete on storage.objects
+  for delete to authenticated
+  using (bucket_id = 'naseeb' and public.naseeb_is_member());
