@@ -246,8 +246,61 @@
     async list() { return { usage: null, assets: [] }; }
   };
 
+  // ---------- one-time move of photos and descriptions from claude.ai ----------
+  // migration/data.json + migration/img/<id>.jpg (exported from the claude.ai ledger).
+  // Shown as a bar until meta/migration is marked done; safe to re-run (finished photos are skipped).
+  const MIG_DONE_KEY = 'naseeb-mig-done';
+  async function offerMigration() {
+    let info;
+    try { const r = await fetch('migration/data.json', { cache: 'no-store' }); if (!r.ok) return; info = await r.json(); } catch (e) { return; }
+    const mark = await getRow('meta', 'migration').catch(() => undefined);
+    if (mark && mark.done) return;
+    const bar = document.createElement('div');
+    bar.style.cssText = 'position:fixed;inset-inline:12px;bottom:calc(84px + env(safe-area-inset-bottom,0px));z-index:40;background:#0F1D3A;color:#fff;border-radius:12px;padding:12px 14px;display:flex;gap:10px;align-items:center;flex-wrap:wrap;font:14px var(--f,system-ui);box-shadow:0 10px 30px -8px rgba(0,0,0,.4);direction:rtl';
+    const txt = document.createElement('span'); txt.style.flex = '1';
+    txt.textContent = `في ${info.images.length} صورة و${Object.keys(info.itemx).length} وصف قطعة من دفتر claude.ai لسّا ما انتقلوا.`;
+    const btn = document.createElement('button');
+    btn.style.cssText = 'border:0;background:#FF6A1A;color:#0F1D3A;font:inherit;font-weight:700;border-radius:8px;padding:8px 14px;cursor:pointer';
+    btn.textContent = 'انقل هلّق';
+    bar.append(txt, btn); document.body.appendChild(bar);
+    btn.addEventListener('click', async () => {
+      btn.disabled = true; btn.style.opacity = '.6';
+      try { await runMigration(info, msg => { txt.textContent = msg; }); txt.textContent = 'خلص النقل ✓ — عم يحمّل من جديد…'; setTimeout(() => location.reload(), 1200); }
+      catch (e) { txt.textContent = 'وقف النقل: ' + (e && e.message || e) + ' — كبّس كمان مرة بيكمّل من وين وقف.'; btn.disabled = false; btn.style.opacity = ''; btn.textContent = 'كمّل'; }
+    });
+  }
+  async function runMigration(info, say) {
+    say('عم ينقل الأوصاف…');
+    const rows = [];
+    for (const coll of ['itemx', 'intake']) for (const [id, data] of Object.entries(info[coll] || {})) rows.push({ coll, id, data });
+    await upsertRows(rows);
+    let done = new Set();
+    try { done = new Set(JSON.parse(localStorage.getItem(MIG_DONE_KEY) || '[]')); } catch (e) {}
+    const todo = info.images.filter(id => !done.has(id));
+    let n = info.images.length - todo.length, failed = 0;
+    const save = () => { try { localStorage.setItem(MIG_DONE_KEY, JSON.stringify([...done])); } catch (e) {} };
+    async function one(id) {
+      for (let t = 0; t < 3; t++) {
+        try {
+          const r = await fetch('migration/img/' + id + '.jpg', { cache: 'no-store' });
+          if (!r.ok) throw new Error('ما لقى الصورة ' + id);
+          const { error } = await sb.storage.from(BUCKET).upload(id, await r.blob(), { contentType: 'image/jpeg', cacheControl: '31536000' });
+          if (error && !/exist|duplicate/i.test(error.message || '')) throw new Error(error.message);
+          done.add(id); n++; if (n % 10 === 0) save();
+          say(`عم ينقل الصور: ${n} من ${info.images.length}`);
+          return;
+        } catch (e) { if (t === 2) { failed++; console.warn(e); } else await new Promise(r => setTimeout(r, 1500 * (t + 1))); }
+      }
+    }
+    const queue = todo.slice();
+    await Promise.all(Array.from({ length: 4 }, async () => { while (queue.length) await one(queue.shift()); }));
+    save();
+    if (failed) throw new Error(failed + ' صورة ما انتقلت');
+    await upsertRows([{ coll: 'meta', id: 'migration', data: { done: true, at: new Date().toISOString(), images: info.images.length } }]);
+  }
+
   let ready = null;
-  const getDb = () => ready || (ready = signedIn().then(() => { startRealtime(); addSignOut(); return db; }));
+  const getDb = () => ready || (ready = signedIn().then(() => { startRealtime(); addSignOut(); offerMigration(); return db; }));
 
   window.claude = {
     async use(name) {
