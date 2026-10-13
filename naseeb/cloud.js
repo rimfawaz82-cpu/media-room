@@ -299,8 +299,36 @@
     await upsertRows([{ coll: 'meta', id: 'migration', data: { done: true, at: new Date().toISOString(), images: info.images.length } }]);
   }
 
+  // ---------- one-time price update prepared in Claude (migration/prices-*.json) ----------
+  // Writes only the price fields (and name) into items that already exist here; marks itself done.
+  async function applyPrices() {
+    let info;
+    try { const r = await fetch('migration/prices-20261013.json', { cache: 'no-store' }); if (!r.ok) return; info = await r.json(); } catch (e) { return; }
+    const tag = info.tag || 'prices';
+    const mark = await getRow('meta', tag).catch(() => undefined);
+    if (mark && mark.done) return;
+    await ensure('items');
+    const have = cache.items || new Map(); const rows = [];
+    for (const [id, f] of Object.entries(info.items || {})) {
+      const cur = have.get(id); if (!cur) continue;
+      const next = { ...cur }; let ch = false;
+      for (const k of ['marketPrice', 'priceSrc', 'priceUrl', 'priceAt', 'name']) if (f[k] !== undefined && f[k] !== '' && String(cur[k] ?? '') !== String(f[k])) { next[k] = f[k]; ch = true; }
+      if (k_empty(f.priceUrl) && cur.priceUrl && f.priceSrc === 'تقدير Claude') { next.priceUrl = ''; ch = true; }
+      if (ch) rows.push({ coll: 'items', id, data: next });
+    }
+    function k_empty(v) { return v === '' || v == null; }
+    if (rows.length) await upsertRows(rows);
+    await upsertRows([{ coll: 'meta', id: tag, data: { done: true, at: new Date().toISOString(), n: rows.length } }]);
+    if (rows.length) {
+      const bar = document.createElement('div');
+      bar.style.cssText = 'position:fixed;inset-inline:12px;bottom:calc(84px + env(safe-area-inset-bottom,0px));z-index:40;background:#0F1D3A;color:#fff;border-radius:12px;padding:12px 14px;font:14px var(--f,system-ui);direction:rtl;box-shadow:0 10px 30px -8px rgba(0,0,0,.4)';
+      bar.textContent = 'تحدّثت أسعار ' + rows.length + ' قطعة ✓ — عم يحمّل من جديد…';
+      document.body.appendChild(bar); setTimeout(() => location.reload(), 1500);
+    }
+  }
+
   let ready = null;
-  const getDb = () => ready || (ready = signedIn().then(() => { startRealtime(); addSignOut(); offerMigration(); return db; }));
+  const getDb = () => ready || (ready = signedIn().then(() => { startRealtime(); addSignOut(); offerMigration(); applyPrices().catch(e => console.warn('prices', e)); return db; }));
 
   window.claude = {
     async use(name) {
