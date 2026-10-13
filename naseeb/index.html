@@ -357,6 +357,7 @@ a.lnk:hover{text-decoration:underline}
 @media (max-width:560px){.srow{grid-template-columns:minmax(0,1fr) auto}.srow select{grid-column:1/-1}}
 .inv-del{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-top:18px;padding:10px 12px;border:1px dashed var(--line2);border-radius:9px;font-size:13px;color:var(--ink2)}
 .inv-other{display:inline-flex;align-items:center;gap:6px;font-size:12.5px;color:var(--muted)}
+.inv-share{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
 .inv-other input{width:72px;border:1px solid var(--line2);border-radius:7px;padding:4px 8px;background:var(--surface);font-size:13px}
 @media print{
   :root,:root:not([data-theme="light"]),:root[data-theme="dark"]{--bg:#fff!important;--surface:#fff!important;--surface2:#F3F5F9!important;--ink:#0F1D3A!important;--ink2:#3A4660!important;--muted:#687390!important;--line:#E1E5EE!important;--line2:#CBD2DF!important;--acc-text:#C4480A!important;color-scheme:light!important}
@@ -369,10 +370,13 @@ a.lnk:hover{text-decoration:underline}
   *{-webkit-print-color-adjust:exact;print-color-adjust:exact}
   @page{margin:12mm}
 }
-@media (max-width:1180px){.g4{grid-template-columns:repeat(2,minmax(0,1fr))}.g3{grid-template-columns:repeat(2,minmax(0,1fr))}.inv-wrap{grid-template-columns:1fr}}
+@media (max-width:1180px){.g4{grid-template-columns:repeat(2,minmax(0,1fr))}.g3{grid-template-columns:repeat(2,minmax(0,1fr))}.inv-wrap{grid-template-columns:minmax(0,1fr)}}
 @media (max-width:980px){.g21,.g11{grid-template-columns:1fr}}
 @media (max-width:900px){
-  .shell{grid-template-columns:1fr}
+  .shell{grid-template-columns:minmax(0,1fr)}
+  .main,.content{min-width:0;overflow-x:clip}
+  .side{visibility:hidden}
+  .shell.open .side{visibility:visible}
   .side{position:fixed;top:0;bottom:0;right:0;width:272px;z-index:25;transform:translateX(100%);transition:transform .22s ease}
   .shell.open .side{transform:none;box-shadow:var(--shadow)}
   .shell.open .side-scrim{display:block}
@@ -1248,7 +1252,7 @@ const NAV = [                                   // third value 1 = a top-level s
   ['النظام', [['settings','الإعدادات']], 1],
 ];
 const TITLES = Object.fromEntries(NAV.flatMap(g => g[1]));
-function go(t) { UI.tab = t; UI.q = ''; try { localStorage.setItem(LSKEY + '-tab', t); } catch (e) {} $('#shell').classList.remove('open'); render(); window.scrollTo({ top: 0 }); }
+function go(t) { UI.tab = t; UI.q = ''; try { localStorage.setItem(LSKEY + '-tab', t); } catch (e) {} $('#shell').classList.remove('open'); render(); window.scrollTo({ top: 0, left: 0 }); }
 
 /* ============ views ============ */
 const V = {};
@@ -1450,6 +1454,7 @@ V.invoice = C => {
   const sub = lines.reduce((a,s) => a + s.total, 0), total = sub + fee - dep;
   const info = C.customers.find(c => c.name === cu) || {};
   const invNo = 'INV-' + today().replace(/-/g,'').slice(2) + '-' + String(Math.max(1, custs.indexOf(cu) + 1)).padStart(2,'0');
+  UI.invData = cu ? { cu, info, lines, dep, total, invNo, fee, sub } : null;
   const side = `<section class="card"><div class="card-h"><h2>زبائن عليهم ذمة</h2><span class="sub">${custs.length}</span></div><div style="padding-top:8px">${custs.length ? `<div class="alist">${custs.map(c => `<button class="aitem" data-act="pickinv" data-c="${esc(c)}" style="${c === cu ? 'background:var(--acc-soft)' : ''}"><span class="t"><b>${esc(c)}</b><small>${byC[c].n} قطعة بالانتظار</small></span><span class="v">${money(byC[c].t)}</span></button>`).join('')}</div>` : '<div class="allgood">ما حدا عليه شي — كل الطلبيات وصلت أو رجعت.</div>'}</div></section>`;
   let doc;
   if (!cu) doc = `<section class="card"><div class="empty"><div class="eico">${ico('invoice')}</div><b>اختار زبون من اللائحة</b><p>الفاتورة بتعرض بس القطع يلي طلبيتها لسا ما وصلت — يعني يلي لسا بالذمة. أول ما تصير «وصلت» أو «مرتجعة» بتختفي.</p></div></section>`;
@@ -1463,9 +1468,78 @@ V.invoice = C => {
     <div class="inv-note"><b class="inv-slogan">خلّيها من نصيبك</b><p>تُعدّ هذه الفاتورة كفالةً لمدة 3 أيام من تاريخ الاستلام.</p><p>إذا ظهر في القطعة عيب خلال هذه المدة، نبدّلها أو نعيد ثمنها.</p><p>لا تُقبل الكفالة من دون إبراز هذه الفاتورة.</p><p class="inv-cur">المبالغ بالدولار الأميركي.</p></div>
     ${readOnly || !lastKey ? '' : `<div class="inv-del"><span>التوصيل:</span><div class="segc">${[['pickup','من المحل'],['3','3$'],['4','4$'],['5','5$']].map(([v,l]) => `<button data-act="invfee" data-k="${esc(keys.slice().sort().join('||'))}" data-v="${v}" class="${curFee === v ? 'on' : ''}">${l}</button>`).join('')}</div><label class="inv-other">غير مبلغ <input type="number" step="any" min="0" dir="ltr" data-act="invfee-other" data-k="${esc(keys.slice().sort().join('||'))}" value="${curFee && !['pickup','3','4','5',''].includes(curFee) ? esc(curFee) : ''}" placeholder="$"></label></div>`}
     <div class="inv-actions" style="display:flex;gap:8px;margin-top:18px;flex-wrap:wrap"><button class="btn pri" data-act="printinv">${ico('print')}طباعة</button><button class="btn" data-act="copyinv">${ico('copy')}نسخ كنص لواتساب</button><button class="btn" data-act="dlinv">${ico('download')}تنزيل كملف نصي</button></div>
+    <div class="inv-share"><button class="btn pri" data-act="imginv">${ico('download')}فاتورة صورة مع صور القطع</button><button class="btn" data-act="wainv">${ico('copy')}ابعت النص عواتساب الزبون</button></div>
     <textarea id="inv-text" hidden readonly>${esc(invText(cu, info, lines, dep, total, invNo, fee))}</textarea></section>`;
   return ph('الفواتير', 'فاتورة «لسا بالذمة» لكل زبون — جاهزة تنسخها وتبعتها.') + `<div class="inv-wrap">${doc}${side}</div>`;
 };
+/* ---------- e-invoice: one JPEG with the piece photos, for WhatsApp ---------- */
+function waNum(ph) { let d = String(ph || '').replace(/[^\d+]/g, ''); if (d.startsWith('+')) d = d.slice(1); else if (d.startsWith('00')) d = d.slice(2); else if (d.startsWith('0')) d = '961' + d.slice(1); else if (d.length <= 8) d = '961' + d; return d; }
+function invWhatsApp() {
+  const D = UI.invData; if (!D) return; const txt = $('#inv-text').value; const num = waNum(D.info.phone);
+  const url = 'https://wa.me/' + (D.info.phone ? num : '') + '?text=' + encodeURIComponent(txt);
+  let w = null; try { w = window.open(url, '_blank', 'noopener'); } catch (e) {}
+  if (!w) { navigator.clipboard && navigator.clipboard.writeText(txt).catch(() => {}); toast(D.info.phone ? 'ما انفتح واتساب — انتسخ النص، الصقه عند الزبون' : 'ما في رقم للزبون — انتسخ النص'); }
+}
+async function invImage(D) {
+  const art = await nxArtLoad(); const W = 1080, P = 56, RH = 196;
+  const nT = 1 + (D.fee ? 1 : 0) + (D.dep ? 1 : 0); const HH = 230; const H = HH + 150 + 18 + D.lines.length * RH + 70 + nT * 52 + 60 + 190 + 110;
+  const cv = document.createElement('canvas'); cv.width = W; cv.height = H; const x = cv.getContext('2d');
+  x.fillStyle = '#F3F5F9'; x.fillRect(0, 0, W, H);
+  // header
+  x.fillStyle = NXC.navy; x.fillRect(0, 0, W, HH);
+  x.drawImage(art.lockup, W - P - 300, 56, 300, 112);
+  x.direction = 'rtl'; x.textAlign = 'left'; x.fillStyle = '#fff'; x.font = nxF('h7', 54); x.fillText('فاتورة', P, 106);
+  x.fillStyle = NXC.or; x.fillRect(P, 124, 60, 6);
+  x.direction = 'ltr'; x.textAlign = 'left'; x.font = nxF('n6', 26); x.fillStyle = '#B4BED3'; x.fillText(D.invNo + '   ·   ' + today(), P, 178);
+  // customer
+  let y = HH; x.fillStyle = '#fff'; x.fillRect(0, y, W, 150);
+  x.direction = 'rtl'; x.textAlign = 'right'; x.fillStyle = '#687390'; x.font = nxF('t6', 24); x.fillText('فاتورة إلى', W - P, y + 50);
+  x.fillStyle = NXC.navy; x.font = nxF('h7', 38); x.fillText(D.cu, W - P, y + 100, W - 2 * P - 330);
+  const sub2 = [D.info.phone ? '‪' + D.info.phone + '‬' : '', D.info.address || ''].filter(Boolean).join(' · ');
+  if (sub2) { x.fillStyle = '#3A4660'; x.font = nxF('t4', 24); x.fillText(sub2, W - P, y + 136, W - 2 * P - 330); }
+  x.textAlign = 'left'; x.fillStyle = '#687390'; x.font = nxF('t6', 24); x.fillText('المطلوب', P, y + 50);
+  x.direction = 'ltr'; x.fillStyle = '#C4480A'; x.font = nxF('n8', 58); x.fillText(money(D.total), P, y + 115);
+  y += 150;
+  // lines
+  for (const [i, s] of D.lines.entries()) {
+    const top = y + 18 + i * RH; x.fillStyle = '#fff'; nxRR(x, P - 16, top, W - 2 * P + 32, RH - 18, 18); x.fill();
+    const it = S.items[s.itemId] || {}; const ph = 150, px = W - P - ph, py = top + 14;
+    let bm = null; const id = it.img0 || (it.imgs || [])[0]; if (id) { try { bm = await nxLoadImg(id); } catch (e) {} }
+    x.save(); nxRR(x, px, py, ph, ph, 14); x.clip(); x.fillStyle = '#EEF1F6'; x.fillRect(px, py, ph, ph);
+    if (bm) { const sc = Math.max(ph / bm.width, ph / bm.height), w = bm.width * sc, h = bm.height * sc; x.drawImage(bm, px + (ph - w) / 2, py + (ph - h) / 2, w, h); }
+    x.restore();
+    const tx = px - 26, tw = tx - P - 230;
+    x.direction = 'rtl'; x.textAlign = 'right'; x.fillStyle = NXC.navy;
+    const f = nxFitText(x, s.itemName, tw, [32, 28, 25], 'h6', 2); x.font = nxF('h6', f.s); f.L.forEach((l, k) => x.fillText(l, tx, py + 42 + k * (f.s + 10)));
+    x.fillStyle = '#687390'; x.font = nxF('t4', 23); x.fillText((s.itemCode ? s.itemCode.replace('P-', 'LOT #') + '   ·   ' : '') + 'الكمية ' + s.qty, tx, py + ph - 14);
+    x.direction = 'ltr'; x.textAlign = 'left'; x.fillStyle = NXC.navy; x.font = nxF('n8', 40); x.fillText(money(s.total), P, py + 70);
+    if (n(s.qty) > 1) { x.fillStyle = '#687390'; x.font = nxF('n6', 22); x.fillText(s.qty + ' × ' + money(n(s.unitPrice)), P, py + 108); }
+  }
+  y += 18 + D.lines.length * RH;
+  // totals
+  const T = [['مجموع القطع', money(D.sub)]]; if (D.fee) T.push(['التوصيل', money(D.fee)]); if (D.dep) T.push(['عربون مدفوع', money(-D.dep)]);
+  x.fillStyle = '#fff'; nxRR(x, P - 16, y + 10, W - 2 * P + 32, 100 + T.length * 52, 18); x.fill();
+  T.forEach(([k, v], j) => { const yy = y + 58 + j * 52; x.direction = 'rtl'; x.textAlign = 'right'; x.fillStyle = '#3A4660'; x.font = nxF('t6', 27); x.fillText(k, W - P, yy); x.direction = 'ltr'; x.textAlign = 'left'; x.font = nxF('n7', 30); x.fillStyle = NXC.navy; x.fillText(v, P, yy); });
+  const yy = y + 58 + T.length * 52; x.fillStyle = NXC.or; x.fillRect(P, yy - 34, W - 2 * P, 3);
+  x.direction = 'rtl'; x.textAlign = 'right'; x.fillStyle = NXC.navy; x.font = nxF('h7', 32); x.fillText('المطلوب', W - P, yy + 14);
+  x.direction = 'ltr'; x.textAlign = 'left'; x.fillStyle = '#C4480A'; x.font = nxF('n8', 40); x.fillText(money(D.total), P, yy + 16);
+  y = yy + 60;
+  // warranty
+  x.direction = 'rtl'; x.textAlign = 'right'; x.fillStyle = '#3A4660'; x.font = nxF('t4', 24);
+  ['تُعدّ هذه الفاتورة كفالةً لمدة 3 أيام من تاريخ الاستلام.', 'إذا ظهر في القطعة عيب خلال هذه المدة، نبدّلها أو نعيد ثمنها.', 'لا تُقبل الكفالة من دون إبراز هذه الفاتورة.', 'المبالغ بالدولار الأميركي.'].forEach((t, k) => x.fillText(t, W - P, y + 40 + k * 40, W - 2 * P));
+  // footer
+  x.fillStyle = NXC.or; x.fillRect(0, H - 110, W, 110);
+  x.fillStyle = NXC.navy; x.font = nxF('h7', 40); x.textAlign = 'right'; x.fillText('خلّيها من نصيبك', W - P, H - 42);
+  x.font = nxF('t7', 24); x.textAlign = 'left'; x.fillText('التوصيل لكل لبنان · الدفع عند الاستلام', P, H - 46);
+  return await new Promise(r => cv.toBlob(r, 'image/jpeg', 0.9));
+}
+async function invImageShare() {
+  const D = UI.invData; if (!D) return; toast('عم جهّز صورة الفاتورة…');
+  let blob; try { blob = await invImage(D); } catch (e) { toast('ما زبطت الصورة'); return; }
+  const name = 'فاتورة-' + D.invNo + '.jpg'; const file = new File([blob], name, { type: 'image/jpeg' });
+  try { if (navigator.canShare && navigator.canShare({ files: [file] })) { await navigator.share({ files: [file], text: 'فاتورة مزاد نصيب ' + D.invNo }); return; } } catch (e) { if (e && e.name === 'AbortError') return; }
+  await saveFile(name, blob, 'image/jpeg');
+}
 function invText(cu, info, lines, dep, total, no, fee) {
   const L = ['*مزاد نصيب — فاتورة ' + no + '*', 'الزبون: ' + cu];
   if (info.phone) L.push('الهاتف: \u202A' + info.phone + '\u202C');
@@ -1659,7 +1733,7 @@ const NX = { itemx: {}, filter: 'all', note: '', localBlob: {}, thumbOf: {}, car
 let nxSample = null, nxAssets = null, nxCaps = null, nxReady = false, nxDone = false, nxUnsub = null, nxWake = null;
 const nxBmp = new Map();              // asset id -> ImageBitmap (post renderer cache)
 const NX_MAXPH = 6;                   // photos kept per product (posts use the first 4)
-const NX_VER = '46';
+const NX_VER = '47';
 const nxDiag = () => `نسخة ${NX_VER} · الاتصال ${window.claude && window.claude.use ? '✓' : '✗'} · البيانات ${mode === 'db' ? '✓' : '✗'} · Claude ${nxSample ? '✓' : '✗'}${NX.perm ? ' (' + NX.perm + ')' : ''} · صور لـClaude ${nxSample ? (!nxCaps || nxCaps.images ? (NX.noImg ? '✗' : '✓') : '✗') : '—'} · المخزن ${nxAssets ? '✓' : '✗'}${readOnly ? ' · قراءة بس' : ''}`;
 function nxDiagSave(code) {
   if (!(db && mode === 'db') || demo || readOnly) return;
@@ -2732,11 +2806,13 @@ document.addEventListener('click', async e => {
   else if (a === 'pcarton') { UI.carton = UI.carton === t.dataset.id ? '' : t.dataset.id; render(); }
   else if (a === 'unpricedonly') { UI.onlyUnpriced = !UI.onlyUnpriced; render(); }
   else if (a === 'ofilter') { UI.ofilter = t.dataset.v; render(); }
-  else if (a === 'pickinv') { UI.invCust = t.dataset.c; render(); }
+  else if (a === 'pickinv') { UI.invCust = t.dataset.c; $('#shell').classList.remove('open'); render(); }
   else if (a === 'demo') enterDemo();
   else if (a === 'exitdemo') exitDemo();
   else if (a === 'copyinv') { const ta = $('#inv-text'); try { await navigator.clipboard.writeText(ta.value); toast('انتسخت الفاتورة — الصقها بواتساب'); } catch (err) { ta.hidden = false; ta.style.cssText = 'width:100%;min-height:170px;margin-top:12px;border:1px solid var(--line2);border-radius:8px;padding:10px;background:var(--surface2)'; ta.select(); toast('انسخ النص يدويًا'); } }
   else if (a === 'printinv') printInvoice();
+  else if (a === 'imginv') invImageShare();
+  else if (a === 'wainv') invWhatsApp();
   else if (a === 'dlinv') saveFile('فاتورة-' + UI.invCust + '-' + today() + '.txt', $('#inv-text').value, 'text/plain');
   else if (a === 'savesettings') { const mg = n($('#s-margin').value) / 100, ld = Math.max(0, Math.round(n($('#s-late').value))); const st = Math.min(1, Math.max(0.05, n($('#s-sell').value) / 100)), fl = Math.max(0, n($('#s-floor').value) / 100); await saveSettings({ margin: mg, lateDays: ld, sellThrough: st, minRatio: fl, deliveryFee: Math.max(0, n($('#s-dfee').value)) }); toast('انحفظت الإعدادات'); }
   else if (a === 'partners') openPartners();
