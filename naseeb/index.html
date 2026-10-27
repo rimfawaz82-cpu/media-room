@@ -608,6 +608,11 @@ const today = () => fmtD(new Date());
 const addDays = (s,k) => { const d = new Date(s + 'T12:00:00'); d.setDate(d.getDate()+k); return fmtD(d); };
 // Week ends Saturday (Sun–Sat week, like Excel WEEKDAY default)
 const weekEnd = s => { if (!s) return ''; const d = new Date(s + 'T12:00:00'); if (isNaN(d)) return ''; d.setDate(d.getDate() + (6 - d.getDay())); return fmtD(d); };
+// A delivery went out in the middle of a week, so that week's orders split there: each date below is the
+// last day of the earlier part (2026-10-20: pieces bought 18–20 went out on the 21st; 21–24 are a separate order)
+const CUTS = ['2026-10-20'];
+const periodEnd = s => { const we = weekEnd(s); if (!we) return ''; return CUTS.find(c => c >= s && c < we) || we; };
+const periodStart = pe => { const prev = CUTS.filter(c => c < pe && weekEnd(c) === weekEnd(pe)).pop(); return prev ? addDays(prev, 1) : addDays(weekEnd(pe), -6); };
 const newId = () => { const d = new Date(); return d.getFullYear() + pad(d.getMonth()+1) + '-' + Math.random().toString(36).slice(2,8) + Date.now().toString(36).slice(-3); };
 // month buckets for hand-entered records; day buckets for items saved from «استقبال كرتونة» (ids 'nYYYYMMDD-…') so a big carton never overfills one document
 const bucket = id => id[0] === 'n' ? id.slice(0,9) : id[4] === '-' ? id.slice(0,4) + id.slice(5,7) : id.slice(0,6);
@@ -646,8 +651,8 @@ function calc() {
   // sales base
   const salesArr = Object.entries(S.sales).map(([id, s]) => {
     const cust = (s.customer || '').trim();
-    const we = weekEnd(s.date);
-    const key = orderKey(cust, we);
+    const we = weekEnd(s.date), pe = periodEnd(s.date);
+    const key = orderKey(cust, pe);
     const om = meta[key] || {};
     const orderStatus = om.deliveryStatus || '';
     let ret = '';
@@ -661,7 +666,7 @@ function calc() {
     else if (orderStatus === 'وصلت' || (orderStatus === 'مرتجعة' && s.override === '-')) state = 'delivered';
     else state = 'reserved';
     const qty = n(s.qty), total = r2(qty * n(s.unitPrice));
-    return { id, ...s, customer: cust, qty, total, weekEnd: we, key, orderStatus, ret, state, live: !ret };
+    return { id, ...s, customer: cust, qty, total, weekEnd: we, period: pe, key, orderStatus, ret, state, live: !ret };
   }).sort((a,b) => (a.date||'').localeCompare(b.date||'') || a.id.localeCompare(b.id));
   salesArr.forEach((s,i) => s.no = i + 1);
 
@@ -669,7 +674,7 @@ function calc() {
   const og = {};
   salesArr.forEach(s => {
     if (!s.customer || !s.weekEnd) return;
-    const o = og[s.key] || (og[s.key] = { key: s.key, customer: s.customer, weekEnd: s.weekEnd, qty: 0, due: 0, lines: 0, first: s.date });
+    const o = og[s.key] || (og[s.key] = { key: s.key, customer: s.customer, weekEnd: s.period, from: periodStart(s.period), qty: 0, due: 0, lines: 0, first: s.date });
     o.lines++;
     if (s.live) { o.qty += s.qty; o.due = r2(o.due + s.total); }
   });
@@ -692,7 +697,7 @@ function calc() {
   const batches = {};
   orders.forEach(o => { if (o.deliveryMethod !== 'دليفري' || o.deliveryStatus === 'ملغاة') return;
     const done = o.deliveryStatus === 'وصلت' || o.deliveryStatus === 'مرتجعة';
-    (batches[o.customer + '|' + (done ? (o.deliveryDate || o.weekEnd) : 'open')] ||= []).push(o); });
+    (batches[o.customer + '|' + (done || o.deliveryDate ? (o.deliveryDate || o.weekEnd) : 'open')] ||= []).push(o); });
   Object.values(batches).forEach(g => { if (g.length < 2) return; const fee = g[g.length - 1].deliveryFee;
     g.forEach((o, i) => { o.deliveryFee = i === g.length - 1 ? fee : 0; o.custPays = r2(o.due + o.deliveryFee - o.deposit); }); });
   const orderByKey = {}; orders.forEach(o => orderByKey[o.key] = o);
@@ -1453,7 +1458,9 @@ V.invoice = C => {
   const custs = Object.keys(byC).sort((a,b) => byC[b].t - byC[a].t);
   if (UI.invCust && !byC[UI.invCust]) byC[UI.invCust] = { n: 0, t: 0 };
   const cu = UI.invCust || '';
-  const lines = open.filter(s => s.customer === cu);
+  const cKeys = [...new Set(open.filter(s => s.customer === cu).map(s => s.key))].sort();
+  if (UI.invKey && !cKeys.includes(UI.invKey)) UI.invKey = '';
+  const lines = open.filter(s => s.customer === cu && (!UI.invKey || s.key === UI.invKey));
   const keys = [...new Set(lines.map(s => s.key))];
   const lastKey = keys.slice().sort().pop() || '';
   const lastO = lastKey ? C.orderByKey[lastKey] : null;
@@ -1462,7 +1469,7 @@ V.invoice = C => {
   const fee = keys.reduce((a,k) => a + (C.orderByKey[k]?.deliveryFee || 0), 0), nFee = keys.filter(k => C.orderByKey[k]?.deliveryFee).length;
   const sub = lines.reduce((a,s) => a + s.total, 0), total = sub + fee - dep;
   const info = C.customers.find(c => c.name === cu) || {};
-  const invNo = 'INV-' + today().replace(/-/g,'').slice(2) + '-' + String(Math.max(1, custs.indexOf(cu) + 1)).padStart(2,'0');
+  const invNo = 'INV-' + today().replace(/-/g,'').slice(2) + '-' + String(Math.max(1, custs.indexOf(cu) + 1)).padStart(2,'0') + (UI.invKey && C.orderByKey[UI.invKey] ? '-' + C.orderByKey[UI.invKey].no : '');
   UI.invData = cu ? { cu, info, lines, dep, total, invNo, fee, sub } : null;
   const side = `<section class="card"><div class="card-h"><h2>زبائن عليهم ذمة</h2><span class="sub">${custs.length}</span></div><div style="padding-top:8px">${custs.length ? `<div class="alist">${custs.map(c => `<button class="aitem" data-act="pickinv" data-c="${esc(c)}" style="${c === cu ? 'background:var(--acc-soft)' : ''}"><span class="t"><b>${esc(c)}</b><small>${byC[c].n} قطعة بالانتظار</small></span><span class="v">${money(byC[c].t)}</span></button>`).join('')}</div>` : '<div class="allgood">ما حدا عليه شي — كل الطلبيات وصلت أو رجعت.</div>'}</div></section>`;
   let doc;
@@ -1470,6 +1477,7 @@ V.invoice = C => {
   else doc = `<section class="card invdoc">
     <div class="inv-top"><div class="inv-brand"><img class="inv-logo logo-l" src="${LOGO.full}" alt="نصيب — NASEEB"><img class="inv-logo logo-d" src="${LOGO.fullW}" alt="نصيب — NASEEB"></div>
       <div><h2>فاتورة</h2><div class="inv-meta"><span>رقم الفاتورة</span><b>${invNo}</b><span>التاريخ</span><b>${today()}</b></div></div></div>
+    ${cKeys.length > 1 ? `<div class="inv-del" style="margin-bottom:12px"><span>الطلبية:</span><div class="segc"><button data-act="invkey" data-k="" class="${!UI.invKey ? 'on' : ''}">كلها</button>${cKeys.map(k => { const o = C.orderByKey[k]; return `<button data-act="invkey" data-k="${esc(k)}" class="${UI.invKey === k ? 'on' : ''}">#${o.no} · ${esc(o.from.slice(5))} → ${esc(o.weekEnd.slice(5))}</button>`; }).join('')}</div></div>` : ''}
     <div class="inv-to"><div><small>فاتورة إلى</small><b>${esc(cu)}</b><div>${info.phone ? `<span dir="ltr" class="tel">${esc(info.phone)}</span>` : ''}${info.phone && info.address ? ' · ' : ''}${esc(info.address || '')}</div>${!info.phone && !info.address ? `<div style="color:var(--muted)">ما في رقم أو عنوان — ضيفهم من «العملاء»</div>` : ''}</div>
       <div style="text-align:left"><small>المطلوب</small><b class="inv-due">${money(total)}</b></div></div>
     ${table('invoice', [{ h:'#', v: s => lines.indexOf(s) + 1 }, { h:'الصنف', v: s => esc(s.itemName) }, { h:'نوع المزاد', v: s => esc(s.auction) }, { h:'التاريخ', v: s => esc(s.date) }, { h:'الكمية', v: s => s.qty }, { h:'سعر الوحدة', m:1, cell: s => mcell(n(s.unitPrice)) }, { h:'الإجمالي', m:1, cell: s => mcell(s.total, 'strong') }], lines, { emptyT:'ما عليه شي معلّق' })}
@@ -2858,7 +2866,8 @@ document.addEventListener('click', async e => {
     const key = t.dataset.key; const cur = S.orders[key] || { deliveryMethod:'', area:'', payStatus:'', collected:'', deliveryDate:'', deliveryStatus:'', deposit:'', depositMethod:'' };
     const on = !cur.ready; await put('orders', key, { ...cur, ready: on ? today() : '' }); toast(on ? 'الطلبية جاهزة ✓' : 'رجعت «لسا ما تجهّزت»');
   }
-  else if (a === 'pickinv') { UI.invCust = t.dataset.c; $('#shell').classList.remove('open'); render(); }
+  else if (a === 'invkey') { UI.invKey = t.dataset.k; render(); }
+  else if (a === 'pickinv') { UI.invCust = t.dataset.c; UI.invKey = ''; $('#shell').classList.remove('open'); render(); }
   else if (a === 'demo') enterDemo();
   else if (a === 'exitdemo') exitDemo();
   else if (a === 'copyinv') { const ta = $('#inv-text'); try { await navigator.clipboard.writeText(ta.value); toast('انتسخت الفاتورة — الصقها بواتساب'); } catch (err) { ta.hidden = false; ta.style.cssText = 'width:100%;min-height:170px;margin-top:12px;border:1px solid var(--line2);border-radius:8px;padding:10px;background:var(--surface2)'; ta.select(); toast('انسخ النص يدويًا'); } }
