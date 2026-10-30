@@ -609,8 +609,8 @@ const addDays = (s,k) => { const d = new Date(s + 'T12:00:00'); d.setDate(d.getD
 // Week ends Saturday (Sun–Sat week, like Excel WEEKDAY default)
 const weekEnd = s => { if (!s) return ''; const d = new Date(s + 'T12:00:00'); if (isNaN(d)) return ''; d.setDate(d.getDate() + (6 - d.getDay())); return fmtD(d); };
 // A delivery went out in the middle of a week, so that week's orders split there: each date below is the
-// last day of the earlier part (2026-10-21: pieces bought 18–21 are one order; 22–24 are a separate order)
-const CUTS = ['2026-10-21'];
+// last day of the earlier part (2026-10-20: pieces bought 18–20 went out on the 21st; 21–24 are a separate order)
+const CUTS = ['2026-10-20'];
 const periodEnd = s => { const we = weekEnd(s); if (!we) return ''; return CUTS.find(c => c >= s && c < we) || we; };
 const periodStart = pe => { const prev = CUTS.filter(c => c < pe && weekEnd(c) === weekEnd(pe)).pop(); return prev ? addDays(prev, 1) : addDays(weekEnd(pe), -6); };
 const newId = () => { const d = new Date(); return d.getFullYear() + pad(d.getMonth()+1) + '-' + Math.random().toString(36).slice(2,8) + Date.now().toString(36).slice(-3); };
