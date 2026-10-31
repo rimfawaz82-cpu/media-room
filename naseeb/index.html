@@ -303,11 +303,13 @@ html[data-lang="en"] .inv-top h2::after{margin:8px 0 0 auto}
 .fld{display:flex;flex-direction:column;gap:5px;min-width:0}
 .fld.full{grid-column:1/-1}
 #ms_rows{display:flex;flex-direction:column;gap:10px}
-.ms-row{display:grid;grid-template-columns:1fr 72px 96px auto;gap:8px;align-items:end;padding:10px;border:1px solid var(--line2);border-radius:10px;background:var(--surface2)}
+.ms-row{display:grid;grid-template-columns:1fr 1fr auto;gap:8px;align-items:end;padding:10px;border:1px solid var(--line2);border-radius:10px;background:var(--surface2)}
+.ms-row .ms-it{grid-column:1/-1}
+.ms-row .ms-i{font-size:16px;padding:13px 12px;min-height:52px;font-weight:500}
 .ms-row .ms-info{grid-column:1/-1;font-size:12px;color:var(--muted);min-height:0}
 .ms-row .ms-info:empty{display:none}
 .ms-o{font-size:13.5px;padding:8px 0;color:var(--ink2)}
-@media (max-width:520px){.ms-row{grid-template-columns:1fr 1fr auto}.ms-row .ms-it{grid-column:1/-1}}
+
 .fld label{font-size:12.5px;color:var(--ink2);font-weight:500}
 .fld label em{color:var(--bad);font-style:normal}
 .fld input,.fld select,.fld textarea{border:1px solid var(--line2);background:var(--surface);border-radius:8px;padding:8px 11px;width:100%;font-size:13.5px}
@@ -1291,10 +1293,11 @@ function openMultiSale() {
     const cu = $('#ms_c').value.replace(/\s+/g, ' ').trim(); $('#ms_o').textContent = cu ? saleOrderTxt(CUR || calc(), { customer: cu, date: $('#ms_d').value }, null) : '—';
   };
   const n_ = v => Number(v) || 0;
-  frm.addEventListener('input', e => {
+  const onPick = e => {
     const r = e.target.closest('.ms-row');
     if (r && e.target.classList.contains('ms-i')) { const it = byLbl[e.target.value.trim()]; const u = r.querySelector('.ms-u'); if (it && !u.value && it.suggested) u.value = it.suggested; }
-    refresh(); });
+    refresh(); };
+  frm.addEventListener('input', onPick); frm.addEventListener('change', onPick);
   frm.addEventListener('click', e => {
     if (e.target.closest('#ms_add')) { rowsEl.insertAdjacentHTML('beforeend', row()); const ins = rowsEl.querySelectorAll('.ms-i'); ins[ins.length - 1].focus(); return; }
     const x = e.target.closest('.ms-x'); if (x) { if (rowsEl.children.length > 1) x.closest('.ms-row').remove(); else x.closest('.ms-row').querySelectorAll('input').forEach(i => i.value = i.classList.contains('ms-n') ? '1' : ''); refresh(); }
