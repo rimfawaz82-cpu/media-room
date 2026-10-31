@@ -1275,7 +1275,7 @@ function openMultiSale() {
       <div class="fld"><label for="ms_d">تاريخ البيع <em>*</em></label><input id="ms_d" type="date" value="${today()}"></div>
       <div class="fld"><label>الطلبية</label><div id="ms_o" class="ms-o">—</div></div>
       <div class="fsec">القطع</div><div class="full" id="ms_rows">${row()}</div>
-      <div class="full"><button type="button" class="btn" id="ms_add">${ico('plus')}زيد قطعة</button></div>
+      <div class="full"><button type="button" class="btn" id="ms_add">${ico('plus')}زيد قطعة</button> <span class="dim" style="font-size:12px">Ctrl+Enter · أو Enter بمربع السعر</span></div>
       <div class="calc" id="ms_tot"></div></div>
       <datalist id="dl_ms_c">${custs.map(x => `<option value="${esc(x)}">`).join('')}</datalist><datalist id="dl_ms_it">${its.map(it => `<option value="${esc(lbl(it))}">`).join('')}</datalist></div>
     <div class="err" id="ferr"></div>
@@ -1298,8 +1298,16 @@ function openMultiSale() {
     if (r && e.target.classList.contains('ms-i')) { const it = byLbl[e.target.value.trim()]; const u = r.querySelector('.ms-u'); if (it && !u.value && it.suggested) u.value = it.suggested; }
     refresh(); };
   frm.addEventListener('input', onPick); frm.addEventListener('change', onPick);
+  // keyboard: Ctrl/⌘+Enter, or Enter in a price box, adds a piece; Ctrl/⌘+S saves; a plain Enter never saves by mistake
+  const addRow = () => { rowsEl.insertAdjacentHTML('beforeend', row()); const ins = rowsEl.querySelectorAll('.ms-i'); ins[ins.length - 1].focus(); };
+  frm.addEventListener('keydown', e => {
+    if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) { e.preventDefault(); addRow(); }
+    else if (e.key === 'Enter' && e.target.classList.contains('ms-u')) { e.preventDefault(); addRow(); }
+    else if (e.key === 'Enter' && e.target.tagName === 'INPUT') e.preventDefault();
+    else if ((e.ctrlKey || e.metaKey) && e.code === 'KeyS') { e.preventDefault(); frm.requestSubmit(); }
+  });
   frm.addEventListener('click', e => {
-    if (e.target.closest('#ms_add')) { rowsEl.insertAdjacentHTML('beforeend', row()); const ins = rowsEl.querySelectorAll('.ms-i'); ins[ins.length - 1].focus(); return; }
+    if (e.target.closest('#ms_add')) { addRow(); return; }
     const x = e.target.closest('.ms-x'); if (x) { if (rowsEl.children.length > 1) x.closest('.ms-row').remove(); else x.closest('.ms-row').querySelectorAll('input').forEach(i => i.value = i.classList.contains('ms-n') ? '1' : ''); refresh(); }
   });
   d.addEventListener('click', e => { const x = e.target.closest('[data-x="close"]'); if (x) closeDrawer(); });
