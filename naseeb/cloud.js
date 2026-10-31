@@ -18,6 +18,15 @@
   const PAGE = 1000, CHUNK = 500;
   const BUCKET = 'naseeb';
   window.NB_BLOB = CFG.SUPABASE_URL + '/storage/v1/object/public/' + BUCKET + '/';
+  // الصورة التوضيحية لقطعة: Gemini بيرسمها من أول صورة (Edge Function naseeb-scene) وبيرجّع اسم الملف بالـ bucket
+  window.NB_SCENE = async id => {
+    const { data } = await sb.auth.getSession(); const t = data && data.session && data.session.access_token;
+    if (!t) throw mkErr('unauthenticated');
+    const r = await fetch(CFG.SUPABASE_URL + '/functions/v1/naseeb-scene', { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + t, apikey: CFG.SUPABASE_ANON_KEY }, body: JSON.stringify({ id }) });
+    const j = await r.json().catch(() => ({}));
+    if (!r.ok || !j.id) throw mkErr(j.error || 'scene', j.detail);
+    return j.id;
+  };
 
   const mkErr = (code, msg) => Object.assign(new Error(msg || code), { code });
   const wrap = e => mkErr('unavailable', (e && e.message) || String(e));
