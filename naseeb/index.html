@@ -2701,6 +2701,55 @@ async function nxDrawAll(it, opt) {             // the four photos in one image:
    Every word on it comes from the item, drawn in Naseeb's fonts and stripped of diacritics; until a scene exists, the real photo stands in. ---------- */
 const nxPlain = t => String(t || '').replace(/[\u064B-\u065F\u0670\u0640]/g, '').trim();
 const NX_COND_SHORT = { N: 'جديدة بكرتونتها', A: 'جديدة بكرتونتها', T: 'جديدة، كرتونتها مخزوقة', B: 'مفتوحة وممتازة', C: 'فيها توك بسيط', D: 'فيها عيب واضح' };
+// one frame for both images (1080 × 1350): the name on top with Latin words in orange, the brand line at the bottom
+function nxFrameHead(x, it, W) {
+  const name = nxPlain(it.name); x.textBaseline = 'alphabetic';
+  let fs = 44, lines = null;
+  for (const s of [72, 64, 56, 50, 44]) { x.font = nxF('h7', s); const L = nxWrap(x, name, W - 120, 2); if (L) { fs = s; lines = L; break; } }
+  if (!lines) { x.font = nxF('h7', 44); lines = (nxWrap(x, name, W - 120) || [name]).slice(0, 2); }
+  let y = 40;
+  lines.forEach(l => { y += fs * 1.22;
+    const parts = l.split(/([A-Za-z0-9][A-Za-z0-9 .\-+×/]*[A-Za-z0-9]|[A-Za-z0-9])/).filter(Boolean);
+    x.font = nxF('h7', fs);
+    const ws = parts.map(t => { x.direction = /[؀-ۿ]/.test(t) ? 'rtl' : 'ltr'; return x.measureText(t).width; }), tw = ws.reduce((a, b) => a + b, 0); let cx = (W + tw) / 2;
+    parts.forEach((t, k) => { const latin = !/[؀-ۿ]/.test(t) && /[A-Za-z0-9]/.test(t); x.fillStyle = latin ? NXC.or : '#fff';
+      if (latin) { x.direction = 'ltr'; x.textAlign = 'left'; x.fillText(t, cx - ws[k], y); } else { x.direction = 'rtl'; x.textAlign = 'right'; x.fillText(t, cx, y); } cx -= ws[k]; }); });
+  return y;
+}
+function nxFrameFoot(x, A, it, W, H) {
+  const by = H - 62; x.fillStyle = NXC.or; x.fillRect(0, by - 24, W, 4);
+  x.drawImage(A.lockup, 40, by - 6, 120, 120 * 188 / 503);
+  const lot = nxPad(it.lot || (/(\d+)/.exec(it.code || '') || [0, 0])[1]); nxLotChip(x, lot, 180, by - 6, false);
+  x.font = nxF('t6', 28); x.direction = 'rtl'; x.textAlign = 'right'; x.fillStyle = NXC.peach; x.textBaseline = 'alphabetic';
+  x.fillText(nxPlain('التوصيل لكل لبنان · خلّيها من نصيبك'), W - 40, by + 30);
+  return by - 24;
+}
+const nxLtr = t => t.replace(/[0-9A-Za-z$][0-9A-Za-z .\-+×/%$]*[0-9A-Za-z%]|[0-9A-Za-z]/g, m => '⁦' + m + '⁩');    // «12 kPa» stays in its order
+// image 1: the real photo, big, with the condition, the market price and (fixed sale) our price
+async function nxDrawMain(it, opt) {
+  const A = await nxArtLoad(); const W = 1080, H = 1350;
+  const cv = document.createElement('canvas'); cv.width = W; cv.height = H; const x = cv.getContext('2d');
+  x.fillStyle = NXC.navy; x.fillRect(0, 0, W, H);
+  const ids = (it.imgs && it.imgs.length) ? it.imgs : (it.img0 ? [it.img0] : []);
+  let bmp = null; if (ids.length) { try { bmp = await nxLoadImg(ids[0]); } catch (e) {} }
+  let y = nxFrameHead(x, it, W);
+  // facts row: condition · market price · our fixed price
+  const fixed = it.channel === 'كمية ثابتة', price = nxMoney(opt.price);
+  const facts = [NX_COND_SHORT[it.grade], n(it.marketPrice) > 0 ? `${nxVerified(it) ? 'بالسوق' : 'بالسوق حوالي'} $${nxMoney(it.marketPrice)}` : '',
+    fixed && n(it.qty) > 1 ? `متوفر ${it.available != null ? it.available : it.qty} قطع` : ''].filter(Boolean).map(t => nxLtr(nxPlain(t)));
+  y += 34;
+  if (facts.length) { x.font = nxF('t6', 30); x.direction = 'rtl'; const gap = 36; const ws = facts.map(t => x.measureText(t).width); const tw = ws.reduce((a, b) => a + b, 0) + gap * (facts.length - 1); let cx = (W + tw) / 2;
+    facts.forEach((t, k) => { if (k) { x.beginPath(); x.arc(cx + gap / 2, y + 28, 5, 0, 7); x.fillStyle = NXC.or; x.fill(); } x.fillStyle = NXC.mist; x.textAlign = 'right'; x.fillText(t, cx, y + 38); cx -= ws[k] + gap; }); y += 60; }
+  const top = y + 20, footTop = H - 86, bottom = footTop - (fixed ? 120 : 24);
+  if (bmp) { x.save(); nxRR(x, 40, top, W - 80, bottom - top, 28); x.clip(); x.fillStyle = '#fff'; x.fillRect(40, top, W - 80, bottom - top); nxPhotoIn(x, bmp, 40, top, W - 80, bottom - top, opt.crop); x.restore(); }
+  if (opt.sold && A.sold) { x.fillStyle = `rgba(${NXC.deep},.38)`; x.fillRect(40, top, W - 80, bottom - top); const w = 620, h = w * A.sold.height / A.sold.width; x.save(); x.translate(W / 2, (top + bottom) / 2); x.rotate(-4 * Math.PI / 180); x.drawImage(A.sold, -w / 2, -h / 2, w, h); x.restore(); }
+  if (fixed) { const py = bottom + 20, ph = 80; x.font = nxF('t7', 30); x.direction = 'rtl'; const lw = x.measureText('السعر').width; x.font = nxF('n8', 52); x.direction = 'ltr'; const pw = x.measureText('$' + price).width; const w = lw + pw + 70, X = (W - w) / 2;
+    x.fillStyle = NXC.or; nxRR(x, X, py, w, ph, 18); x.fill(); x.fillStyle = NXC.navy; x.textBaseline = 'middle'; x.textAlign = 'left'; x.fillText('$' + price, X + 26, py + ph / 2 + 3);
+    x.font = nxF('t7', 30); x.direction = 'rtl'; x.textAlign = 'right'; x.fillText('السعر', X + w - 26, py + ph / 2 + 1); x.textBaseline = 'alphabetic'; }
+  nxFrameFoot(x, A, it, W, H);
+  return await new Promise(res => cv.toBlob(res, 'image/jpeg', 0.92));
+}
+// image 2: the features, an illustrative scene (it.ai, made by AI with no words in it — the real photo until then) and three real photos
 async function nxDrawInfo(it, opt) {
   const A = await nxArtLoad(); const W = 1080, H = 1350;
   const cv = document.createElement('canvas'); cv.width = W; cv.height = H; const x = cv.getContext('2d');
@@ -2708,17 +2757,7 @@ async function nxDrawInfo(it, opt) {
   const ids = (it.imgs && it.imgs.length) ? it.imgs : (it.img0 ? [it.img0] : []);
   let scene = null; if (it.ai) { try { scene = await nxLoadImg(it.ai); } catch (e) {} }
   if (!scene && ids.length) { try { scene = await nxLoadImg(ids[0]); } catch (e) {} }
-  // headline: the name, with Latin words (the brand, the model) in orange
-  const name = nxPlain(it.name); x.textBaseline = 'alphabetic';
-  let fs = 64, lines = null;
-  for (const s of [72, 64, 56, 50, 44]) { x.font = nxF('h7', s); const L = nxWrap(x, name, W - 120, 2); if (L) { fs = s; lines = L; break; } }
-  if (!lines) { x.font = nxF('h7', 44); lines = (nxWrap(x, name, W - 120) || [name]).slice(0, 2); fs = 44; }
-  let y = 40;
-  lines.forEach(l => { y += fs * 1.22;
-    const parts = l.split(/([A-Za-z0-9][A-Za-z0-9 .\-+×/]*[A-Za-z0-9]|[A-Za-z0-9])/).filter(Boolean);
-    x.font = nxF('h7', fs); x.direction = 'rtl';
-    const ws = parts.map(t => x.measureText(t).width), tw = ws.reduce((a, b) => a + b, 0); let cx = (W + tw) / 2;
-    parts.forEach((t, k) => { const latin = /[A-Za-z0-9]/.test(t) && !/[؀-ۿ]/.test(t); x.fillStyle = latin ? NXC.or : '#fff'; x.direction = latin ? 'ltr' : 'rtl'; x.textAlign = 'right'; if (latin) { x.textAlign = 'left'; x.fillText(t, cx - ws[k], y); } else x.fillText(t, cx, y); cx -= ws[k]; }); });
+  const y = nxFrameHead(x, it, W);
   // four facts: the features, then the condition
   const facts = (Array.isArray(it.features) ? it.features : []).map(f => nxPlain(typeof f === 'string' ? f : f.t)).filter(Boolean).slice(0, 3);
   const cond = NX_COND_SHORT[it.grade]; if (cond) facts.push(cond);
@@ -2729,23 +2768,18 @@ async function nxDrawInfo(it, opt) {
     if (k === n4 - 1 && cond) { x.rect(cx - 20, cy - 16, 40, 34); x.moveTo(cx - 20, cy - 4); x.lineTo(cx + 20, cy - 4); }    // a box for the condition
     else { x.moveTo(cx - 19, cy + 1); x.lineTo(cx - 5, cy + 15); x.lineTo(cx + 20, cy - 13); }                              // a tick for a feature
     x.stroke();
-    t = t.replace(/[0-9A-Za-z][0-9A-Za-z .\-+×/%]*[0-9A-Za-z%]|[0-9A-Za-z]/g, m => '\u2066' + m + '\u2069');    // «12 kPa» stays in its order
-    const ft = nxFitText(x, t, cw - 16, [30, 27, 24, 22], 't6', 2); x.font = nxF('t6', ft.s); x.fillStyle = '#fff'; x.direction = 'rtl'; x.textAlign = 'center';
+    const ft = nxFitText(x, nxLtr(t), cw - 16, [30, 27, 24, 22], 't6', 2); x.font = nxF('t6', ft.s); x.fillStyle = '#fff'; x.direction = 'rtl'; x.textAlign = 'center';
     ft.L.forEach((l, j) => x.fillText(l, cx, cy + r + 18 + ft.s * (j + 1) * 1.2, cw - 16)); });
   // the scene
   const sy = fy + 2 * r + 120, sh = H - sy - 306;
-  if (scene) { x.save(); nxRR(x, 40, sy, W - 80, sh, 28); x.clip(); nxPhotoIn(x, scene, 40, sy, W - 80, sh, true); x.restore(); }
+  if (scene) { x.save(); nxRR(x, 40, sy, W - 80, sh, 28); x.clip(); x.fillStyle = '#fff'; x.fillRect(40, sy, W - 80, sh); nxPhotoIn(x, scene, 40, sy, W - 80, sh, !!it.ai); x.restore(); }
   if (it.ai) { x.font = nxF('t4', 22); x.direction = 'rtl'; x.textAlign = 'left'; const lw = x.measureText('صورة توضيحية').width; x.fillStyle = 'rgba(8,18,38,.6)'; nxRR(x, 56, sy + sh - 50, lw + 28, 36, 10); x.fill(); x.fillStyle = '#fff'; x.fillText('صورة توضيحية', 70, sy + sh - 25); }
   // three real photos underneath
   const py = sy + sh + 24, ph = 180, pw = (W - 80 - 2 * 20) / 3;
   for (let k = 0; k < Math.min(3, ids.length); k++) { let b = null; try { b = await nxLoadImg(ids[k]); } catch (e) {} if (!b) continue;
     const px = W - 40 - pw * (k + 1) - 20 * k; x.save(); nxRR(x, px, py, pw, ph, 18); x.clip(); nxPhotoIn(x, b, px, py, pw, ph, true); x.restore();
     x.strokeStyle = 'rgba(255,255,255,.85)'; x.lineWidth = 3; nxRR(x, px, py, pw, ph, 18); x.stroke(); }
-  // footer: brand and number on the left, delivery on the right
-  const by = H - 62; x.fillStyle = NXC.or; x.fillRect(0, by - 24, W, 4);
-  x.drawImage(A.lockup, 40, by - 6, 120, 120 * 188 / 503);
-  const lot = nxPad(it.lot || (/(\d+)/.exec(it.code || '') || [0, 0])[1]); nxLotChip(x, lot, 180, by - 6, false);
-  x.font = nxF('t6', 28); x.direction = 'rtl'; x.textAlign = 'right'; x.fillStyle = NXC.peach; x.fillText(nxPlain('التوصيل لكل لبنان · خلّيها من نصيبك'), W - 40, by + 30);
+  nxFrameFoot(x, A, it, W, H);
   return await new Promise(res => cv.toBlob(res, 'image/jpeg', 0.92));
 }
 /* ---------- price card: the 5th image, a shelf label. No «مدقَّق» and no «تقريبي» anywhere on it (owner's rule); a price with a page behind it adds the kind of source and its date, nothing else ---------- */
@@ -2853,9 +2887,8 @@ async function nxOpen(id) {
   ov.innerHTML = `<div class="nx-pan" role="dialog" aria-modal="true"><header><span class="code">${esc(it.code)}</span><h2>${esc(it.name)}</h2><button class="btn icon ghost" data-nxo="close" aria-label="إغلاق">${ico('x')}</button></header>
     ${prov ? `<div class="banner warn nx-warn"><span>${ico('alert')}السعر مبدئي — الكرتونة ${esc(c.code)} لسّا قيد الفرز.</span></div>` : ''}
     ${!price ? `<div class="banner warn nx-warn"><span>${ico('alert')}ما في سعر لهالقطعة — زيد سعر السوق بالدفتر.</span></div>` : ''}
-    <div class="nx-posts" id="nx-posts">${[['الصورة الحقيقية', 0], [it.ai ? 'الصورة التوضيحية' : 'الصورة التوضيحية (لسا ما انعملت، هلق صورة القطعة)', 1]].map(([l, i]) => `<figure><img id="nx-p${i}" alt="${l}"><figcaption><span>${l}</span><button class="btn sm ghost" data-nxo="dl" data-i="${i}">${ico('download')}نزّل</button></figcaption></figure>`).join('')}</div>
+    <div class="nx-posts" id="nx-posts">${[['الصورة الحقيقية', 0], ['الصورة التوضيحية', 1]].map(([l, i]) => `<figure><img id="nx-p${i}" alt="${l}"><figcaption><span>${l}</span><button class="btn sm ghost" data-nxo="dl" data-i="${i}">${ico('download')}نزّل</button></figcaption></figure>`).join('')}</div>
     <div class="nx-opts"><label class="nx-steps" style="font-size:13px"><input type="checkbox" id="nx-fit"${nxPost.fit ? ' checked' : ''}> كبّر الصورة لتعبّي الإطار (بتنقصّ أطرافها)</label><label class="nx-steps" style="font-size:13px"><input type="checkbox" id="nx-sold"${nxPost.sold ? ' checked' : ''}> ختم «انباع» عالغلاف</label>${readOnly ? '' : `<div class="segc nx-chan" role="group" aria-label="نوع البيع">${AUCTIONS.map(a => { const on = (it.channel || 'مزاد تنافسي') === a; return `<button type="button" data-nxo="chan" data-v="${a}" class="${on ? 'on' : ''}" aria-pressed="${on}">${a}</button>`; }).join('')}</div>`}${it.channel === 'كمية ثابتة' ? `<span class="dim" style="font-size:12.5px">السعر الثابت: <b style="color:var(--ink)">${price ? money(price) : 'ما في سعر بعد'}</b></span>` : ''}<span style="flex:1"></span>
-      ${readOnly ? '' : `<button class="btn${it.ai ? '' : ' pri'}" data-nxo="aiup">${ico('download')}${it.ai ? 'غيّر الصورة التوضيحية' : 'حط الصورة التوضيحية'}</button>${it.ai ? '<button class="btn ghost" data-nxo="aidel">شيلها</button>' : ''}`}
       <button class="btn" data-nxo="desc">${ico('edit')}الوصف والميزات</button><button class="btn" data-nxo="edit">عدّل القطعة</button><button class="btn pri" data-nxo="dlall">${ico('download')}نزّل الكل</button></div>
     <div id="nx-dedit" hidden class="nx-f" style="padding:0 16px 14px"><label class="full">أول جملة بالكابشن<input id="nx-d-hook" value="${esc(it.hook || '')}"></label><label class="full">الوصف التسويقي (بالكابشن)<textarea id="nx-d-pitch">${esc(it.pitch || '')}</textarea></label><label class="full">لمين بتنفع<input id="nx-d-use" value="${esc(it.use || '')}"></label><label class="full chk" style="flex-direction:row;align-items:center;gap:8px"><input type="checkbox" id="nx-d-nobat"${it.noBat ? ' checked' : ''}> بلا بطارية (بتنكتب بالكابشن)</label><label class="full">رقم الباركود (13 رقم، لتدقيق السعر)<input id="nx-d-ean" inputmode="numeric" dir="ltr" value="${esc(it.ean || '')}"></label><label class="full">الوصف القصير<textarea id="nx-d-desc">${esc(it.desc || '')}</textarea></label>${[0, 1, 2].map(k => { const f = (it.features || [])[k]; const tt = f ? (typeof f === 'string' ? f : f.t) : ''; return `<label class="full">ميزة ${k + 1}<input id="nx-d-f${k}" value="${esc(tt)}"></label>`; }).join('')}<div class="full" style="grid-column:1/-1"><button class="btn pri sm" data-nxo="dsave">احفظ وحدّث البوستات</button></div></div>
     <div class="nx-cap"><div style="min-width:0"><textarea id="nx-captext" readonly>${esc(nxCaption(it, price))}</textarea><div id="nx-capst" class="nx-capst" role="status"></div></div><div class="acts"><button class="btn pri" data-nxo="copy">${ico('check')}انسخ الكابشن</button>${nxSample && !readOnly ? `<button class="btn" data-nxo="repitch">${ico('edit')}اكتب وصف جديد</button>` : ''}<span class="dim" style="font-size:12px">على التلفون: اكبس مطوّل على الصورة واحفظها</span></div></div></div>`;
@@ -2867,7 +2900,7 @@ const nxFile = (lot, i) => `NSB-${lot}-${i + 1}${nxPost && nxPost.sold && i === 
 async function nxPaint(it, price) {               // two images per piece: the real photo in Naseeb's frame, and the illustrative one
   const my = nxPost; my.urls.forEach(u => URL.revokeObjectURL(u)); my.urls = []; my.blobs = [];
   const show = (i, b) => { my.blobs[i] = b; const u = URL.createObjectURL(b); my.urls[i] = u; const im = document.getElementById('nx-p' + i); if (im) im.src = u; };
-  { const b = await nxDraw(it, 0, { crop: my.fit, sold: my.sold, price }); if (nxPost !== my) return; show(0, b); }
+  { const b = await nxDrawMain(it, { crop: my.fit, sold: my.sold, price }); if (nxPost !== my) return; show(0, b); }
   { const b = await nxDrawInfo(it, {}); if (nxPost !== my) return; show(1, b); }
 }
 function nxClose() { const ov = document.getElementById('nx-ov'); if (ov) { ov.hidden = true; ov.innerHTML = ''; } if (nxPost) nxPost.urls.forEach(u => URL.revokeObjectURL(u)); nxPost = null; }
