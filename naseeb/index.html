@@ -2749,8 +2749,44 @@ async function nxDrawMain(it, opt) {
   nxFrameFoot(x, A, it, W, H);
   return await new Promise(res => cv.toBlob(res, 'image/jpeg', 0.92));
 }
+// image 2 when Gemini drew the poster (it.poster): its icons, scene and panels, with the words written here into the empty
+// navy bands it left — the name in 0–13%, the icon labels in 25–30% under the circles, the brand line in 93–100%
+async function nxDrawPoster(it, bg) {
+  const A = await nxArtLoad(); const W = 1080, H = 1350;
+  const cv = document.createElement('canvas'); cv.width = W; cv.height = H; const x = cv.getContext('2d');
+  x.fillStyle = NXC.navy; x.fillRect(0, 0, W, H);
+  const sc = Math.max(W / bg.width, H / bg.height); x.drawImage(bg, (W - bg.width * sc) / 2, (H - bg.height * sc) / 2, bg.width * sc, bg.height * sc);
+  x.fillStyle = NXC.navy; x.fillRect(0, 0, W, H * .125); x.fillRect(0, H * .935, W, H * .065);
+  // the name: one line if it fits, else two
+  const name = nxPlain(it.name); x.textBaseline = 'alphabetic';
+  const band = H * .125; let fs = 34, L = null;
+  for (const [s, ml] of [[64, 1], [56, 1], [50, 1], [44, 2], [38, 2], [34, 2]]) { x.font = nxF('h7', s); const w = nxWrap(x, name, W - 80, ml); if (w && w.length <= ml) { fs = s; L = w; break; } }
+  if (!L) { x.font = nxF('h7', 34); L = (nxWrap(x, name, W - 80) || [name]).slice(0, 2); }
+  const lh = fs * 1.18; let y = (band - L.length * lh) / 2 + 4;
+  L.forEach(l => { y += lh;
+    const parts = l.split(/([A-Za-z0-9][A-Za-z0-9 .\-+×/]*[A-Za-z0-9]|[A-Za-z0-9])/).filter(Boolean); x.font = nxF('h7', fs);
+    const ws = parts.map(t => { x.direction = /[\u0600-\u06FF]/.test(t) ? 'rtl' : 'ltr'; return x.measureText(t).width; }), tw = ws.reduce((a, b) => a + b, 0); let cx = (W + tw) / 2;
+    parts.forEach((t, k) => { const latin = !/[\u0600-\u06FF]/.test(t) && /[A-Za-z0-9]/.test(t); x.fillStyle = latin ? NXC.or : '#fff';
+      if (latin) { x.direction = 'ltr'; x.textAlign = 'left'; x.fillText(t, cx - ws[k], y - fs * .2); } else { x.direction = 'rtl'; x.textAlign = 'right'; x.fillText(t, cx, y - fs * .2); } cx -= ws[k]; }); });
+  // the icon labels, in the order the icons were drawn (right to left)
+  const facts = (Array.isArray(it.features) ? it.features : []).map(f => nxPlain(typeof f === 'string' ? f : f.t)).filter(Boolean).slice(0, 3);
+  if (NX_COND_SHORT[it.grade]) facts.push(NX_COND_SHORT[it.grade]);
+  const xs = [[50], [70, 30], [80, 50, 20], [87.5, 62.5, 37.5, 12.5]][facts.length - 1] || [], cw = W / Math.max(1, facts.length) - 16;
+  facts.forEach((t, k) => { const ft = nxFitText(x, nxLtr(t), cw, [30, 27, 24, 22], 't6', 2); x.font = nxF('t6', ft.s); x.direction = 'rtl'; x.textAlign = 'center';
+    x.shadowColor = 'rgba(8,18,38,.9)'; x.shadowBlur = 8; x.fillStyle = '#fff';
+    ft.L.forEach((l, j) => x.fillText(l, W * xs[k] / 100, H * .255 + ft.s * (j + 1) * 1.15, cw)); x.shadowBlur = 0; });
+  // «صورة توضيحية» on the scene, and the brand line
+  x.font = nxF('t4', 22); x.direction = 'rtl'; x.textAlign = 'left'; const lw = x.measureText('صورة توضيحية').width;
+  x.fillStyle = 'rgba(8,18,38,.6)'; nxRR(x, 24, H * .74 - 46, lw + 28, 36, 10); x.fill(); x.fillStyle = '#fff'; x.fillText('صورة توضيحية', 38, H * .74 - 21);
+  const by = H - 50; x.fillStyle = NXC.or; x.fillRect(0, H * .935, W, 3);
+  x.drawImage(A.lockup, 40, by - 22, 100, 100 * 188 / 503);
+  const lot = nxPad(it.lot || (/(\d+)/.exec(it.code || '') || [0, 0])[1]); nxLotChip(x, lot, 158, by - 24, false);
+  x.font = nxF('t6', 26); x.direction = 'rtl'; x.textAlign = 'right'; x.fillStyle = NXC.peach; x.fillText(nxPlain('التوصيل لكل لبنان · خلّيها من نصيبك'), W - 40, by + 12);
+  return await new Promise(res => cv.toBlob(res, 'image/jpeg', 0.92));
+}
 // image 2: the features, an illustrative scene (it.ai, made by AI with no words in it — the real photo until then) and three real photos
 async function nxDrawInfo(it, opt) {
+  if (it.poster) { try { return await nxDrawPoster(it, await nxLoadImg(it.poster)); } catch (e) {} }
   const A = await nxArtLoad(); const W = 1080, H = 1350;
   const cv = document.createElement('canvas'); cv.width = W; cv.height = H; const x = cv.getContext('2d');
   x.fillStyle = NXC.navy; x.fillRect(0, 0, W, H);
@@ -2904,12 +2940,12 @@ async function nxPaint(it, price) {               // two images per piece: the r
   { const b = await nxDrawInfo(it, {}); if (nxPost !== my) return; show(1, b); }
   // no scene yet: Gemini draws one now, once per piece (about 4¢), and the second image is redrawn with it
   const tried = NX.sceneTried || (NX.sceneTried = {});
-  if (it.ai || demo || readOnly || !window.NB_SCENE || tried[it.id]) return;
+  if (it.poster || demo || readOnly || !window.NB_SCENE || tried[it.id]) return;
   tried[it.id] = 1;
   const cap = document.querySelector('#nx-p1 + figcaption span'); if (cap) cap.textContent = 'عم تنعمل الصورة التوضيحية…';
   try {
     const sid = await window.NB_SCENE(it.id);
-    await nxSetItemx(it.id, { ...((await nxItemx(it.id)) || {}), ai: sid });
+    await nxSetItemx(it.id, { ...((await nxItemx(it.id)) || {}), poster: sid });
     if (nxPost !== my) return;
     const b = await nxDrawInfo(await nxFull(it.id), {}); if (nxPost !== my) return; show(1, b);
   } catch (e) { toast('ما زبطت الصورة التوضيحية هالمرة — بتنعمل المرة الجاية'); delete tried[it.id]; }
