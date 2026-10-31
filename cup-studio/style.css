@@ -172,3 +172,4 @@ textarea.field { min-height: 84px; resize: vertical; }
 }
 @media (max-width: 380px) { .g3 { grid-template-columns: repeat(2, 1fr); } .steps .lbl { font-size: 10px; } }
 @media (prefers-reduced-motion: reduce) { * { animation: none !important; transition: none !important; } }
+[hidden] { display: none !important; }

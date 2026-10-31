@@ -234,6 +234,7 @@ document.addEventListener('input', (e) => {
 
 $('#prev').onclick = () => go(S.step - 1);
 $('#next').onclick = () => (S.step === STEPS.length - 1 ? order() : go(S.step + 1));
+if (window.top !== window) $('#snap').hidden = true;   // جوّا إطار المعاينة التحميل ممنوع
 $('#snap').onclick = () => {
   const a = document.createElement('a'); a.href = studio.snapshot(); a.download = `${cat.shop.name}-تصميمي.png`; a.click();
   toast('📸 انحفظت صورة تصميمك');
@@ -280,7 +281,13 @@ function order() {
     localStorage.setItem(ORDERS_KEY, JSON.stringify(orders.slice(0, 200)));
   } catch (e) {}
   confetti();
-  window.open(`https://wa.me/${String(cat.shop.whatsapp).replace(/\D/g, '')}?text=${encodeURIComponent(msg)}`, '_blank');
+  const url = `https://wa.me/${String(cat.shop.whatsapp).replace(/\D/g, '')}?text=${encodeURIComponent(msg)}`;
+  // رابط حقيقي (بعض المتصفحات بتمنع window.open)
+  let box = $('#waBox');
+  if (!box) { box = document.createElement('div'); box.id = 'waBox'; box.className = 'group'; $('#stepBody').appendChild(box); }
+  box.innerHTML = `<div class="tip">✅ طلبك جاهز. إذا ما انفتح الواتساب لحالو، اكبس هون:</div><a class="btn primary wa" style="display:block;text-align:center;text-decoration:none" href="${url}" target="_blank" rel="noopener">افتح واتساب وابعت الطلب</a>`;
+  box.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  try { window.open(url, '_blank'); } catch (e) {}
 }
 
 // ---------- البداية ----------

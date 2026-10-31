@@ -88,7 +88,7 @@ document.addEventListener('click', (e) => {
     else { const row = {}; SECTIONS[current].cols.forEach(([k, , ty]) => (row[k] = ty === 'number' ? 0 : Array.isArray(ty) ? ty[0][0] : ty === 'color' ? '#e8b4c4' : '')); row.id = 'n' + Date.now().toString(36); row.name = 'جديد'; list.push(row); }
     mark(); render(); return;
   }
-  if (t.dataset.del != null) { if (confirm('أكيد بدك تحذفه؟')) { list.splice(+t.dataset.del, 1); mark(); render(); } return; }
+  if (t.dataset.del != null) { list.splice(+t.dataset.del, 1); mark(); render(); toast('انحذف — ما بيتثبّت لحتى تكبس حفظ'); return; }
   if (t.dataset.up != null) { const i = +t.dataset.up; if (i > 0) { [list[i - 1], list[i]] = [list[i], list[i - 1]]; mark(); render(); } return; }
   if (t.dataset.clear != null) { list[+t.dataset.clear][t.dataset.k] = ''; mark(); render(); }
 });
@@ -110,7 +110,7 @@ $('#save').onclick = () => {
   try { saveCatalog(cat); dirty = false; $('#dirty').textContent = ''; toast('✓ انحفظ — فتّح الموقع لتشوف التغييرات'); }
   catch (e) { toast('التخزين امتلى — صغّر الصور أو قلّل عددها'); }
 };
-$('#reset').onclick = () => { if (confirm('رجوع للقيم الافتراضية؟ رح تروح كل تعديلاتك.')) { cat = resetCatalog(); dirty = false; $('#dirty').textContent = ''; render(); toast('رجعنا للافتراضي'); } };
+$('#reset').onclick = (e) => { const btn = e.currentTarget; if (!btn.dataset.sure) { btn.dataset.sure = 1; btn.textContent = 'أكيد؟ اكبس كمان مرة'; setTimeout(() => { delete btn.dataset.sure; btn.textContent = 'رجّع الافتراضي'; }, 3000); return; } { cat = resetCatalog(); dirty = false; $('#dirty').textContent = ''; render(); toast('رجعنا للافتراضي'); } };
 $('#export').onclick = () => {
   const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([JSON.stringify(cat, null, 2)], { type: 'application/json' }));
   a.download = 'catalog.json'; a.click();
