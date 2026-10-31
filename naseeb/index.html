@@ -630,6 +630,7 @@ function orderFor(cust, date, C) {
   return cur ? cur.key : newOrderKey(cust, date);
 }
 
+const EXP_FROM = '2026-10-31';   // first day whose expenses count against the profit
 const COLLS = ['cartons','items','sales','orders','customers','dpay','moves','expenses'];
 const DEF_SETTINGS = { margin: 1, p0: 'أنا', p1: 'الشريك', s0: 0.5, s1: 0.5, lateDays: 3, sellThrough: 0.8, minRatio: 0.25, deliveryFee: 4 };
 let S = {}; COLLS.forEach(c => S[c] = {});
@@ -867,6 +868,8 @@ function calc() {
     if (v === (settings.p0 || 'أنا')) return '0'; if (v === (settings.p1 || 'الشريك')) return '1'; if (v === 'أنا' || v === 'الشريك الأول') return '0'; return '1'; };
   expenses.forEach(x => x.payer = payerOf(x));
   const expTotal = r2(expenses.reduce((a,x) => a + x.amount, 0));
+  // expenses before EXP_FROM set the shop up out of the partners' capital; from then on they come off the profit
+  const expProfit = r2(expenses.filter(x => (x.date || '') >= EXP_FROM).reduce((a,x) => a + x.amount, 0));
   const expCash = r2(expenses.filter(x => !x.payer).reduce((a,x) => a + x.amount, 0));
   const expBy = i => r2(expenses.filter(x => x.payer === String(i)).reduce((a,x) => a + x.amount, 0));
   const profitWithdrawn = r2(sumMoves('سحب أرباح'));
@@ -881,8 +884,8 @@ function calc() {
   const revFixed = r2(revenue - revComp);
   const cogs = items.reduce((a,it) => a + (it.cogs||0), 0);
   const grossProfit = r2(revenue - cogs);
-  // net profit = revenue − all cartons − all expenses; the partners' capital stays out of it
-  const profit = r2(revenue - cartonCost - expTotal);
+  // net profit = what the cartons made (revenue − all cartons) − the running expenses; the partners' capital stays out of it
+  const profit = r2(revenue - cartonCost - expProfit);
   const invValue = r2(items.reduce((a,it) => a + (it.invValue||0), 0));
   const totQty = items.reduce((a,it) => a + it.qty, 0);
   const totDelivered = items.reduce((a,it) => a + it.delivered, 0);
@@ -919,7 +922,7 @@ function calc() {
     late: orders.filter(o => o.late).length,
     pickupUncollected, dOwed, dPaid, dComm, dBalance, dPendingCourier, dFees, dShort, dWithCount: dWith.length, dUnsettledCount: dUnsettled.length, dUnsettledAmt: r2(dUnsettled.reduce((a,o) => a + o.owes, 0)),
     toRecover: r2(cartonCost - revenue), invValue,
-    netCapital, capital: r2(netCapital + inKind(0) + inKind(1)), profitLeft: r2(profit - profitWithdrawn), dCash, pickupCollected, deposits, expTotal, expCash, profitWithdrawn, reimbursed, cash, net: r2(cash + invValue), grossProfit, cartonCostCash, inKindTotal: r2(inKind(0) + inKind(1)),
+    expProfit, netCapital, capital: r2(netCapital + inKind(0) + inKind(1)), profitLeft: r2(profit - profitWithdrawn), dCash, pickupCollected, deposits, expTotal, expCash, profitWithdrawn, reimbursed, cash, net: r2(cash + invValue), grossProfit, cartonCostCash, inKindTotal: r2(inKind(0) + inKind(1)),
   };
   return { weeks, sales: salesArr, orders, orderByKey, items, itemsMap, cartons, cartonsMap, customers, dpay, dOrders, moves, expenses, partners, T };
 }
@@ -1325,7 +1328,7 @@ V.dash = C => { const T = C.T; const W = C.weeks;
   ${empty ? `<section class="card"><div class="card-b" style="display:flex;gap:16px;align-items:center;justify-content:space-between;flex-wrap:wrap;padding:18px"><div><b style="font-size:15px">ابدأ بأول كرتونة</b><div style="color:var(--muted);font-size:13px;margin-top:2px">سجّل الكرتونة ← افرز قطعها ← سجّل المبيعات. الباقي بيتحسب لحاله.</div></div><div class="acts" style="display:flex;gap:8px">${!demo ? '<button class="btn" data-act="demo">جرّب ببيانات تجريبية</button>' : ''}${addBtn('cartons','كرتونة جديدة')}</div></div></section>` : ''}
   <div class="grid g4">
     <section class="card kpi"><span class="lbl">إجمالي الإيرادات</span><span class="val">${money(T.revenue)}</span><div class="foot"><span>${delta == null ? 'هالأسبوع ' + money(thisW.total) : `<span class="tag ${delta >= 0 ? 't-good' : 't-bad'}">${delta >= 0 ? '▲' : '▼'} ${pct(Math.abs(delta))}</span> عن الأسبوع الماضي`}</span>${spark(W.map(w => w.total), 'var(--s1)')}</div></section>
-    <section class="card kpi"><span class="lbl">صافي الربح</span><span class="val" style="color:${T.profitLeft < 0 ? 'var(--bad)' : 'var(--ink)'}">${money(T.profitLeft)}</span><div class="foot"><span>${T.profitWithdrawn ? `الربح ${money(T.profit)} · مسحوب ${money(T.profitWithdrawn)}` : `الإيرادات − الكراتين ${money(T.cartonCost)} − المصاريف ${money(T.expTotal)}`}</span></div></section>
+    <section class="card kpi"><span class="lbl">صافي الربح</span><span class="val" style="color:${T.profitLeft < 0 ? 'var(--bad)' : 'var(--ink)'}">${money(T.profitLeft)}</span><div class="foot"><span>${T.profitWithdrawn ? `الربح ${money(T.profit)} · مسحوب ${money(T.profitWithdrawn)}` : `الإيرادات − الكراتين ${money(T.cartonCost)}${T.expProfit ? ' − المصاريف ' + money(T.expProfit) : ''}`}</span></div></section>
     <section class="card kpi"><span class="lbl">الرصيد الحالي بالصندوق</span><span class="val">${money(T.cash)}</span><div class="foot"><span>المصاري يلي بين إيدينا</span></div></section>
     <section class="card kpi"><span class="lbl">رأس مال الشركاء</span><span class="val">${money(T.capital)}</span><div class="foot"><span>${T.inKindTotal ? `كاش ${money(T.netCapital)} · بضاعة ${money(T.inKindTotal)}` : 'لحالو — مش من الربح'}</span></div></section>
   </div>
