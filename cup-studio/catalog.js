@@ -11,12 +11,12 @@ export const DEFAULT_CATALOG = {
     delivery: 3,
   },
   occasions: [
-    { id: 'love',  name: 'حب',        emoji: '❤️', cup: '#f6d5dc', box: '#c2405a', ribbon: '#f3c96b', pattern: 'hearts',  text: 'إلك وحدك',    font: 'messiri' },
+    { id: 'love',  name: 'حب',        emoji: '❤️', cup: '#f6d5dc', box: '#c2405a', ribbon: '#f3c96b', pattern: 'hearts',  text: 'إلك وحدك',    font: 'ruqaa' },
     { id: 'bday',  name: 'عيد ميلاد', emoji: '🎂', cup: '#fff3d6', box: '#f2a541', ribbon: '#ffffff', pattern: 'confetti', text: 'كل سنة وإنت بخير', font: 'lalezar' },
-    { id: 'mom',   name: 'عيد الأم',  emoji: '🌷', cup: '#ffffff', box: '#e8b4c4', ribbon: '#b88a3e', pattern: 'flowers', text: 'ست الحبايب',  font: 'messiri' },
-    { id: 'grad',  name: 'تخرّج',     emoji: '🎓', cup: '#1f2a44', box: '#1f2a44', ribbon: '#d4af37', pattern: 'stars',   text: 'مبروك التخرج', font: 'lalezar' },
-    { id: 'thanks',name: 'شكر',       emoji: '🤍', cup: '#f4efe6', box: '#7c9a83', ribbon: '#f4efe6', pattern: 'dots',    text: 'شكراً من القلب', font: 'tajawal' },
-    { id: 'self',  name: 'لإلي أنا',  emoji: '☕', cup: '#2b2b2b', box: '#d9c3a5', ribbon: '#2b2b2b', pattern: 'none',    text: 'قهوتي أولاً',  font: 'tajawal' },
+    { id: 'mom',   name: 'عيد الأم',  emoji: '🌷', cup: '#ffffff', box: '#e8b4c4', ribbon: '#b88a3e', pattern: 'flowers', text: 'ست الحبايب',  font: 'amiri' },
+    { id: 'grad',  name: 'تخرّج',     emoji: '🎓', cup: '#1f2a44', box: '#1f2a44', ribbon: '#d4af37', pattern: 'stars',   text: 'مبروك التخرج', font: 'rakkas' },
+    { id: 'thanks',name: 'شكر',       emoji: '🤍', cup: '#f4efe6', box: '#7c9a83', ribbon: '#f4efe6', pattern: 'dots',    text: 'شكراً من القلب', font: 'ruqaa' },
+    { id: 'self',  name: 'لإلي أنا',  emoji: '☕', cup: '#2b2b2b', box: '#d9c3a5', ribbon: '#2b2b2b', pattern: 'none',    text: 'قهوتي أولاً',  font: 'reem' },
   ],
   cups: [
     { id: 'mug',    name: 'ماغ كلاسيك',   desc: 'سيراميك ٣٢٠ مل',       price: 8,  shape: 'mug',    badge: 'الأكثر طلباً' },
@@ -32,11 +32,14 @@ export const DEFAULT_CATALOG = {
     { name: 'كحلي', hex: '#1f2a44' }, { name: 'أسود مطفي', hex: '#2b2b2b' },
   ],
   fonts: [
-    { id: 'messiri', name: 'أنيق',   css: '"El Messiri", serif' },
-    { id: 'lalezar', name: 'جريء',   css: '"Lalezar", sans-serif' },
-    { id: 'tajawal', name: 'بسيط',   css: '"Tajawal", sans-serif' },
-    { id: 'reem',    name: 'يدوي',   css: '"Reem Kufi Fun", sans-serif' },
+    { id: 'ruqaa',   name: 'رقعة',  css: '"Aref Ruqaa", serif' },
+    { id: 'messiri', name: 'أنيق',  css: '"El Messiri", serif' },
+    { id: 'lalezar', name: 'جريء',  css: '"Lalezar", sans-serif' },
+    { id: 'amiri',   name: 'نسخ',   css: '"Amiri", serif' },
+    { id: 'reem',    name: 'مرح',   css: '"Reem Kufi Fun", sans-serif' },
+    { id: 'rakkas',  name: 'فخم',   css: '"Rakkas", serif' },
   ],
+
   textColors: ['#2b2b2b', '#ffffff', '#c2405a', '#b88a3e', '#1f2a44', '#7c9a83'],
   // pattern: none|hearts|dots|stars|stripes|flowers|confetti — أو image (رفع صورة من لوحة التحكم)
   decorations: [

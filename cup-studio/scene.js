@@ -2,6 +2,7 @@
 import * as THREE from 'three';
 import { OrbitControls } from './vendor/OrbitControls.js';
 import { RoomEnvironment } from './vendor/RoomEnvironment.js';
+import { Reflector } from './vendor/Reflector.js';
 
 const CM = 1 / 9;            // وحدة المشهد = ٩ سم (قطر الماغ تقريباً)
 const TAU = Math.PI * 2;
@@ -257,24 +258,92 @@ export function createStudio(host) {
   camera.position.set(0.6, 1.6, 4.2);
   const controls = new OrbitControls(camera, renderer.domElement);
   controls.enableDamping = true; controls.dampingFactor = 0.08;
-  controls.minDistance = 1.6; controls.maxDistance = 9;
+  controls.minDistance = 1.6; controls.maxDistance = 22;
   controls.maxPolarAngle = Math.PI * 0.49; controls.enablePan = false;
   controls.autoRotateSpeed = 1.2;
 
-  scene.add(new THREE.HemisphereLight('#fff6ee', '#e9d9cc', 0.6));
-  const key = new THREE.DirectionalLight('#fff3e6', 1.6);
-  key.position.set(3, 6, 4); key.castShadow = true;
-  key.shadow.mapSize.set(2048, 2048); key.shadow.radius = 6; key.shadow.bias = -0.0004;
-  Object.assign(key.shadow.camera, { left: -4, right: 4, top: 4, bottom: -4, near: 1, far: 20 });
-  scene.add(key);
-  const rim = new THREE.DirectionalLight('#ffd9e2', 0.7); rim.position.set(-4, 3, -3); scene.add(rim);
+  const isSmall = Math.min(window.innerWidth, window.innerHeight) < 700;
+  const R0 = rng(42);
+  const glowTex = (stops) => {   // تدرّج دائري (للتوهّج والذرّات)
+    const c = document.createElement('canvas'); c.width = c.height = 128; const x = c.getContext('2d');
+    const g = x.createRadialGradient(64, 64, 0, 64, 64, 64); stops.forEach(([o, col]) => g.addColorStop(o, col));
+    x.fillStyle = g; x.fillRect(0, 0, 128, 128); const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; return t;
+  };
+  const dotTex = glowTex([[0, 'rgba(255,255,255,1)'], [0.25, 'rgba(255,240,210,.8)'], [1, 'rgba(255,255,255,0)']]);
 
-  // منصة العرض
-  const pedestalMat = std('#f3e7dc', 0.85);
-  const pedestal = new THREE.Mesh(new THREE.CylinderGeometry(2.9, 3.0, 0.24, 96), pedestalMat);
-  pedestal.position.y = -0.12; pedestal.receiveShadow = true; scene.add(pedestal);
-  const ring = new THREE.Mesh(new THREE.TorusGeometry(2.92, 0.012, 8, 128), std('#d4af37', 0.25, { metalness: 0.9 }));
-  ring.rotation.x = Math.PI / 2; ring.position.y = 0.002; scene.add(ring);
+  // إضاءة مسرحية: سبوت دافي من فوق + إضاءات خلفية وردي وذهبي
+  scene.add(new THREE.HemisphereLight('#ffe3ec', '#1a0b14', 0.45));
+  const key = new THREE.SpotLight('#ffe9cc', 3.2, 0, 0.42, 0.65, 0);
+  key.position.set(1.0, 8, 2.6); key.target.position.set(0, 0.3, 0); scene.add(key.target);
+  key.castShadow = true; key.shadow.mapSize.set(isSmall ? 1024 : 2048, isSmall ? 1024 : 2048); key.shadow.bias = -0.0003; key.shadow.radius = 5;
+  scene.add(key);
+  const front = new THREE.DirectionalLight('#fff1e6', 0.55); front.position.set(-2, 3, 6); scene.add(front);
+  const rimPink = new THREE.PointLight('#ff6f9c', 2.4, 10, 0); rimPink.position.set(-3.6, 2.4, -2.6); scene.add(rimPink);
+  const rimGold = new THREE.PointLight('#ffc261', 2.2, 10, 0); rimGold.position.set(3.6, 2.6, -2.4); scene.add(rimGold);
+
+  // شعاع الضو (حزمة ناعمة)
+  const beamTex = (() => { const c = document.createElement('canvas'); c.width = 4; c.height = 256; const x = c.getContext('2d');
+    const g = x.createLinearGradient(0, 0, 0, 256); g.addColorStop(0, 'rgba(255,255,255,0)'); g.addColorStop(0.35, 'rgba(255,255,255,.55)'); g.addColorStop(1, 'rgba(255,255,255,0.05)');
+    x.fillStyle = g; x.fillRect(0, 0, 4, 256); return new THREE.CanvasTexture(c); })();
+  const beam = new THREE.Mesh(new THREE.CylinderGeometry(0.15, 2.7, 8, 64, 1, true),
+    new THREE.MeshBasicMaterial({ color: '#ffd9a8', alphaMap: beamTex, transparent: true, opacity: 0.11, depthWrite: false, side: THREE.DoubleSide, blending: THREE.AdditiveBlending }));
+  beam.position.set(0.5, 4, 1.3); beam.rotation.z = -0.06; beam.rotation.x = 0.3; scene.add(beam);
+
+  // المنصة: مرايا + لون نبيذي + حلقة ذهب
+  const pedestal = new THREE.Mesh(new THREE.CylinderGeometry(3.0, 3.12, 0.3, 128), std('#2a1020', 0.4, { metalness: 0.35, envMapIntensity: 0.35 }));
+  pedestal.position.y = -0.15; pedestal.receiveShadow = true; scene.add(pedestal);
+  if (!isSmall) {
+    const mirror = new Reflector(new THREE.CircleGeometry(2.98, 96), { textureWidth: 1024, textureHeight: 1024, color: '#9a8590', clipBias: 0.003 });
+    mirror.rotation.x = -Math.PI / 2; mirror.position.y = 0.001; scene.add(mirror);
+  }
+  const tint = new THREE.Mesh(new THREE.CircleGeometry(2.99, 96), new THREE.MeshBasicMaterial({
+    map: glowTex([[0, 'rgba(46,16,34,.42)'], [0.6, 'rgba(40,14,30,.78)'], [1, 'rgba(30,10,22,.97)']]), transparent: true, depthWrite: false }));
+  tint.rotation.x = -Math.PI / 2; tint.position.y = 0.002; scene.add(tint);
+  const shadowCatcher = new THREE.Mesh(new THREE.CircleGeometry(2.99, 96), new THREE.ShadowMaterial({ opacity: 0.5 }));
+  shadowCatcher.rotation.x = -Math.PI / 2; shadowCatcher.position.y = 0.003; shadowCatcher.receiveShadow = true; scene.add(shadowCatcher);
+  const ring = new THREE.Mesh(new THREE.TorusGeometry(3.02, 0.018, 12, 160), std('#e0b25c', 0.18, { metalness: 1, emissive: '#6a4410', emissiveIntensity: 0.6 }));
+  ring.rotation.x = Math.PI / 2; ring.position.y = 0.004; scene.add(ring);
+  const glow = new THREE.Mesh(new THREE.PlaneGeometry(1, 1), new THREE.MeshBasicMaterial({
+    map: glowTex([[0, 'rgba(255,200,120,.9)'], [0.35, 'rgba(255,150,120,.35)'], [1, 'rgba(255,120,150,0)']]), transparent: true, depthWrite: false, blending: THREE.AdditiveBlending }));
+  glow.rotation.x = -Math.PI / 2; glow.position.y = 0.006; scene.add(glow);
+
+  // ذرّات ذهبية طايرة
+  const SP = isSmall ? 140 : 280;
+  const spGeo = new THREE.BufferGeometry(), spPos = new Float32Array(SP * 3), spSeed = new Float32Array(SP);
+  for (let i = 0; i < SP; i++) {
+    const a = R0() * TAU, r = 0.8 + R0() * 4.5;
+    spPos.set([Math.cos(a) * r, R0() * 4.5, Math.sin(a) * r - 0.5], i * 3); spSeed[i] = R0();
+  }
+  spGeo.setAttribute('position', new THREE.BufferAttribute(spPos, 3)); spGeo.setAttribute('seed', new THREE.BufferAttribute(spSeed, 1));
+  const spMat = new THREE.ShaderMaterial({
+    uniforms: { uTime: { value: 0 }, uPx: { value: renderer.getPixelRatio() } },
+    vertexShader: `attribute float seed; uniform float uTime; uniform float uPx; varying float vA; varying float vS;
+      void main(){ vec3 p = position; p.y = mod(p.y + uTime*(0.06+seed*0.1), 4.5);
+        p.x += sin(uTime*0.5+seed*20.)*0.18; p.z += cos(uTime*0.4+seed*13.)*0.18;
+        vec4 mv = modelViewMatrix*vec4(p,1.); gl_Position = projectionMatrix*mv;
+        float tw = 0.35+0.65*pow(0.5+0.5*sin(uTime*(1.2+seed*2.5)+seed*40.), 2.);
+        vA = tw*smoothstep(0.,0.8,p.y)*(1.-smoothstep(3.4,4.5,p.y)); vS = seed;
+        gl_PointSize = (4.+seed*10.)*uPx*tw*(6./-mv.z); }`,
+    fragmentShader: `varying float vA; varying float vS;
+      void main(){ float d = length(gl_PointCoord-.5); float a = smoothstep(.5,0.,d); a*=a;
+        vec3 col = mix(vec3(1.,.8,.45), vec3(1.,.55,.72), step(.65,vS)); gl_FragColor = vec4(col, a*vA); }`,
+    transparent: true, depthWrite: false, blending: THREE.AdditiveBlending,
+  });
+  const sparkles = new THREE.Points(spGeo, spMat); sparkles.frustumCulled = false; scene.add(sparkles);
+
+  // انفجار لمعة عند كل اختيار
+  const BN = 90, bPos = new Float32Array(BN * 3), bVel = Array.from({ length: BN }, () => new THREE.Vector3());
+  const bGeo = new THREE.BufferGeometry(); bGeo.setAttribute('position', new THREE.BufferAttribute(bPos, 3));
+  const bMat = new THREE.PointsMaterial({ map: dotTex, size: 0.11, color: '#ffd38a', transparent: true, opacity: 0, depthWrite: false, blending: THREE.AdditiveBlending });
+  const burstPts = new THREE.Points(bGeo, bMat); burstPts.frustumCulled = false; scene.add(burstPts);
+  let burstLife = 1;
+  function burstAt(c, power = 1) {
+    for (let i = 0; i < BN; i++) {
+      bPos.set([c.x, c.y, c.z], i * 3);
+      bVel[i].set(R0() - 0.5, R0() * 0.9 + 0.2, R0() - 0.5).normalize().multiplyScalar((0.9 + R0() * 1.8) * power);
+    }
+    burstLife = 0; bGeo.attributes.position.needsUpdate = true;
+  }
 
   const world = new THREE.Group(); scene.add(world);
   const cupHolder = new THREE.Group(); world.add(cupHolder);
@@ -284,11 +353,12 @@ export function createStudio(host) {
   const cupTex = new THREE.CanvasTexture(cupCanvas);
   cupTex.colorSpace = THREE.SRGBColorSpace; cupTex.anisotropy = 8;
   const latteTex = latteArt();
+  const steamTex = glowTex([[0, 'rgba(255,255,255,.55)'], [0.5, 'rgba(255,255,255,.18)'], [1, 'rgba(255,255,255,0)']]);
 
   let cupCfg = null, cupShapeBuilt = null, cupParts = null;
   let boxCfg = null, boxParts = null;
   let view = 'cup';
-  const anim = { lid: 0, lidTarget: 0, boxScale: 0, boxScaleTarget: 0, cupPos: new THREE.Vector3(), cupPosTarget: new THREE.Vector3(), cupScale: 1, cupScaleTarget: 1 };
+  const anim = { pop: 0, lid: 0, lidTarget: 0, boxScale: 0, boxScaleTarget: 0, cupPos: new THREE.Vector3(), cupPosTarget: new THREE.Vector3(), cupScale: 1, cupScaleTarget: 1 };
   let camAnim = null;
   const flames = [];
 
@@ -306,7 +376,7 @@ export function createStudio(host) {
       decal = new THREE.Mesh(new THREE.LatheGeometry(dpts, 96), new THREE.MeshStandardMaterial({ map: cupTex, transparent: true, roughness: 0.4, depthWrite: false }));
       decal.rotation.y = Math.PI;
     } else {
-      bodyMat = new THREE.MeshPhysicalMaterial({ map: cupTex, roughness: 0.28, clearcoat: 0.8, clearcoatRoughness: 0.12 });
+      bodyMat = new THREE.MeshPhysicalMaterial({ map: cupTex, roughness: 0.28, clearcoat: 0.8, clearcoatRoughness: 0.12, envMapIntensity: 0.55 });
     }
     const body = new THREE.Mesh(new THREE.LatheGeometry(pts, 96), bodyMat);
     body.rotation.y = Math.PI;                 // نص الصورة (u=0.5) لقدّام
@@ -324,7 +394,7 @@ export function createStudio(host) {
     const base = new THREE.Mesh(new THREE.CircleGeometry(S.r(0), 48), S.glass ? bodyMat : glaze.clone());
     base.rotation.x = Math.PI / 2; base.position.y = 0.002; group.add(base);
 
-    let handle = null;
+    let handle = null, steam = null;
     if (S.handle) {
       const arc = Math.PI * 1.15;
       handle = new THREE.Mesh(new THREE.TorusGeometry(0.25, 0.052, 20, 64, arc), glaze.clone());
@@ -335,6 +405,9 @@ export function createStudio(host) {
       const lvl = 0.86, cr = S.r(lvl) - 0.034;
       const coffee = new THREE.Mesh(new THREE.CircleGeometry(cr, 48), new THREE.MeshPhysicalMaterial({ map: latteTex, roughness: 0.2, clearcoat: 1 }));
       coffee.rotation.x = -Math.PI / 2; coffee.rotation.z = Math.PI; coffee.position.y = S.H * lvl; group.add(coffee);
+      steam = new THREE.Group(); steam.position.y = S.H * lvl;
+      for (let i = 0; i < 6; i++) { const sp = new THREE.Sprite(new THREE.SpriteMaterial({ map: steamTex, transparent: true, depthWrite: false, opacity: 0 })); sp.userData.off = i / 6; steam.add(sp); }
+      group.add(steam);
     }
     let lid = null;
     if (S.lid) {
@@ -350,7 +423,7 @@ export function createStudio(host) {
     if (decal) decal.castShadow = false;
     cupHolder.add(group);
     const avgR = (S.r(0) + S.r(0.5) + S.r(1)) / 3;
-    cupParts = { group, body, glaze, innerMat, handle, lid, S, aspect: (TAU * avgR) / S.H };
+    cupParts = { group, body, glaze, innerMat, handle, lid, steam, S, aspect: (TAU * avgR) / S.H };
     cupShapeBuilt = shapeId;
   }
 
@@ -383,17 +456,18 @@ export function createStudio(host) {
   }
 
   function buildBox(cfg) {
+    const prevIds = boxParts ? new Set(boxParts.items.children.map((i) => i.userData.id)) : null;
     boxHolder.clear(); flames.length = 0;
     boxParts = null;
     if (!cfg || !cfg.w) return;
     const w = cfg.w * CM, h = cfg.h * CM, d = cfg.d * CM, lidH = 0.24, gap = 0.03, overlap = 0.12;
     const color = cfg.color, ribbon = cfg.ribbon;
     const paper = paperTex(color);
-    const outside = std('#ffffff', 0.78, { map: paper });
+    const outside = std('#ffffff', 0.7, { map: paper, envMapIntensity: 0.3 });
     const inside = std(shade(color, 0.12), 0.9, { side: THREE.DoubleSide });
     const hidden = new THREE.MeshBasicMaterial({ visible: false });
     const ink = ribbon || contrastOn(color);
-    const front = std('#ffffff', 0.75, {
+    const front = std('#ffffff', 0.7, { envMapIntensity: 0.3,
       map: canvasTex(1024, Math.round(1024 * h / w), (x, W, H) => {
         x.fillStyle = color; x.fillRect(0, 0, W, H);
         x.textAlign = 'center'; x.textBaseline = 'middle'; x.direction = 'rtl'; x.fillStyle = ink;
@@ -407,7 +481,7 @@ export function createStudio(host) {
     const walls = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), [outside, outside, hidden, outside, front, outside]);
     walls.position.y = h / 2; bodyGroup.add(walls);
     const liner = new THREE.Mesh(new THREE.BoxGeometry(w - 0.02, h - 0.01, d - 0.02), [inside, inside, hidden, inside, inside, inside]);
-    liner.material = liner.material.map((m) => (m === inside ? new THREE.MeshStandardMaterial({ color: shade(color, 0.1), roughness: 0.9, side: THREE.BackSide }) : m));
+    liner.material = liner.material.map((m) => (m === inside ? new THREE.MeshStandardMaterial({ color: shade(color, 0.1), roughness: 0.9, envMapIntensity: 0.3, side: THREE.BackSide }) : m));
     liner.position.y = h / 2 + 0.005; bodyGroup.add(liner);
     // ورق مقصوص (حشوة)
     const shredGeo = new THREE.BoxGeometry(0.16, 0.006, 0.022);
@@ -432,7 +506,7 @@ export function createStudio(host) {
     const lidMesh = new THREE.Mesh(new THREE.BoxGeometry(w + gap * 2, lidH, d + gap * 2), [outside, outside, outside, hidden, outside, outside]);
     lidMesh.material = lidMesh.material.map((m) => (m === hidden ? hidden : m));
     lidMesh.position.set(0, -lidH / 2, d / 2 + gap); lidPivot.add(lidMesh);
-    const lidIn = new THREE.Mesh(new THREE.BoxGeometry(w + gap * 2 - 0.01, lidH - 0.005, d + gap * 2 - 0.01), new THREE.MeshStandardMaterial({ color: shade(color, 0.1), roughness: 0.9, side: THREE.BackSide }));
+    const lidIn = new THREE.Mesh(new THREE.BoxGeometry(w + gap * 2 - 0.01, lidH - 0.005, d + gap * 2 - 0.01), new THREE.MeshStandardMaterial({ color: shade(color, 0.1), roughness: 0.9, envMapIntensity: 0.3, side: THREE.BackSide }));
     lidIn.position.copy(lidMesh.position); lidPivot.add(lidIn);
     let bow = null;
     if (ribbon) {
@@ -461,6 +535,7 @@ export function createStudio(host) {
     (cfg.addons || []).forEach((a) => {
       const it = makeAddon(a.kind, { message: cfg.message, color: cfg.color });
       it.userData.id = a.id; items.add(it);
+      if (prevIds && !prevIds.has(a.id)) it.userData.drop = 1;
       if (it.userData.flame) flames.push(it.userData);
     });
     boxHolder.add(bodyGroup);
@@ -481,7 +556,7 @@ export function createStudio(host) {
   function layout() {
     const inBox = boxParts && view !== 'cup';
     anim.boxScaleTarget = inBox ? 1 : 0;
-    anim.lidTarget = view === 'gift' ? 0 : -1.95;
+    anim.lidTarget = view === 'gift' || view === 'intro' ? 0 : -1.95;
     if (!inBox) { anim.cupPosTarget.set(0, 0, 0); anim.cupScaleTarget = 1; return; }
     const { w, d, items } = boxParts;
     const S = cupParts ? cupParts.S : SHAPES.mug;
@@ -508,6 +583,7 @@ export function createStudio(host) {
       const s = Math.min(1, ((freeX1 - freeX0) / cols) / (it.userData.size + 0.06), ((freeZ1 - freeZ0) / rows) / (it.userData.size + 0.06));
       it.scale.setScalar(it.userData.lie ? Math.min(1, (d - 0.3) / it.userData.size) : Math.max(0.55, s));
       it.position.set(x, it.userData.lie ? 0.16 : 0.08, it.userData.lie ? -0.5 * it.userData.size * it.scale.x : z);
+      it.userData.baseY = it.position.y;
       if (!it.userData.lie) it.rotation.y = (i % 2 ? -1 : 1) * 0.25;
     });
   }
@@ -518,12 +594,15 @@ export function createStudio(host) {
     const S = cupParts ? cupParts.S : SHAPES.mug;
     if (view === 'cup' || !boxParts) {
       target = new THREE.Vector3(0, S.H * 0.5, 0);
-      pos = new THREE.Vector3(0.9, S.H * 0.5 + 1.0, 3.4 + S.H * 0.6);
+      pos = new THREE.Vector3(1.1, S.H * 0.5 + 0.85, 3.3 + S.H * 0.6);
     } else {
       const span = Math.max(boxParts.w, boxParts.d);
       target = new THREE.Vector3(0, boxParts.h * 0.4, 0);
-      const dist = 3.2 + span * 1.7;
-      pos = new THREE.Vector3(dist * 0.25, boxParts.h + dist * (view === 'gift' ? 0.5 : 0.78), dist * 0.8);
+      // على الشاشات الضيقة منبعّد الكاميرا لحتى يساع البوكس بالعرض
+      const fitW = (span * (view === 'intro' ? 1.9 : 1.5)) / (2 * Math.tan(THREE.MathUtils.degToRad(camera.fov / 2)) * camera.aspect);
+      const dist = Math.max((view === 'intro' ? 2.6 : 3.2) + span * (view === 'intro' ? 1.5 : 1.7), fitW);
+      pos = view === 'intro' ? new THREE.Vector3(dist * 0.35, boxParts.h + dist * 0.32, dist * 0.92)
+        : new THREE.Vector3(dist * 0.25, boxParts.h + dist * (view === 'gift' ? 0.5 : 0.78), dist * 0.8);
     }
     if (immediate) { camera.position.copy(pos); controls.target.copy(target); camAnim = null; }
     else camAnim = { pos, target };
@@ -531,16 +610,28 @@ export function createStudio(host) {
   controls.addEventListener('start', () => { camAnim = null; idle = 0; controls.autoRotate = false; });
   let idle = 0;
 
-  function setView(v, immediate) { view = v; layout(); focus(immediate); idle = 0; controls.autoRotate = false; }
+  function setView(v, immediate) { view = v; layout(); focus(immediate); idle = v === 'intro' ? 99 : 0; controls.autoRotate = v === 'intro'; controls.autoRotateSpeed = v === 'intro' ? 0.8 : 1.2; }
 
-  function openGift() { anim.lidTarget = -1.95; anim.bowPop = 1; }
+  function openGift() { anim.lidTarget = -1.95; anim.bowPop = 1; if (boxParts) setTimeout(() => burstAt(new THREE.Vector3(0, boxParts.h + 0.3, 0), 1.4), 250); }
+  const _v = new THREE.Vector3();
+  function celebrate() {
+    anim.pop = 1;
+    const target = view === 'cup' || !boxParts ? cupHolder : boxHolder;
+    target.getWorldPosition(_v); _v.y += view === 'cup' || !boxParts ? (cupParts ? cupParts.S.H * 0.6 : 0.6) : boxParts.h * 0.8;
+    burstAt(_v.clone());
+  }
   function closeGift() { anim.lidTarget = 0; }
 
+  // إزاحة الصورة لتضل الهدية بنص المساحة الفاضية (اللوحة بتغطي جزء من الشاشة)
+  let offX = 0, offTarget = 0, offY = 0, offYTarget = 0, W = 1, H = 1;
+  function applyOffset() { if (Math.abs(offX) < 0.5 && Math.abs(offY) < 0.5) camera.clearViewOffset(); else camera.setViewOffset(W, H, offX, offY, W, H); camera.updateProjectionMatrix(); }
+  function setOffset(px, py = 0) { offTarget = px; offYTarget = py; }
   function resize() {
     const r = host.getBoundingClientRect();
     if (!r.width || !r.height) return;
+    W = r.width; H = r.height;
     renderer.setSize(r.width, r.height, false);
-    camera.aspect = r.width / r.height; camera.updateProjectionMatrix();
+    camera.aspect = r.width / r.height; applyOffset();
   }
   new ResizeObserver(resize).observe(host); resize();
 
@@ -567,6 +658,34 @@ export function createStudio(host) {
     if (boxHolder.visible && view !== 'cup') cupHolder.position.multiplyScalar(boxHolder.scale.x).add(new THREE.Vector3(0, boxHolder.position.y, 0));
     cupHolder.scale.setScalar(anim.cupScale * (view !== 'cup' && boxHolder.visible ? boxHolder.scale.x : 1));
     if (view === 'cup') cupHolder.position.y += Math.sin(t * 1.4) * 0.015;
+    // لمعة، توهّج، بخار، نطّة، وإضافات بتنزل
+    spMat.uniforms.uTime.value = t;
+    if (burstLife < 1) {
+      burstLife = Math.min(1, burstLife + dt * 0.9);
+      for (let i = 0; i < BN; i++) { const v = bVel[i]; v.y -= 2.2 * dt; v.multiplyScalar(0.975); bPos[i * 3] += v.x * dt; bPos[i * 3 + 1] += v.y * dt; bPos[i * 3 + 2] += v.z * dt; }
+      bGeo.attributes.position.needsUpdate = true; bMat.opacity = Math.pow(1 - burstLife, 1.5);
+    }
+    const inBoxNow = !!boxParts && boxHolder.visible && view !== 'cup';
+    const gs = inBoxNow ? Math.max(boxParts.w, boxParts.d) * 1.6 : 1.9;
+    glow.scale.lerp(new THREE.Vector3(gs, gs, 1), k); glow.position.x = inBoxNow ? 0 : cupHolder.position.x; glow.position.z = inBoxNow ? 0 : cupHolder.position.z;
+    glow.material.opacity = 0.55 + Math.sin(t * 1.8) * 0.15;
+    if (cupParts && cupParts.steam) {
+      cupParts.steam.visible = view !== 'intro' && view !== 'gift';
+      cupParts.steam.children.forEach((sp) => { const ph = (t * 0.22 + sp.userData.off) % 1;
+        sp.position.set(Math.sin(t * 0.9 + sp.userData.off * 7) * 0.07 * ph, ph * 0.85, Math.cos(t * 0.7 + sp.userData.off * 5) * 0.04 * ph);
+        sp.scale.setScalar(0.18 + ph * 0.55); sp.material.opacity = Math.sin(ph * Math.PI) * 0.16; });
+    }
+    if (anim.pop > 0) { anim.pop = Math.max(0, anim.pop - dt * 1.8); cupHolder.scale.multiplyScalar(1 + Math.sin((1 - anim.pop) * Math.PI * 2.5) * 0.06 * anim.pop); }
+    if (boxParts) {
+      if (boxParts.bow) boxParts.bow.rotation.z = Math.sin(t * 1.6) * 0.05;
+      for (const it of boxParts.items.children) {
+        if (it.userData.drop > 0) {
+          it.userData.drop = Math.max(0, it.userData.drop - dt * 1.5); const p = it.userData.drop;
+          it.position.y = it.userData.baseY + 1.9 * p * (2 - p); it.rotation.y += dt * 5 * p;
+          if (p === 0) { it.getWorldPosition(_v); burstAt(_v.clone().add(new THREE.Vector3(0, 0.15, 0)), 0.7); }
+        } else if (it.userData.baseY != null) it.position.y = it.userData.baseY;
+      }
+    }
     for (const f of flames) { const s = 1 + Math.sin(t * 18) * 0.08 + Math.sin(t * 7.3) * 0.06; f.flame.scale.set(s, 1.9 * s, s); f.light.intensity = 0.5 * s; }
     if (camAnim) {
       camera.position.lerp(camAnim.pos, 1 - Math.pow(0.01, dt));
@@ -574,14 +693,38 @@ export function createStudio(host) {
       if (camera.position.distanceTo(camAnim.pos) < 0.01) camAnim = null;
     }
     idle += dt; if (idle > 5 && !controls.autoRotate) controls.autoRotate = true;
+    if (Math.abs(offTarget - offX) > 0.5 || Math.abs(offYTarget - offY) > 0.5) { const kk = 1 - Math.pow(0.02, dt); offX += (offTarget - offX) * kk; offY += (offYTarget - offY) * kk; applyOffset(); }
     controls.update();
     renderer.render(scene, camera);
     requestAnimationFrame(tick);
   }
+  const handlers = {};
+  const ray = new THREE.Raycaster(), ndc = new THREE.Vector2(); let downAt = null;
+  function pickAt(e) {
+    const r = renderer.domElement.getBoundingClientRect();
+    ndc.set(((e.clientX - r.left) / r.width) * 2 - 1, -((e.clientY - r.top) / r.height) * 2 + 1);
+    ray.setFromCamera(ndc, camera);
+    for (const h of ray.intersectObjects([cupHolder, boxHolder], true)) {
+      for (let o = h.object; o; o = o.parent) {
+        if (o === cupHolder) return 'cup';
+        if (boxParts && o.parent === boxParts.items) return 'addon';
+        if (o === boxHolder) return boxHolder.visible ? 'box' : null;
+      }
+    }
+    return null;
+  }
+  const el = renderer.domElement;
+  el.addEventListener('pointerdown', (e) => { downAt = [e.clientX, e.clientY]; });
+  el.addEventListener('pointerup', (e) => {
+    if (!downAt) return; const moved = Math.hypot(e.clientX - downAt[0], e.clientY - downAt[1]); downAt = null;
+    if (moved > 6) return; const hit = pickAt(e); if (hit && handlers.pick) handlers.pick(hit);
+  });
+  el.addEventListener('pointermove', (e) => { if (e.pointerType === 'mouse' && !e.buttons) el.style.cursor = pickAt(e) ? 'pointer' : 'grab'; });
+
   focus(true); tick();
 
   function snapshot() { return renderer.domElement.toDataURL('image/png'); }
   function spin() { idle = 6; controls.autoRotate = true; }
 
-  return { setCup, setBox, setView, openGift, closeGift, snapshot, spin, get view() { return view; } };
+  return { setCup, setBox, setView, openGift, closeGift, snapshot, spin, celebrate, setOffset, on: (n, fn) => (handlers[n] = fn), get view() { return view; } };
 }

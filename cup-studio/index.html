@@ -3,49 +3,69 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="theme-color" content="#fbf5ef">
-<title>كوبي · صمّم هديتك</title>
-<meta name="description" content="صمّم كوبك وبوكس هديتك بثلاثي الأبعاد، بخطوات بسيطة، وشوفها قبل ما تطلبها.">
+<meta name="theme-color" content="#12060d">
+<title>كوبي · استوديو الهدايا</title>
+<meta name="description" content="صمّم كوب باسم يلي بتحبو، غلّفو ببوكس على ذوقك، وشوف الهدية 3D قبل ما توصل.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=El+Messiri:wght@500;700&family=Lalezar&family=Reem+Kufi+Fun:wght@500;700&family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Aref+Ruqaa:wght@400;700&family=Amiri:wght@700&family=El+Messiri:wght@500;700&family=Lalezar&family=Rakkas&family=Readex+Pro:wght@300;400;500;600;700&family=Reem+Kufi+Fun:wght@500;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="style.css">
 <script type="importmap">{ "imports": { "three": "./vendor/three.module.min.js" } }</script>
 </head>
-<body>
+<body class="is-intro">
+<div id="three" class="three" aria-label="معاينة ثلاثية الأبعاد للهدية"></div>
+<div class="vignette" aria-hidden="true"></div>
+
 <header class="top">
-  <a class="brand" href="./"><span class="logo">☕</span><span><b id="shopName">كوبي</b><small id="shopTag">هدية بتحكي عنك</small></span></a>
-  <div class="promise"><span>🎁 بيوصل مغلّف وجاهز للإهداء</span><span>✋ شغل يدوي</span><span>👀 بتشوفو قبل ما تطلبو</span></div>
+  <a class="brand" href="./" aria-label="الرئيسية">
+    <span class="mono" aria-hidden="true">ك</span>
+    <span class="brand-txt"><b id="shopName">كوبي</b><small id="shopTag">هدية بتحكي عنك</small></span>
+  </a>
+  <div class="seg" role="tablist" aria-label="طريقة العرض">
+    <span class="seg-ink" aria-hidden="true"></span>
+    <button data-view="cup" class="on">الكوب</button>
+    <button data-view="box">البوكس</button>
+    <button data-view="gift">الهدية</button>
+  </div>
+  <div class="price-pill" aria-live="polite"><small>هديتك</small><b id="total">0</b></div>
 </header>
 
-<main class="studio">
-  <section class="stage" aria-label="معاينة ثلاثية الأبعاد">
-    <div id="three" class="three"></div>
-    <div class="stage-top">
-      <div class="seg" role="tablist" aria-label="طريقة العرض">
-        <button data-view="cup" class="on">الكوب</button>
-        <button data-view="box">البوكس</button>
-        <button data-view="gift">الهدية</button>
-      </div>
-      <button class="icon-btn" id="snap" title="حمّل صورة التصميم" aria-label="حمّل صورة التصميم">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/></svg>
-      </button>
-    </div>
-    <div class="hint" id="hint">👆 اسحب لتلف التصميم ٣٦٠°</div>
-    <div class="loading" id="loading"><span class="spinner"></span>عم نجهّز الاستوديو…</div>
-  </section>
+<!-- المقدّمة -->
+<section class="intro" id="intro">
+  <p class="eyebrow">استوديو الهدايا</p>
+  <h1 class="hero" id="heroTitle">هدية بتحكي عنك</h1>
+  <p class="lede">صمّم كوب باسم يلي بتحبو، غلّفو ببوكس على ذوقك، وشوف الهدية بعيونك قبل ما توصل.</p>
+  <div class="cta-row">
+    <button class="btn gold big" id="start"><span id="startTxt">ابدأ هديتك</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 6l-6 6 6 6"/></svg></button>
+    <span class="cta-note">٣ دقايق · بدون تسجيل</span>
+  </div>
+  <ul class="promises">
+    <li><i>✦</i>بيوصل مغلّف وجاهز</li>
+    <li><i>✦</i>شغل إيد، قطعة وحدة</li>
+    <li><i>✦</i>بتشوفو 3D قبل ما تطلبو</li>
+  </ul>
+</section>
 
-  <aside class="panel">
-    <ol class="steps" id="steps"></ol>
-    <div class="step-body" id="stepBody"></div>
-    <footer class="bar">
-      <div class="total"><small>المجموع</small><b id="total">0</b></div>
-      <button class="btn ghost" id="prev">رجوع</button>
-      <button class="btn primary" id="next">التالي</button>
-    </footer>
-  </aside>
-</main>
+<!-- الاستوديو -->
+<aside class="panel" id="panel" aria-label="خطوات التصميم">
+  <div class="panel-head">
+    <span class="stepno" id="stepNo"></span>
+    <div class="progress"><i id="progress"></i></div>
+  </div>
+  <div class="step-body" id="stepBody"></div>
+  <footer class="bar">
+    <button class="btn ghost" id="prev" aria-label="رجوع"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg></button>
+    <button class="btn gold" id="next">التالي</button>
+  </footer>
+</aside>
 
+<nav class="dock" id="dock" aria-label="الخطوات"></nav>
+<div class="tap-hint" id="hint"><span class="pulse"></span>اسحب لتلف · اكبس عالكوب أو البوكس لتعدّلو</div>
+<button class="icon-btn snap" id="snap" title="حمّل صورة التصميم" aria-label="حمّل صورة التصميم">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/></svg>
+</button>
+
+<div class="loading" id="loading"><span class="spinner"></span><span>عم نجهّز الاستوديو…</span></div>
 <div class="confetti" id="confetti" aria-hidden="true"></div>
 <div class="toast" id="toast" role="status"></div>
 <a class="admin-link" href="admin.html" title="لوحة التحكم">⚙︎</a>
