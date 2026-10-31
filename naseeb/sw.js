@@ -1,5 +1,5 @@
 // Offline cache for the Naseeb ledger app. Bump VERSION when files change.
-const VERSION = 'naseeb-v19';
+const VERSION = 'naseeb-v20';
 const CORE = ['./', 'index.html', 'config.js', 'cloud.js', 'vendor/supabase.js', 'manifest.webmanifest', 'icons/icon-192.png', 'icons/icon-512.png', 'icons/maskable-512.png', 'icons/apple-touch-icon.png'];
 const FONT_HOSTS = ['fonts.googleapis.com', 'fonts.gstatic.com'];
 
