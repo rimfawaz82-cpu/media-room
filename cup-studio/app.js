@@ -283,10 +283,10 @@ function order() {
   confetti();
   const url = `https://wa.me/${String(cat.shop.whatsapp).replace(/\D/g, '')}?text=${encodeURIComponent(msg)}`;
   // رابط حقيقي (بعض المتصفحات بتمنع window.open)
-  let box = $('#waBox');
-  if (!box) { box = document.createElement('div'); box.id = 'waBox'; box.className = 'group'; $('#stepBody').appendChild(box); }
-  box.innerHTML = `<div class="tip">✅ طلبك جاهز. إذا ما انفتح الواتساب لحالو، اكبس هون:</div><a class="btn primary wa" style="display:block;text-align:center;text-decoration:none" href="${url}" target="_blank" rel="noopener">افتح واتساب وابعت الطلب</a>`;
-  box.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  let waBox = $('#waBox');
+  if (!waBox) { waBox = document.createElement('div'); waBox.id = 'waBox'; waBox.className = 'group'; $('#stepBody').appendChild(waBox); }
+  waBox.innerHTML = `<div class="tip">✅ طلبك جاهز. إذا ما انفتح الواتساب لحالو، اكبس هون:</div><a class="btn primary wa" style="display:block;text-align:center;text-decoration:none" href="${url}" target="_blank" rel="noopener">افتح واتساب وابعت الطلب</a>`;
+  waBox.scrollIntoView({ behavior: 'smooth', block: 'center' });
   try { window.open(url, '_blank'); } catch (e) {}
 }
 
