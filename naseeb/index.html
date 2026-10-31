@@ -1182,6 +1182,7 @@ function openForm(ent, id, extra) {
   if (ent === 'items' && !Object.keys(S.cartons).length) { toast('سجّل كرتونة أول'); go('cartons'); openForm('cartons'); return; }
   const vals = {}; spec.fields.forEach(f => vals[f.k] = rec[f.k] != null ? String(rec[f.k]) : (f.def ? f.def() : ''));
   if (extra) Object.assign(vals, extra);
+  const origName = ent === 'customers' ? (vals.name || '').replace(/\s+/g, ' ').trim() : '';
   let title, sub = '';
   if (ent === 'orders') { const o = CUR.orderByKey[id]; title = `طلبية #${o.no} · ${esc(o.customer)}`; sub = `${oSpan(o)} · ${o.qty} قطعة · المستحق ${money(o.due)}`; }
   else title = (id ? 'تعديل ' : 'إضافة ') + spec.title;
@@ -1219,6 +1220,7 @@ function openForm(ent, id, extra) {
       const old = id && S.sales[id];
       if (!old || (old.ord && (old.customer || '').trim() !== v.customer)) v.ord = orderFor(v.customer, v.date, calc()); }
     if (ent === 'orders' && v.deliveryStatus && !(S.orders[id] || {}).deliveryStatus) v.sentAt = today();
+    if (ent === 'customers') { v.name = v.name.replace(/\s+/g, ' '); if (origName && v.name !== origName) await renameCustomer(origName, v.name); }
     const rid = id || newId();
     closeDrawer();
     await put(ent, rid, id ? { ...(ent === 'orders' ? (S.orders[id] || {}) : (S[ent][id] || {})), ...v } : v);
@@ -1244,6 +1246,21 @@ async function setOrderFee(keyList, v) {
     const next = v === 'pickup' ? { ...cur, deliveryMethod: 'استلام من المحل' } : { ...cur, deliveryMethod: 'دليفري', ...(i === keys.length - 1 ? { deliveryFee: v } : {}) };
     await put('orders', key, next); }
   toast(v === 'pickup' ? 'استلام من المحل — بلا توصيل' : 'التوصيل ' + money(n(v)) + ' عالفاتورة');
+}
+// a customer's name ties together their sales, orders and courier statements: renaming moves all of it to the new name
+async function renameCustomer(from, to) {
+  const sub = k => k.endsWith('~' + from) ? k.slice(0, -from.length) + to : k;
+  const sales = Object.entries(S.sales).filter(([, x]) => (x.customer || '').replace(/\s+/g, ' ').trim() === from)
+    .map(([sid, x]) => [sid, { ...x, customer: to, ...(x.ord ? { ord: sub(x.ord) } : {}) }]);
+  const moved = Object.keys(S.orders).filter(k => k.endsWith('~' + from));
+  const orders = moved.map(k => [sub(k), { ...S.orders[k], ...(S.orders[sub(k)] || {}) }]);
+  const dpay = Object.entries(S.dpay).filter(([, p]) => Array.isArray(p.orders) && p.orders.some(k => k.endsWith('~' + from)))
+    .map(([pid, p]) => [pid, { ...p, orders: p.orders.map(sub) }]);
+  if (sales.length) await nxPutMany('sales', sales);
+  if (orders.length) await nxPutMany('orders', orders);
+  if (dpay.length) await nxPutMany('dpay', dpay);
+  for (const k of moved) await del('orders', k);
+  if (UI.invCust === from) UI.invCust = to;
 }
 function closeDrawer() { const d = $('#drawer'); d.hidden = true; d.innerHTML = ''; const nd = d.cloneNode(false); d.replaceWith(nd); }
 document.addEventListener('keydown', e => { if (e.key === 'Escape') { if (!$('#drawer').hidden) closeDrawer(); $('#newdd').hidden = true; $('#gres').hidden = true; } });
