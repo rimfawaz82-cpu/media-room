@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#fbf5ef">
+<title>كوبي · صمّم هديتك</title>
+<meta name="description" content="صمّم كوبك وبوكس هديتك بثلاثي الأبعاد، بخطوات بسيطة، وشوفها قبل ما تطلبها.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=El+Messiri:wght@500;700&family=Lalezar&family=Reem+Kufi+Fun:wght@500;700&family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+<script type="importmap">{ "imports": { "three": "./vendor/three.module.min.js" } }</script>
+</head>
+<body>
+<header class="top">
+  <a class="brand" href="./"><span class="logo">☕</span><span><b id="shopName">كوبي</b><small id="shopTag">هدية بتحكي عنك</small></span></a>
+  <div class="promise"><span>🎁 بيوصل مغلّف وجاهز للإهداء</span><span>✋ شغل يدوي</span><span>👀 بتشوفو قبل ما تطلبو</span></div>
+</header>
+
+<main class="studio">
+  <section class="stage" aria-label="معاينة ثلاثية الأبعاد">
+    <div id="three" class="three"></div>
+    <div class="stage-top">
+      <div class="seg" role="tablist" aria-label="طريقة العرض">
+        <button data-view="cup" class="on">الكوب</button>
+        <button data-view="box">البوكس</button>
+        <button data-view="gift">الهدية</button>
+      </div>
+      <button class="icon-btn" id="snap" title="حمّل صورة التصميم" aria-label="حمّل صورة التصميم">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/></svg>
+      </button>
+    </div>
+    <div class="hint" id="hint">👆 اسحب لتلف التصميم ٣٦٠°</div>
+    <div class="loading" id="loading"><span class="spinner"></span>عم نجهّز الاستوديو…</div>
+  </section>
+
+  <aside class="panel">
+    <ol class="steps" id="steps"></ol>
+    <div class="step-body" id="stepBody"></div>
+    <footer class="bar">
+      <div class="total"><small>المجموع</small><b id="total">0</b></div>
+      <button class="btn ghost" id="prev">رجوع</button>
+      <button class="btn primary" id="next">التالي</button>
+    </footer>
+  </aside>
+</main>
+
+<div class="confetti" id="confetti" aria-hidden="true"></div>
+<div class="toast" id="toast" role="status"></div>
+<a class="admin-link" href="admin.html" title="لوحة التحكم">⚙︎</a>
+<noscript>الموقع بدو JavaScript ليشتغل.</noscript>
+<script type="module" src="app.js"></script>
+</body>
+</html>

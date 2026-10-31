@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>لوحة التحكم · كوبي</title>
+<link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&family=El+Messiri:wght@700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+<style>
+  body { overflow: auto; }
+  .adm { display: grid; grid-template-columns: 230px 1fr; min-height: calc(100vh - 64px); }
+  .side { border-inline-end: 1px solid var(--line); padding: 16px 12px; display: flex; flex-direction: column; gap: 4px; position: sticky; top: 0; align-self: start; }
+  .side button { border: 0; background: none; text-align: start; padding: 10px 14px; border-radius: 12px; font-weight: 700; color: var(--muted); }
+  .side button.on { background: var(--card); color: var(--ink); box-shadow: var(--shadow); }
+  .content { padding: 24px; max-width: 1100px; }
+  .content h2 { font-family: var(--display); margin: 0 0 4px; }
+  .content p.sub { margin-bottom: 16px; }
+  table { width: 100%; border-collapse: separate; border-spacing: 0 8px; }
+  th { text-align: start; font-size: 12px; color: var(--muted); font-weight: 700; padding: 0 6px; white-space: nowrap; }
+  td { background: var(--card); padding: 8px 6px; vertical-align: middle; }
+  td:first-child { border-radius: 0 12px 12px 0; } td:last-child { border-radius: 12px 0 0 12px; white-space: nowrap; }
+  td input:not([type=color]):not([type=file]), td select { width: 100%; min-width: 70px; border: 1.5px solid var(--line); border-radius: 10px; padding: 8px 10px; background: #fff; }
+  td input[type=number] { max-width: 90px; }
+  td input[type=color] { width: 44px; height: 36px; border: 0; background: none; padding: 0; }
+  .thumb { width: 40px; height: 40px; border-radius: 8px; object-fit: contain; background: #f4f0ec; display: inline-block; vertical-align: middle; }
+  .upl { display: inline-flex; align-items: center; gap: 6px; }
+  .upl label { font-size: 12px; color: var(--rose-d); cursor: pointer; text-decoration: underline; }
+  .mini { border: 0; background: none; font-size: 16px; padding: 4px 6px; border-radius: 8px; color: var(--muted); }
+  .mini:hover { background: var(--rose-soft); color: var(--rose-d); }
+  .actions { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 16px; }
+  .form { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 14px; background: var(--card); padding: 18px; border-radius: var(--radius); }
+  .form label { display: grid; gap: 6px; font-weight: 700; font-size: 13px; }
+  .savebar { position: sticky; bottom: 0; display: flex; gap: 10px; align-items: center; padding: 14px 24px; background: rgba(255,255,255,.92); border-top: 1px solid var(--line); backdrop-filter: blur(8px); }
+  .savebar .dirty { color: var(--rose-d); font-weight: 700; margin-inline-end: auto; }
+  .order { background: var(--card); border-radius: var(--radius); padding: 16px; margin-bottom: 12px; white-space: pre-wrap; font-size: 14px; line-height: 1.7; }
+  .order b { display: block; margin-bottom: 6px; }
+  .note { background: #fff7e6; border: 1px solid #f0dfb5; color: #7a5b16; border-radius: 14px; padding: 12px 14px; font-size: 13px; line-height: 1.7; margin-bottom: 16px; }
+  @media (max-width: 800px) { .adm { grid-template-columns: 1fr; } .side { position: static; flex-direction: row; overflow-x: auto; } .side button { white-space: nowrap; } .content { padding: 16px; } table, tbody, tr, td { display: block; } thead { display: none; } tr { margin-bottom: 12px; } td { border-radius: 0 !important; } td:first-child { border-radius: 12px 12px 0 0 !important; } td:last-child { border-radius: 0 0 12px 12px !important; } td::before { content: attr(data-l); display: block; font-size: 11px; color: var(--muted); margin-bottom: 4px; } }
+</style>
+</head>
+<body>
+<header class="top">
+  <a class="brand" href="./"><span class="logo">⚙︎</span><span><b>لوحة التحكم</b><small>المنتجات، الزينة والأسعار</small></span></a>
+  <a class="btn ghost" href="./" style="margin-inline-start:auto;text-decoration:none">← شوف الموقع</a>
+</header>
+<div class="adm">
+  <nav class="side" id="side"></nav>
+  <section class="content" id="content"></section>
+</div>
+<div class="savebar">
+  <span class="dirty" id="dirty"></span>
+  <button class="btn ghost" id="reset">رجّع الافتراضي</button>
+  <button class="btn ghost" id="export">تصدير JSON</button>
+  <label class="btn ghost" style="cursor:pointer">استيراد JSON<input type="file" id="import" accept="application/json" hidden></label>
+  <button class="btn primary" id="save">حفظ التغييرات</button>
+</div>
+<div class="toast" id="toast" role="status"></div>
+<script type="module" src="admin.js"></script>
+</body>
+</html>
