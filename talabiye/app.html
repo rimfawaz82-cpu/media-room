@@ -44,7 +44,7 @@
     <button class="btn ghost" id="openSettings" style="min-height:40px;padding:8px 12px">الإعدادات</button>
   </header>
 
-  <div class="banner hide" id="demoBanner">وضع العرض: النتيجة طلبية تجريبية. لما ينحط رابط الخدمة بـ config.js، بتشتغل عالفويسات الحقيقية.</div>
+  <div class="banner hide" id="demoBanner">الفويس هون بيطلّع طلبية تجريبية. المحادثات المكتوبة بتتحلل فعلاً، جرّبها بتبويب «محادثة».</div>
 
   <!-- الإعدادات -->
   <section class="card hide" id="settings">
@@ -86,6 +86,7 @@
 
   <!-- النتيجة -->
   <section class="card order hide" id="result"></section>
+  <p class="muted small" style="text-align:center"><a href="index.html">رجوع لصفحة طلبيّة</a></p>
 
   <!-- آخر الطلبيات -->
   <section class="card hist hide" id="history">
@@ -180,6 +181,16 @@ const SAMPLE = {
   reply: 'أهلين ريما، تأكدت الطلبية: كنزة صوف بيج L وجينز أزرق 30، المجموع 55$. بتوصلك بكرا بعد الضهر. بس قوليلي رقم الشقة لو سمحتي.'
 };
 
+// داخل صفحة Claude: منحلل المحادثة بـ Claude إذا ما في خدمة Gemini
+let sampler = null;
+const samplerReady = (window.claude && window.claude.use) ? window.claude.use('sample').then(s => (sampler = s)).catch(() => null) : Promise.resolve(null);
+const CLAUDE_PROMPT = `إنت مساعد لبيّاع أونلاين بلبنان. هيدي محادثة واتساب من زبون (لبناني أو عربي أو إنكليزي أو مخلوط).
+رجّع JSON بس بهالشكل:
+{"customer_name":"","phone":"","items":[{"name":"","size":"","color":"","qty":1,"price":null}],"total":null,"currency":"USD أو LBP","address":{"text":"","city":"","area":"","building":"","floor":"","landmarks":[],"map_query":"معلم أو شارع + المنطقة + Lebanon"},"delivery_time":"","payment":"","notes":"","missing":["شو ناقص لازم البيّاع يسأل"],"reply":"رد قصير ولطيف باللهجة اللبنانية بيأكد الطلبية وبيسأل عن الناقص بس"}
+ما تخترع شي ما انقال؛ الشي المش معروف خليه فاضي أو null. الأسعار أرقام بس.
+المحادثة:
+`;
+
 $('#go').onclick = async () => {
   const text = $('#chat').value.trim();
   if (tab === 'voice' && !audioFile) return toast('اختار فويس الأول');
@@ -187,7 +198,13 @@ $('#go').onclick = async () => {
   const btn = $('#go'); btn.disabled = true; btn.innerHTML = '<span class="spin"></span> عم إسمع وإفهم...';
   try {
     let order;
-    if (!CFG.PARSE_URL) {
+    if (!CFG.PARSE_URL && tab === 'text' && (await samplerReady)) {
+      order = await sampler.json(CLAUDE_PROMPT + text, { modelTier: 'quick' });
+      $('#demoBanner').classList.add('hide');
+    } else if (!CFG.PARSE_URL) {
+      $('#demoBanner').textContent = sampler
+        ? 'الفويس هون بيطلّع طلبية تجريبية. المحادثات المكتوبة بتتحلل فعلاً، جرّبها بتبويب «محادثة».'
+        : 'وضع العرض: النتيجة طلبية تجريبية. لما ينحط رابط الخدمة بـ config.js، بتشتغل عالفويسات الحقيقية.';
       $('#demoBanner').classList.remove('hide');
       await new Promise(r => setTimeout(r, 1400));
       order = SAMPLE;
@@ -273,6 +290,7 @@ function render(o) {
     <div class="actions">
       <a class="btn wa" id="aReply" target="_blank" rel="noopener">ابعت الرد</a>
       <a class="btn ghost" id="aPin" target="_blank" rel="noopener">اطلب دبّوس الموقع</a>
+      <a class="btn ghost" id="aPinView" href="pin.html">شوف صفحة الدبّوس</a>
       <a class="btn ghost" id="aMap" target="_blank" rel="noopener">افتح الخريطة</a>
       <a class="btn" id="aDel" target="_blank" rel="noopener">ابعت للديليفري</a>
       <button class="btn ghost" id="aCopy">انسخ الطلبية</button>
@@ -286,6 +304,7 @@ function render(o) {
     $('#aReply').href = wa(o.phone, o.reply);
     $('#aPin').href = wa(o.phone, `أهلين${o.customer_name ? ' ' + o.customer_name : ''}، كرمال يوصلك الديليفري بلا ما يضيع، كبسي هون وحدّدي موقعك بكبسة: ${pinLink(o)}`);
     $('#aMap').href = mapUrl(o);
+    $('#aPinView').href = 'pin.html' + new URL(pinLink(o)).search;
     $('#aDel').href = wa(s.delivery, cardText(o));
     save(o);
   };

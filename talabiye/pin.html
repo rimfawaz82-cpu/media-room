@@ -29,6 +29,11 @@
     <div class="got hide" id="got"></div>
     <p class="muted small" id="hint">لازم تكون عند العنوان اللي بدك التوصيل عليه. إذا مش هونيك، اكتب العنوان تحت.</p>
 
+    <div class="hide" id="noGeo">
+      <p class="muted small" style="margin:10px 0 0">ما قدرنا نحدد موقعك من هون. افتح Google Maps، كبّس على مكانك، «مشاركة»، والصق الرابط:</p>
+      <label for="maplink">رابط الموقع</label>
+      <input id="maplink" placeholder="https://maps.app.goo.gl/..." inputmode="url">
+    </div>
     <label for="building">البناية والطابق</label>
     <input id="building" placeholder="بناية الريحان، طابق 3، شقة يمين">
     <label for="notes">كيف بيوصل الديليفري؟</label>
@@ -65,29 +70,29 @@ function showPos(msg) {
   $('#got').classList.remove('hide'); update();
 }
 $('#locate').onclick = () => {
-  if (!navigator.geolocation) return alert('تلفونك ما بيدعم تحديد الموقع. اكتب العنوان تحت.');
+  if (!navigator.geolocation) { $('#noGeo').classList.remove('hide'); return; }
   $('#locate').textContent = 'عم حدّد...';
   navigator.geolocation.getCurrentPosition(p => {
     pos = { lat: +p.coords.latitude.toFixed(6), lng: +p.coords.longitude.toFixed(6), acc: p.coords.accuracy };
     $('#locate').textContent = 'حدّد موقعي من جديد'; showPos();
   }, () => {
     $('#locate').textContent = 'حدّد موقعي هلّق';
-    alert('ما قدرنا نحدد الموقع. اسمح للمتصفح يوصل للموقع، أو اكتب العنوان تحت.');
+    $('#noGeo').classList.remove('hide'); $('#maplink').focus();
   }, { enableHighAccuracy: true, timeout: 15000 });
 };
 
 function message() {
   return [
     '📍 عنواني' + (ref ? ' (طلبية ' + ref + ')' : ''),
-    pos ? 'https://maps.google.com/?q=' + pos.lat + ',' + pos.lng : '',
+    pos ? 'https://maps.google.com/?q=' + pos.lat + ',' + pos.lng : ($('#maplink').value.trim() || ''),
     $('#building').value.trim() ? '🏢 ' + $('#building').value.trim() : '',
     $('#notes').value.trim() ? '📝 ' + $('#notes').value.trim() : '',
   ].filter(Boolean).join('\n');
 }
 function update() { $('#send').href = 'https://wa.me/' + seller + '?text=' + encodeURIComponent(message()); }
-$('#building').oninput = update; $('#notes').oninput = update;
+$('#building').oninput = update; $('#notes').oninput = update; $('#maplink').oninput = update;
 $('#send').onclick = e => {
-  if (!pos && !$('#building').value.trim() && !$('#notes').value.trim()) { e.preventDefault(); return alert('حدّد موقعك أو اكتب العنوان الأول'); }
+  if (!pos && !$('#maplink').value.trim() && !$('#building').value.trim() && !$('#notes').value.trim()) { e.preventDefault(); $('#noGeo').classList.remove('hide'); $('#building').focus(); return; }
   if ($('#remember').checked) store.set('myaddress', { pos, building: $('#building').value.trim(), notes: $('#notes').value.trim() });
   update();
 };
