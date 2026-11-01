@@ -10,6 +10,8 @@ window.TALABIYE_CFG = {
   PARSE_URL: '',
   SUPABASE_ANON_KEY: '',
   OWNER_WHATSAPP: '',
-  EARLY_PRICE: '79$',         // سعر أول ٥٠ محل للسنة
-  PRICE: '149$',              // السعر العادي للسنة
+  BASIC_PRICE: '79$',         // الباقة الأساسية للسنة
+  BASIC_LIMIT: 600,           // طلبية بالشهر (٢٠ باليوم)
+  PRO_PRICE: '149$',          // الباقة الكبيرة للسنة
+  PRO_LIMIT: 3000,            // طلبية بالشهر (١٠٠ باليوم)
 };

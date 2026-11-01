@@ -34,6 +34,38 @@
   @keyframes s { to { transform: rotate(360deg); } }
   .hist li { display: flex; justify-content: space-between; gap: 8px; padding: 10px 0; border-bottom: 1px solid var(--line); cursor: pointer; }
   .hist ul { list-style: none; margin: 0; padding: 0; }
+  .views { display: flex; gap: 6px; margin-bottom: 14px; }
+  .views button { flex: 1; border: 1px solid var(--line); background: var(--surface); font: inherit; font-weight: 700; padding: 11px 6px; border-radius: 12px; color: var(--muted); cursor: pointer; }
+  .views button.on { background: var(--ink); color: var(--bg); border-color: var(--ink); }
+  .meter { display: grid; gap: 6px; margin-bottom: 14px; font-size: 14px; }
+  .meter .bar { height: 8px; border-radius: 99px; background: var(--line); overflow: hidden; }
+  .meter .bar i { display: block; height: 100%; background: var(--brand); border-radius: 99px; }
+  .meter.full .bar i { background: var(--warn); }
+  .money { display: grid; grid-template-columns: 1fr 1fr; gap: 0 10px; }
+  .paid { display: flex; gap: 6px; margin-top: 10px; }
+  .paid button { flex: 1; font: inherit; font-weight: 700; padding: 10px; border-radius: 10px; border: 1px solid var(--line); background: var(--bg); color: var(--muted); cursor: pointer; }
+  .paid button.on.yes { background: var(--soft); color: var(--brand); border-color: var(--brand); }
+  .paid button.on.no { background: var(--warn-soft); color: var(--warn); border-color: var(--warn); }
+  .month { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 12px; }
+  .month b { font-size: 18px; }
+  .month button { min-height: 40px; padding: 6px 14px; }
+  .owed { text-align: center; padding: 22px 16px; }
+  .owed .n { font-size: 44px; font-weight: 800; line-height: 1.1; color: var(--warn); font-variant-numeric: tabular-nums; }
+  .owed.zero .n { color: var(--brand); }
+  .tiles { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 14px; }
+  .tile { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 12px 14px; }
+  .tile span { display: block; font-size: 14px; color: var(--muted); }
+  .tile b { font-size: 24px; font-variant-numeric: tabular-nums; }
+  .tile.net { grid-column: 1 / -1; background: var(--ink); color: var(--bg); border-color: var(--ink); }
+  .tile.net span { color: inherit; opacity: .75; }
+  .rows { list-style: none; margin: 0; padding: 0; }
+  .rows li { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 10px 0; border-bottom: 1px solid var(--line); }
+  .rows li:last-child { border-bottom: 0; }
+  .rows .who { min-width: 0; }
+  .rows .who small { display: block; color: var(--muted); font-size: 13px; }
+  .rows .act { display: flex; gap: 6px; flex: none; }
+  .rows .act .btn { min-height: 38px; padding: 6px 10px; font-size: 14px; }
+  .num { font-weight: 700; font-variant-numeric: tabular-nums; white-space: nowrap; }
   .banner { background: var(--soft); color: var(--brand); padding: 10px 12px; border-radius: 12px; font-size: 14px; margin-bottom: 12px; }
 </style>
 </head>
@@ -43,6 +75,11 @@
     <div class="logo"><img src="icons/icon.svg" alt=""> طلبيّة</div>
     <button class="btn ghost" id="openSettings" style="min-height:40px;padding:8px 12px">الإعدادات</button>
   </header>
+
+  <div class="views" role="tablist">
+    <button class="on" data-view="orders" role="tab">الطلبيات</button>
+    <button data-view="books" role="tab">الحسابات</button>
+  </div>
 
   <div class="banner hide" id="demoBanner">الفويس هون بيطلّع طلبية تجريبية. المحادثات المكتوبة بتتحلل فعلاً، جرّبها بتبويب «محادثة».</div>
 
@@ -56,8 +93,13 @@
     <input id="sPhone" inputmode="tel" placeholder="03 123 456">
     <label for="sDelivery">رقم الديليفري (اختياري)</label>
     <input id="sDelivery" inputmode="tel" placeholder="70 123 456">
+    <label for="sPlan">الباقة</label>
+    <select id="sPlan"></select>
     <div style="margin-top:14px"><button class="btn block" id="saveSettings">حفظ</button></div>
   </section>
+
+  <div id="viewOrders">
+  <div class="meter" id="meter"></div>
 
   <!-- الإدخال -->
   <section class="card" id="input">
@@ -93,6 +135,54 @@
     <h3>آخر الطلبيات</h3>
     <ul id="histList"></ul>
   </section>
+  </div>
+
+  <!-- الحسابات -->
+  <div id="viewBooks" class="hide">
+    <div class="month"><button class="btn ghost" id="mNext" aria-label="الشهر الجاي">›</button><b id="mLabel"></b><button class="btn ghost" id="mPrev" aria-label="الشهر الماضي">‹</button></div>
+
+    <section class="card owed" id="owedCard">
+      <span class="muted">إلك برّا (ما انقبضوا)</span>
+      <div class="n" id="owedN">$0</div>
+      <span class="muted small" id="owedC"></span>
+    </section>
+
+    <div class="tiles">
+      <div class="tile"><span>مبيعات الشهر</span><b id="tSales">$0</b></div>
+      <div class="tile"><span>ربح القطع</span><b id="tProfit">$0</b></div>
+      <div class="tile"><span>المصاريف</span><b id="tExp">$0</b></div>
+      <div class="tile"><span>عدد الطلبيات</span><b id="tCount">0</b></div>
+      <div class="tile net"><span>الصافي بإيدك هالشهر</span><b id="tNet">$0</b></div>
+    </div>
+    <p class="muted small" id="booksNote"></p>
+
+    <section class="card">
+      <h3>مين بعدو ما دفع</h3>
+      <ul class="rows" id="unpaidList"></ul>
+    </section>
+
+    <section class="card">
+      <h3>مصاريف هالشهر</h3>
+      <div class="money">
+        <div><label for="eAmt">المبلغ ($)</label><input id="eAmt" inputmode="decimal" placeholder="15"></div>
+        <div><label for="eCat">شو</label><select id="eCat"><option>توصيل</option><option>تغليف</option><option>إعلانات</option><option>بضاعة</option><option>غيرو</option></select></div>
+      </div>
+      <label for="eNote">ملاحظة (اختياري)</label>
+      <input id="eNote" placeholder="أكياس وكرتون">
+      <div style="margin-top:10px"><button class="btn block" id="eAdd">زيد المصروف</button></div>
+      <ul class="rows" id="expList" style="margin-top:8px"></ul>
+    </section>
+
+    <section class="card">
+      <h3>نسخة احتياطية</h3>
+      <p class="muted small">الطلبيات والحسابات محفوظة عهالتلفون بس. نزّل نسخة كل فترة، وإذا غيّرت تلفون رجّعها من هون.</p>
+      <div class="row" style="margin-top:10px">
+        <button class="btn ghost" id="bExport">نزّل نسخة</button>
+        <label class="btn ghost" for="bImport" style="margin:0">رجّع من نسخة</label>
+      </div>
+      <input type="file" id="bImport" accept="application/json,.json" class="hide">
+    </section>
+  </div>
 </div>
 
 <div class="toast hide" id="toast"></div>
@@ -107,6 +197,10 @@ const store = {
   set(k, v) { try { localStorage.setItem('tb_' + k, JSON.stringify(v)); } catch {} },
 };
 let audioFile = null, tab = 'voice', current = null;
+const PLANS = [
+  { id: 'basic', name: 'الأساسية', price: CFG.BASIC_PRICE || '79$', limit: CFG.BASIC_LIMIT || 600 },
+  { id: 'pro', name: 'الكبيرة', price: CFG.PRO_PRICE || '149$', limit: CFG.PRO_LIMIT || 3000 },
+];
 
 function toast(msg) { const t = $('#toast'); t.textContent = msg; t.classList.remove('hide'); clearTimeout(toast.t); toast.t = setTimeout(() => t.classList.add('hide'), 2600); }
 
@@ -125,11 +219,14 @@ const wa = (num, text) => 'https://wa.me/' + waNum(num) + '?text=' + encodeURICo
 function loadSettings() {
   const s = store.get('settings', {});
   $('#sName').value = s.name || ''; $('#sPhone').value = s.phone || ''; $('#sDelivery').value = s.delivery || '';
+  $('#sPlan').innerHTML = PLANS.map(p => `<option value="${p.id}">${p.name}: ${p.price} بالسنة، لحد ${p.limit.toLocaleString('en')} طلبية بالشهر</option>`).join('');
+  $('#sPlan').value = s.plan || 'basic';
   return s;
 }
 $('#openSettings').onclick = () => $('#settings').classList.toggle('hide');
 $('#saveSettings').onclick = () => {
-  store.set('settings', { name: $('#sName').value.trim(), phone: $('#sPhone').value.trim(), delivery: $('#sDelivery').value.trim() });
+  store.set('settings', { name: $('#sName').value.trim(), phone: $('#sPhone').value.trim(), delivery: $('#sDelivery').value.trim(), plan: $('#sPlan').value });
+  renderMeter();
   $('#settings').classList.add('hide'); toast('انحفظ');
 };
 if (!store.get('settings', {}).phone) $('#settings').classList.remove('hide');
@@ -207,7 +304,7 @@ $('#go').onclick = async () => {
         : 'وضع العرض: النتيجة طلبية تجريبية. لما ينحط رابط الخدمة بـ config.js، بتشتغل عالفويسات الحقيقية.';
       $('#demoBanner').classList.remove('hide');
       await new Promise(r => setTimeout(r, 1400));
-      order = SAMPLE;
+      order = JSON.parse(JSON.stringify(SAMPLE));
     } else {
       const body = tab === 'voice' ? { audio: await toB64(audioFile), mime: mimeOf(audioFile) } : { text };
       const headers = { 'Content-Type': 'application/json' };
@@ -220,9 +317,11 @@ $('#go').onclick = async () => {
     order.id = Date.now().toString(36);
     order.created = new Date().toISOString();
     order.status = 'جديدة';
+    order.paid = false;
+    if (order.total == null && (order.items || []).some(i => i.price != null)) order.total = order.items.reduce((t, i) => t + (Number(i.price) || 0) * (Number(i.qty) || 1), 0);
     current = order;
-    const list = store.get('orders', []); list.unshift(order); store.set('orders', list.slice(0, 100));
-    render(order); renderHistory();
+    const list = store.get('orders', []); list.unshift(order); store.set('orders', list.slice(0, 5000));
+    render(order); renderHistory(); renderMeter();
     $('#result').scrollIntoView({ behavior: 'smooth' });
   } catch (e) {
     toast(e.message || 'صار في مشكلة');
@@ -283,6 +382,14 @@ function render(o) {
       ${o.notes ? `<dt>ملاحظات</dt><dd>${esc(o.notes)}</dd>` : ''}
     </dl>
     ${(o.missing || []).length ? `<div class="missing"><b>ناقص:</b> ${o.missing.map(esc).join('، ')}</div>` : ''}
+    <div class="money">
+      <div><label for="oTotal">المجموع (${/LBP|ليرة/i.test(o.currency || '') ? 'ل.ل.' : '$'})</label><input id="oTotal" inputmode="decimal" value="${o.total ?? ''}"></div>
+      <div><label for="oCost">كلفتها عليّ (اختياري)</label><input id="oCost" inputmode="decimal" placeholder="بيطلع الربح" value="${o.cost ?? ''}"></div>
+    </div>
+    <div class="paid" role="group" aria-label="الدفع">
+      <button class="no ${o.paid ? '' : 'on'}" id="oUnpaid">ما انقبضت</button>
+      <button class="yes ${o.paid ? 'on' : ''}" id="oPaid">انقبضت</button>
+    </div>
     <label for="reply">الرد عالزبون</label>
     <textarea id="reply">${esc(o.reply || '')}</textarea>
     <label for="pinIn">رابط الموقع اللي بعتو الزبون (اختياري)</label>
@@ -309,6 +416,11 @@ function render(o) {
     save(o);
   };
   $('#reply').oninput = refresh; $('#pinIn').oninput = refresh;
+  const num = v => { const n = parseFloat(String(v).replace(/[^\d.]/g, '')); return isFinite(n) ? n : null; };
+  $('#oTotal').oninput = e => { o.total = num(e.target.value); save(o); };
+  $('#oCost').oninput = e => { o.cost = num(e.target.value); save(o); };
+  $('#oPaid').onclick = () => { o.paid = true; o.paidAt = new Date().toISOString(); save(o); render(o); renderHistory(); };
+  $('#oUnpaid').onclick = () => { o.paid = false; delete o.paidAt; save(o); render(o); renderHistory(); };
   $('#aCopy').onclick = () => navigator.clipboard.writeText(cardText(o)).then(() => toast('انتسخت'), () => toast('ما زبط النسخ'));
   $('#aDone').onclick = () => { o.status = o.status === 'انبعتت' ? 'جديدة' : 'انبعتت'; save(o); render(o); renderHistory(); };
   refresh();
@@ -321,12 +433,126 @@ function save(o) {
 function renderHistory() {
   const list = store.get('orders', []);
   $('#history').classList.toggle('hide', !list.length);
-  $('#histList').innerHTML = list.slice(0, 20).map(o => `<li data-id="${esc(o.id)}"><span>${esc(o.customer_name || 'طلبية')} · ${esc((o.items || []).map(i => i.name).join('، '))}</span><span class="pill ${o.status === 'انبعتت' ? '' : 'warn'}">${esc(o.status)}</span></li>`).join('');
+  $('#histList').innerHTML = list.slice(0, 20).map(o => `<li data-id="${esc(o.id)}"><span>${esc(o.customer_name || 'طلبية')} · ${esc((o.items || []).map(i => i.name).join('، '))}</span><span class="pill ${o.paid ? '' : 'warn'}">${o.paid ? 'انقبضت' : esc(o.status)}</span></li>`).join('');
   $('#histList').querySelectorAll('li').forEach(li => li.onclick = () => {
     current = store.get('orders', []).find(x => x.id === li.dataset.id); render(current); $('#result').scrollIntoView({ behavior: 'smooth' });
   });
 }
 renderHistory();
+
+// ---------- العداد ----------
+const monthKey = d => { const x = new Date(d); return x.getFullYear() + '-' + String(x.getMonth() + 1).padStart(2, '0'); };
+function renderMeter() {
+  const plan = PLANS.find(p => p.id === (store.get('settings', {}).plan || 'basic')) || PLANS[0];
+  const used = store.get('orders', []).filter(o => monthKey(o.created) === monthKey(Date.now())).length;
+  const pct = Math.min(100, Math.round(used / plan.limit * 100));
+  const m = $('#meter');
+  m.classList.toggle('full', pct >= 90);
+  m.innerHTML = `<div class="row" style="justify-content:space-between;gap:8px"><span>هالشهر: <b class="num">${used.toLocaleString('en')}</b> من ${plan.limit.toLocaleString('en')} طلبية</span><span class="muted">باقة ${plan.name}</span></div><div class="bar"><i style="width:${pct}%"></i></div>${pct >= 90 ? '<span>قرّبت توصل للحد. الباقة الكبيرة بتعطيك ' + PLANS[1].limit.toLocaleString('en') + ' طلبية بالشهر.</span>' : ''}`;
+}
+renderMeter();
+
+// ---------- الحسابات ----------
+const isLBP = o => /LBP|ليرة/i.test(o.currency || '');
+const usd = n => (n < 0 ? '-$' : '$') + Math.abs(Math.round(n * 100) / 100).toLocaleString('en');
+let bookMonth = monthKey(Date.now());
+const MONTHS = ['كانون التاني', 'شباط', 'آذار', 'نيسان', 'أيار', 'حزيران', 'تموز', 'آب', 'أيلول', 'تشرين الأول', 'تشرين التاني', 'كانون الأول'];
+function shiftMonth(k, d) { const [y, m] = k.split('-').map(Number); const x = new Date(y, m - 1 + d, 1); return monthKey(x); }
+
+function renderBooks() {
+  const [y, m] = bookMonth.split('-').map(Number);
+  $('#mLabel').textContent = MONTHS[m - 1] + ' ' + y;
+  $('#mNext').disabled = bookMonth >= monthKey(Date.now());
+  const all = store.get('orders', []);
+  const inMonth = all.filter(o => monthKey(o.created) === bookMonth && o.total != null);
+  const usdOrders = inMonth.filter(o => !isLBP(o));
+  const sales = usdOrders.reduce((t, o) => t + Number(o.total), 0);
+  const withCost = usdOrders.filter(o => o.cost != null);
+  const profit = withCost.reduce((t, o) => t + Number(o.total) - Number(o.cost), 0);
+  const exps = store.get('expenses', []).filter(e => monthKey(e.date) === bookMonth);
+  const expSum = exps.reduce((t, e) => t + Number(e.amount), 0);
+  // الصافي: ربح الطلبيات اللي إلها كلفة، والباقي بالمبيعات كاملة، ناقص المصاريف
+  const base = profit + usdOrders.filter(o => o.cost == null).reduce((t, o) => t + Number(o.total), 0);
+  $('#tSales').textContent = usd(sales);
+  $('#tProfit').textContent = withCost.length ? usd(profit) : '—';
+  $('#tExp').textContent = usd(expSum);
+  $('#tCount').textContent = inMonth.length;
+  $('#tNet').textContent = usd(base - expSum);
+  const noCost = usdOrders.length - withCost.length;
+  const lbp = inMonth.filter(isLBP);
+  $('#booksNote').textContent = [
+    noCost ? `${noCost} طلبية بلا كلفة، فالصافي محسوب على مبيعاتها كاملة. زيد «كلفتها عليّ» بالطلبية ليطلع الربح الحقيقي.` : '',
+    lbp.length ? `${lbp.length} طلبية بالليرة مش محسوبة بالدولار (${lbp.reduce((t, o) => t + Number(o.total), 0).toLocaleString('en')} ل.ل.).` : '',
+  ].filter(Boolean).join(' ');
+
+  // الديون: كل الشهور، مش بس هالشهر
+  const unpaid = all.filter(o => !o.paid && o.total != null && !isLBP(o));
+  const owed = unpaid.reduce((t, o) => t + Number(o.total), 0);
+  $('#owedN').textContent = usd(owed);
+  $('#owedCard').classList.toggle('zero', !unpaid.length);
+  $('#owedC').textContent = unpaid.length ? `${unpaid.length} طلبية` : 'كل الطلبيات انقبضت';
+  const shop = store.get('settings', {}).name || '';
+  $('#unpaidList').innerHTML = unpaid.length ? unpaid.map(o => `
+    <li data-id="${esc(o.id)}">
+      <div class="who"><b>${esc(o.customer_name || 'زبون')}</b><small>${esc((o.items || []).map(i => i.name).join('، '))} · ${new Date(o.created).toLocaleDateString('en-GB')}</small></div>
+      <span class="num">${usd(Number(o.total))}</span>
+      <div class="act">
+        <a class="btn wa" target="_blank" rel="noopener" href="${wa(o.phone, `أهلين${o.customer_name ? ' ' + o.customer_name : ''}، بتمنى تكون عجبتك الطلبية. بس للتذكير، المبلغ ${usd(Number(o.total))}${shop ? '، ' + shop : ''}. شكراً كتير!`)}">ذكّر</a>
+        <button class="btn ghost" data-paid="${esc(o.id)}">انقبضت</button>
+      </div>
+    </li>`).join('') : '<li class="muted">ما في حدا مديون. منيح!</li>';
+  $('#unpaidList').querySelectorAll('[data-paid]').forEach(b => b.onclick = () => {
+    const o = store.get('orders', []).find(x => x.id === b.dataset.paid); if (!o) return;
+    o.paid = true; o.paidAt = new Date().toISOString(); save(o); renderBooks(); renderHistory(); toast('انقبضت');
+  });
+
+  $('#expList').innerHTML = exps.map(e => `<li><div class="who"><b>${esc(e.cat)}</b><small>${esc(e.note || '')} ${new Date(e.date).toLocaleDateString('en-GB')}</small></div><span class="num">${usd(Number(e.amount))}</span><div class="act"><button class="btn ghost" data-del="${esc(e.id)}" aria-label="امحي">امحي</button></div></li>`).join('');
+  $('#expList').querySelectorAll('[data-del]').forEach(b => b.onclick = () => {
+    store.set('expenses', store.get('expenses', []).filter(x => x.id !== b.dataset.del)); renderBooks();
+  });
+}
+$('#mPrev').onclick = () => { bookMonth = shiftMonth(bookMonth, -1); renderBooks(); };
+$('#mNext').onclick = () => { bookMonth = shiftMonth(bookMonth, 1); renderBooks(); };
+$('#eAdd').onclick = () => {
+  const amount = parseFloat($('#eAmt').value.replace(/[^\d.]/g, ''));
+  if (!isFinite(amount) || amount <= 0) return toast('اكتب المبلغ');
+  const now = new Date(); const [y, m] = bookMonth.split('-').map(Number);
+  const date = bookMonth === monthKey(now) ? now : new Date(y, m - 1, 15);
+  const list = store.get('expenses', []);
+  list.unshift({ id: Date.now().toString(36), amount, cat: $('#eCat').value, note: $('#eNote').value.trim(), date: date.toISOString() });
+  store.set('expenses', list);
+  $('#eAmt').value = ''; $('#eNote').value = ''; renderBooks(); toast('انزاد');
+};
+
+// النسخة الاحتياطية
+$('#bExport').onclick = () => {
+  const data = { app: 'talabiye', v: 1, at: new Date().toISOString(), settings: store.get('settings', {}), orders: store.get('orders', []), expenses: store.get('expenses', []) };
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([JSON.stringify(data, null, 1)], { type: 'application/json' }));
+  a.download = 'talabiye-' + new Date().toISOString().slice(0, 10) + '.json';
+  document.body.appendChild(a); a.click(); a.remove();
+};
+$('#bImport').onchange = async e => {
+  const f = e.target.files[0]; if (!f) return;
+  try {
+    const d = JSON.parse(await f.text());
+    if (d.app !== 'talabiye') throw 0;
+    const merge = (cur, inc) => { const ids = new Set(cur.map(x => x.id)); return cur.concat((inc || []).filter(x => !ids.has(x.id))); };
+    store.set('orders', merge(store.get('orders', []), d.orders).sort((a, b) => (b.created || '').localeCompare(a.created || '')));
+    store.set('expenses', merge(store.get('expenses', []), d.expenses));
+    if (d.settings && !store.get('settings', {}).phone) store.set('settings', d.settings);
+    loadSettings(); renderBooks(); renderHistory(); renderMeter(); toast('رجعت النسخة');
+  } catch { toast('هيدا مش ملف نسخة من طلبيّة'); }
+  e.target.value = '';
+};
+
+// التبديل بين الطلبيات والحسابات
+document.querySelectorAll('[data-view]').forEach(b => b.onclick = () => {
+  document.querySelectorAll('[data-view]').forEach(x => x.classList.toggle('on', x === b));
+  $('#viewOrders').classList.toggle('hide', b.dataset.view !== 'orders');
+  $('#viewBooks').classList.toggle('hide', b.dataset.view !== 'books');
+  if (b.dataset.view === 'books') renderBooks();
+});
 
 if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(() => {});
 </script>

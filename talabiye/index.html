@@ -305,6 +305,9 @@ section h2 { font-size: clamp(34px, 6vw, 58px); max-width: 18ch; }
   .coupon .right { border-inline-start: 0; border-top: 2px dashed #C9C6BC; }
 }
 
+.pro { margin-top: 18px; max-width: 760px; color: var(--ink-2); font-size: 17px; }
+.pro b { color: var(--ink); }
+
 /* faq */
 .faq { margin-top: 30px; max-width: 760px; }
 .faq details { border-top: 1.5px solid var(--rule); padding-block: 16px; }
@@ -449,24 +452,27 @@ footer .brand img { width: 30px; height: 30px; }
 
 <section class="band" aria-labelledby="h-price" style="background:var(--ground-2)">
   <div class="in">
-    <p class="kicker">Founders price</p>
-    <h2 id="h-price">سعر أول ٥٠ محل.</h2>
+    <p class="kicker">Pricing</p>
+    <h2 id="h-price">سعر واحد بالسنة، بلا مفاجآت.</h2>
     <div class="coupon">
       <div class="left">
-        <span class="pr mono" id="early">$79</span>
+        <span class="per">الباقة الأساسية</span>
+        <span class="pr mono" id="basicP">$79</span>
         <span class="per">للسنة كلها</span>
-        <span>بدل <s class="mono" id="normal">$149</s>، وبيضل سعرك هيك طول ما إنت مشترك.</span>
+        <span>أول ٥٠ محل بيضل سعرن هيك طول ما هنّي مشتركين.</span>
       </div>
       <div class="right">
         <ul>
-          <li><svg><use href="#i-check"/></svg>فويسات ومحادثات بلا حد</li>
+          <li><svg><use href="#i-check"/></svg>لحد <b id="basicL">٦٠٠</b> طلبية بالشهر، يعني ٢٠ باليوم</li>
           <li><svg><use href="#i-check"/></svg>روابط دبّوس لكل زبائنك</li>
+          <li><svg><use href="#i-check"/></svg>الحسابات: مين بعدو ما دفع، الربح، والمصاريف</li>
           <li><svg><use href="#i-check"/></svg>أول ١٤ يوم ببلاش</li>
           <li><svg><use href="#i-check"/></svg>الدفع Whish أو OMT أو USDT</li>
         </ul>
         <a class="btn" id="join2" target="_blank" rel="noopener"><svg><use href="#i-wa"/></svg>احجز محلّك</a>
       </div>
     </div>
+    <p class="pro">محلك أكبر؟ <b>الباقة الكبيرة <span class="mono" id="proP">$149</span> بالسنة</b>، لحد <span id="proL">٣٠٠٠</span> طلبية بالشهر.</p>
   </div>
 </section>
 
@@ -477,6 +483,7 @@ footer .brand img { width: 30px; height: 30px; }
       <details><summary>لازم نزّل تطبيق؟</summary><p>لا. بينفتح من المتصفح وبينزل عالشاشة متل أي تطبيق. والزبونة ما بتحتاج شي.</p></details>
       <details><summary>بتفهم اللهجة اللبنانية؟</summary><p>إيه، ومعمولة إلها. وإذا شي مش واضح بالفويس، بتقلك شو ناقص بدل ما تخمّن.</p></details>
       <details><summary>وين بتنحفظ طلبياتي؟</summary><p>على تلفونك. الفويس بيتحلل وما منحفظو عنا.</p></details>
+      <details><summary>شو بيصير إذا خلصت الطلبيات بالشهر؟</summary><p>بيضل كل شي محفوظ وبتقدر تفوت عالحسابات. بس تحليل الفويسات الجديدة بيوقف لأول الشهر، إلا إذا نقلت عالباقة الكبيرة. والعداد بالتطبيق بيقلك قديش استعملت قبل ما توصل.</p></details>
       <details><summary>بتشتغل عالآيفون؟</summary><p>إيه. عالآيفون بتحفظ الفويس بالملفات وبتختارو من التطبيق، أو بتلصق المحادثة.</p></details>
     </div>
   </div>
@@ -494,7 +501,10 @@ footer .brand img { width: 30px; height: 30px; }
 (() => {
   const C = window.TALABIYE_CFG || {};
   const set = (id, v) => { const el = document.getElementById(id); if (el && v) el.textContent = '$' + String(v).replace(/\$/g, ''); };
-  set('early', C.EARLY_PRICE); set('normal', C.PRICE);
+  set('basicP', C.BASIC_PRICE); set('proP', C.PRO_PRICE);
+  const ar = n => Number(n).toLocaleString('ar-EG');
+  if (C.BASIC_LIMIT) document.getElementById('basicL').textContent = ar(C.BASIC_LIMIT);
+  if (C.PRO_LIMIT) document.getElementById('proL').textContent = ar(C.PRO_LIMIT);
   const msg = encodeURIComponent('مرحبا، بدي جرّب طلبيّة لمحلي.\nاسم المحل: \nشو بتبيعو: ');
   const join = C.OWNER_WHATSAPP ? 'https://wa.me/' + C.OWNER_WHATSAPP + '?text=' + msg : 'app.html';
   ['join', 'join2'].forEach(id => { const a = document.getElementById(id); a.href = join; if (!C.OWNER_WHATSAPP) a.removeAttribute('target'); });
