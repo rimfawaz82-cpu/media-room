@@ -21,7 +21,7 @@
   <div class="hero">
     <div class="icon" aria-hidden="true">📍</div>
     <h1 id="title">حدّد موقعك</h1>
-    <p class="muted">كبسة وحدة، والديليفري بيوصلك بلا ما يتصل ويسأل.</p>
+    <p class="muted">اسمح بالموقع وكبّس «ابعت». الديليفري بيوصلك بلا ما يتصل ويسأل.</p>
   </div>
 
   <section class="card">
@@ -97,6 +97,9 @@ $('#send').onclick = e => {
   update();
 };
 update();
+
+// الموقع بيتحدد لحالو أول ما تنفتح الصفحة؛ الزبون بس بيكبس «سماح» وبعدين «ابعت»
+if (!saved || !saved.pos) $('#locate').click();
 </script>
 </body>
 </html>
