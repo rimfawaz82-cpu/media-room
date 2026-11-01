@@ -1,0 +1,25 @@
+{
+  "name": "طلبيّة: الفويس بيصير طلبية",
+  "short_name": "طلبيّة",
+  "description": "بتحوّل فويسات ومحادثات الواتساب لطلبيات مرتبة، والعنوان لدبّوس عالخريطة",
+  "lang": "ar",
+  "dir": "rtl",
+  "start_url": "app.html",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#FBF7F1",
+  "theme_color": "#0E7C66",
+  "icons": [
+    { "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png" },
+    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ],
+  "share_target": {
+    "action": "share",
+    "method": "POST",
+    "enctype": "multipart/form-data",
+    "params": {
+      "files": [{ "name": "audio", "accept": ["audio/*", ".opus", ".ogg", ".m4a", ".mp3"] }]
+    }
+  }
+}

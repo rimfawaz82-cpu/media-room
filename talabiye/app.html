@@ -1,0 +1,315 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>طلبيّة</title>
+<meta name="theme-color" content="#0E7C66">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icons/icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="icons/icon-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+<style>
+  header { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 12px; }
+  header .logo { display: flex; align-items: center; gap: 8px; font-weight: 800; font-size: 22px; }
+  header img { width: 34px; height: 34px; }
+  .tabs { display: flex; gap: 6px; background: var(--bg); padding: 4px; border-radius: 12px; border: 1px solid var(--line); margin-bottom: 12px; }
+  .tabs button { flex: 1; border: 0; background: transparent; font: inherit; font-weight: 700; padding: 10px 6px; border-radius: 9px; color: var(--muted); cursor: pointer; }
+  .tabs button.on { background: var(--surface); color: var(--ink); box-shadow: var(--shadow); }
+  .drop { border: 2px dashed var(--line); border-radius: 14px; padding: 22px 12px; text-align: center; cursor: pointer; }
+  .drop b { display: block; font-size: 18px; }
+  audio { width: 100%; margin-top: 10px; }
+  .order h3 { display: flex; justify-content: space-between; align-items: center; }
+  .kv { display: grid; grid-template-columns: 92px 1fr; gap: 6px 10px; margin: 8px 0; }
+  .kv dt { color: var(--muted); font-size: 15px; }
+  .kv dd { margin: 0; font-weight: 700; overflow-wrap: anywhere; }
+  .items { list-style: none; padding: 0; margin: 6px 0; }
+  .items li { padding: 8px 10px; border-radius: 10px; background: var(--bg); margin-bottom: 6px; display: flex; justify-content: space-between; gap: 8px; }
+  .missing { background: var(--warn-soft); color: var(--warn); border-radius: 12px; padding: 10px 12px; margin: 10px 0; font-size: 15px; }
+  .actions { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 12px; }
+  .actions .btn { padding: 11px 8px; font-size: 15px; }
+  .spin { width: 22px; height: 22px; border: 3px solid currentColor; border-top-color: transparent; border-radius: 50%; animation: s 1s linear infinite; }
+  @keyframes s { to { transform: rotate(360deg); } }
+  .hist li { display: flex; justify-content: space-between; gap: 8px; padding: 10px 0; border-bottom: 1px solid var(--line); cursor: pointer; }
+  .hist ul { list-style: none; margin: 0; padding: 0; }
+  .banner { background: var(--soft); color: var(--brand); padding: 10px 12px; border-radius: 12px; font-size: 14px; margin-bottom: 12px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="logo"><img src="icons/icon.svg" alt=""> طلبيّة</div>
+    <button class="btn ghost" id="openSettings" style="min-height:40px;padding:8px 12px">الإعدادات</button>
+  </header>
+
+  <div class="banner hide" id="demoBanner">وضع العرض: النتيجة طلبية تجريبية. لما ينحط رابط الخدمة بـ config.js، بتشتغل عالفويسات الحقيقية.</div>
+
+  <!-- الإعدادات -->
+  <section class="card hide" id="settings">
+    <h2>معلوماتك</h2>
+    <p class="muted small">بتنحفظ عهالجهاز بس. منستعملها لنبعت الرسائل باسمك.</p>
+    <label for="sName">اسم المحل</label>
+    <input id="sName" placeholder="مثلاً: Lara Boutique">
+    <label for="sPhone">رقم واتساب المحل</label>
+    <input id="sPhone" inputmode="tel" placeholder="03 123 456">
+    <label for="sDelivery">رقم الديليفري (اختياري)</label>
+    <input id="sDelivery" inputmode="tel" placeholder="70 123 456">
+    <div style="margin-top:14px"><button class="btn block" id="saveSettings">حفظ</button></div>
+  </section>
+
+  <!-- الإدخال -->
+  <section class="card" id="input">
+    <h2>شو بعتلك الزبون؟</h2>
+    <div class="tabs" role="tablist">
+      <button class="on" data-tab="voice" role="tab">فويس</button>
+      <button data-tab="text" role="tab">محادثة</button>
+    </div>
+
+    <div data-pane="voice">
+      <label class="drop" for="file">
+        <b>اختار الفويس</b>
+        <span class="muted small">من واتساب: كبسة طويلة عالفويس ← مشاركة ← طلبيّة (أندرويد)، أو احفظو بالملفات واختارو من هون</span>
+      </label>
+      <input type="file" id="file" accept="audio/*,.opus,.ogg,.m4a,.mp3,.aac,.wav" class="hide">
+      <audio id="player" controls class="hide"></audio>
+    </div>
+
+    <div data-pane="text" class="hide">
+      <label for="chat">الصق المحادثة</label>
+      <textarea id="chat" placeholder="مرحبا بدي الكنزة البيج مقاس L والجينز الأزرق 30، عنواني الحمرا حد صيدلية مازن بناية الريحان طابق 3، الدفع كاش"></textarea>
+    </div>
+
+    <div style="margin-top:12px"><button class="btn block" id="go">طلّعلي الطلبية</button></div>
+  </section>
+
+  <!-- النتيجة -->
+  <section class="card order hide" id="result"></section>
+
+  <!-- آخر الطلبيات -->
+  <section class="card hist hide" id="history">
+    <h3>آخر الطلبيات</h3>
+    <ul id="histList"></ul>
+  </section>
+</div>
+
+<div class="toast hide" id="toast"></div>
+
+<script src="config.js"></script>
+<script>
+const CFG = window.TALABIYE_CFG || {};
+const $ = s => document.querySelector(s);
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const store = {
+  get(k, d) { try { const v = localStorage.getItem('tb_' + k); return v ? JSON.parse(v) : d; } catch { return d; } },
+  set(k, v) { try { localStorage.setItem('tb_' + k, JSON.stringify(v)); } catch {} },
+};
+let audioFile = null, tab = 'voice', current = null;
+
+function toast(msg) { const t = $('#toast'); t.textContent = msg; t.classList.remove('hide'); clearTimeout(toast.t); toast.t = setTimeout(() => t.classList.add('hide'), 2600); }
+
+// رقم لبناني لصيغة واتساب: 03 123 456 ← 9613123456
+function waNum(p) {
+  let d = String(p || '').replace(/\D/g, '');
+  if (!d) return '';
+  if (d.startsWith('00')) d = d.slice(2);
+  if (d.startsWith('961')) return d;
+  if (d.startsWith('0')) d = d.slice(1);
+  return d.length <= 8 ? '961' + d : d;
+}
+const wa = (num, text) => 'https://wa.me/' + waNum(num) + '?text=' + encodeURIComponent(text);
+
+// ---------- الإعدادات ----------
+function loadSettings() {
+  const s = store.get('settings', {});
+  $('#sName').value = s.name || ''; $('#sPhone').value = s.phone || ''; $('#sDelivery').value = s.delivery || '';
+  return s;
+}
+$('#openSettings').onclick = () => $('#settings').classList.toggle('hide');
+$('#saveSettings').onclick = () => {
+  store.set('settings', { name: $('#sName').value.trim(), phone: $('#sPhone').value.trim(), delivery: $('#sDelivery').value.trim() });
+  $('#settings').classList.add('hide'); toast('انحفظ');
+};
+if (!store.get('settings', {}).phone) $('#settings').classList.remove('hide');
+loadSettings();
+
+// ---------- التبويبات ----------
+document.querySelectorAll('[data-tab]').forEach(b => b.onclick = () => {
+  tab = b.dataset.tab;
+  document.querySelectorAll('[data-tab]').forEach(x => x.classList.toggle('on', x === b));
+  document.querySelectorAll('[data-pane]').forEach(p => p.classList.toggle('hide', p.dataset.pane !== tab));
+});
+
+function setAudio(f) {
+  audioFile = f;
+  const p = $('#player'); p.src = URL.createObjectURL(f); p.classList.remove('hide');
+  document.querySelector('.drop b').textContent = f.name || 'فويس';
+}
+$('#file').onchange = e => { if (e.target.files[0]) setAudio(e.target.files[0]); };
+
+// فويس جايي من «مشاركة» بواتساب (أندرويد): الـ service worker بيحطو بالكاش
+if (new URLSearchParams(location.search).has('shared') && 'caches' in window) {
+  caches.open('talabiye-share').then(c => c.match('shared-file')).then(async r => {
+    if (!r) return;
+    const blob = await r.blob();
+    const name = decodeURIComponent(r.headers.get('x-name') || 'voice.opus');
+    setAudio(new File([blob], name, { type: blob.type }));
+    caches.delete('talabiye-share');
+    history.replaceState(null, '', 'app.html');
+  });
+}
+
+function mimeOf(f) {
+  const ext = (f.name.split('.').pop() || '').toLowerCase();
+  const map = { opus: 'audio/ogg', ogg: 'audio/ogg', oga: 'audio/ogg', mp3: 'audio/mp3', m4a: 'audio/mp4', mp4: 'audio/mp4', aac: 'audio/aac', wav: 'audio/wav', flac: 'audio/flac' };
+  if (map[ext]) return map[ext];
+  if (/opus|ogg/.test(f.type)) return 'audio/ogg';
+  return f.type || 'audio/ogg';
+}
+const toB64 = f => new Promise((ok, no) => { const r = new FileReader(); r.onload = () => ok(String(r.result).split(',')[1]); r.onerror = no; r.readAsDataURL(f); });
+
+// ---------- طلبية تجريبية (لما ما في خدمة) ----------
+const SAMPLE = {
+  customer_name: 'ريما', phone: '03 456 789',
+  items: [{ name: 'كنزة صوف', size: 'L', color: 'بيج', qty: 1, price: 25 }, { name: 'جينز', size: '30', color: 'أزرق', qty: 1, price: 30 }],
+  total: 55, currency: 'USD',
+  address: { text: 'الحمرا، حد صيدلية مازن، بناية الريحان، الطابق التالت', city: 'بيروت', area: 'الحمرا', street: '', building: 'بناية الريحان', floor: '3', landmarks: ['صيدلية مازن'], map_query: 'صيدلية مازن الحمرا بيروت Lebanon' },
+  delivery_time: 'بكرا بعد الضهر', payment: 'كاش عالتسليم', notes: '',
+  missing: ['رقم الشقة', 'هل التوصيل مدفوع من الزبونة؟'],
+  reply: 'أهلين ريما، تأكدت الطلبية: كنزة صوف بيج L وجينز أزرق 30، المجموع 55$. بتوصلك بكرا بعد الضهر. بس قوليلي رقم الشقة لو سمحتي.'
+};
+
+$('#go').onclick = async () => {
+  const text = $('#chat').value.trim();
+  if (tab === 'voice' && !audioFile) return toast('اختار فويس الأول');
+  if (tab === 'text' && !text) return toast('الصق المحادثة الأول');
+  const btn = $('#go'); btn.disabled = true; btn.innerHTML = '<span class="spin"></span> عم إسمع وإفهم...';
+  try {
+    let order;
+    if (!CFG.PARSE_URL) {
+      $('#demoBanner').classList.remove('hide');
+      await new Promise(r => setTimeout(r, 1400));
+      order = SAMPLE;
+    } else {
+      const body = tab === 'voice' ? { audio: await toB64(audioFile), mime: mimeOf(audioFile) } : { text };
+      const headers = { 'Content-Type': 'application/json' };
+      if (CFG.SUPABASE_ANON_KEY) { headers.apikey = CFG.SUPABASE_ANON_KEY; headers.Authorization = 'Bearer ' + CFG.SUPABASE_ANON_KEY; }
+      const r = await fetch(CFG.PARSE_URL, { method: 'POST', headers, body: JSON.stringify(body) });
+      const j = await r.json().catch(() => ({}));
+      if (!r.ok || !j.order) throw new Error(j.error || 'صار في مشكلة');
+      order = j.order;
+    }
+    order.id = Date.now().toString(36);
+    order.created = new Date().toISOString();
+    order.status = 'جديدة';
+    current = order;
+    const list = store.get('orders', []); list.unshift(order); store.set('orders', list.slice(0, 100));
+    render(order); renderHistory();
+    $('#result').scrollIntoView({ behavior: 'smooth' });
+  } catch (e) {
+    toast(e.message || 'صار في مشكلة');
+  } finally {
+    btn.disabled = false; btn.textContent = 'طلّعلي الطلبية';
+  }
+};
+
+// ---------- عرض الطلبية ----------
+function money(o) {
+  if (o.total == null || o.total === '') return '';
+  const c = /LBP|ليرة/i.test(o.currency || '') ? ' ل.ل.' : '$';
+  return Number(o.total).toLocaleString('en') + c;
+}
+function itemLine(i) {
+  return [i.qty > 1 ? i.qty + '×' : '', i.name, i.color, i.size ? 'مقاس ' + i.size : ''].filter(Boolean).join(' ');
+}
+function mapUrl(o) {
+  const a = o.address || {};
+  if (o.pin) return o.pin;
+  const q = a.map_query || [a.building, a.street, a.area, a.city, 'Lebanon'].filter(Boolean).join(' ');
+  return 'https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(q);
+}
+function cardText(o) {
+  const a = o.address || {};
+  return [
+    '📦 طلبية' + (o.customer_name ? ' — ' + o.customer_name : ''),
+    o.phone ? '📞 ' + o.phone : '',
+    ...(o.items || []).map(i => '• ' + itemLine(i) + (i.price != null ? ' — ' + i.price : '')),
+    money(o) ? '💵 المجموع: ' + money(o) + (o.payment ? ' (' + o.payment + ')' : '') : (o.payment ? '💵 ' + o.payment : ''),
+    a.text ? '📍 ' + a.text : '',
+    '🗺️ ' + mapUrl(o),
+    o.delivery_time ? '🕒 ' + o.delivery_time : '',
+    o.notes ? '📝 ' + o.notes : '',
+  ].filter(Boolean).join('\n');
+}
+function pinLink(o) {
+  const s = store.get('settings', {});
+  const base = new URL('pin.html', location.href);
+  base.searchParams.set('s', waNum(s.phone)); base.searchParams.set('n', s.name || ''); base.searchParams.set('r', o.id);
+  return base.href;
+}
+
+function render(o) {
+  const a = o.address || {};
+  const s = store.get('settings', {});
+  const el = $('#result');
+  el.innerHTML = `
+    <h3>${esc(o.customer_name || 'طلبية')} <span class="pill">${esc(o.status || 'جديدة')}</span></h3>
+    <ul class="items">${(o.items || []).map(i => `<li><span>${esc(itemLine(i))}</span><b>${i.price != null ? esc(i.price) : ''}</b></li>`).join('')}</ul>
+    <dl class="kv">
+      ${money(o) ? `<dt>المجموع</dt><dd>${esc(money(o))}</dd>` : ''}
+      ${o.phone ? `<dt>الرقم</dt><dd>${esc(o.phone)}</dd>` : ''}
+      ${a.text ? `<dt>العنوان</dt><dd>${esc(a.text)}</dd>` : ''}
+      ${o.pin ? `<dt>الموقع</dt><dd><span class="pill">دبّوس من الزبون</span></dd>` : ''}
+      ${o.delivery_time ? `<dt>الوقت</dt><dd>${esc(o.delivery_time)}</dd>` : ''}
+      ${o.payment ? `<dt>الدفع</dt><dd>${esc(o.payment)}</dd>` : ''}
+      ${o.notes ? `<dt>ملاحظات</dt><dd>${esc(o.notes)}</dd>` : ''}
+    </dl>
+    ${(o.missing || []).length ? `<div class="missing"><b>ناقص:</b> ${o.missing.map(esc).join('، ')}</div>` : ''}
+    <label for="reply">الرد عالزبون</label>
+    <textarea id="reply">${esc(o.reply || '')}</textarea>
+    <label for="pinIn">رابط الموقع اللي بعتو الزبون (اختياري)</label>
+    <input id="pinIn" placeholder="الصق رابط الخريطة هون" value="${esc(o.pin || '')}">
+    <div class="actions">
+      <a class="btn wa" id="aReply" target="_blank" rel="noopener">ابعت الرد</a>
+      <a class="btn ghost" id="aPin" target="_blank" rel="noopener">اطلب دبّوس الموقع</a>
+      <a class="btn ghost" id="aMap" target="_blank" rel="noopener">افتح الخريطة</a>
+      <a class="btn" id="aDel" target="_blank" rel="noopener">ابعت للديليفري</a>
+      <button class="btn ghost" id="aCopy">انسخ الطلبية</button>
+      <button class="btn ghost" id="aDone">${o.status === 'انبعتت' ? 'رجّعها جديدة' : 'علّمها انبعتت'}</button>
+    </div>`;
+  el.classList.remove('hide');
+
+  const refresh = () => {
+    o.reply = $('#reply').value;
+    o.pin = $('#pinIn').value.trim();
+    $('#aReply').href = wa(o.phone, o.reply);
+    $('#aPin').href = wa(o.phone, `أهلين${o.customer_name ? ' ' + o.customer_name : ''}، كرمال يوصلك الديليفري بلا ما يضيع، كبسي هون وحدّدي موقعك بكبسة: ${pinLink(o)}`);
+    $('#aMap').href = mapUrl(o);
+    $('#aDel').href = wa(s.delivery, cardText(o));
+    save(o);
+  };
+  $('#reply').oninput = refresh; $('#pinIn').oninput = refresh;
+  $('#aCopy').onclick = () => navigator.clipboard.writeText(cardText(o)).then(() => toast('انتسخت'), () => toast('ما زبط النسخ'));
+  $('#aDone').onclick = () => { o.status = o.status === 'انبعتت' ? 'جديدة' : 'انبعتت'; save(o); render(o); renderHistory(); };
+  refresh();
+}
+function save(o) {
+  const list = store.get('orders', []); const i = list.findIndex(x => x.id === o.id);
+  if (i >= 0) list[i] = o; else list.unshift(o);
+  store.set('orders', list);
+}
+function renderHistory() {
+  const list = store.get('orders', []);
+  $('#history').classList.toggle('hide', !list.length);
+  $('#histList').innerHTML = list.slice(0, 20).map(o => `<li data-id="${esc(o.id)}"><span>${esc(o.customer_name || 'طلبية')} · ${esc((o.items || []).map(i => i.name).join('، '))}</span><span class="pill ${o.status === 'انبعتت' ? '' : 'warn'}">${esc(o.status)}</span></li>`).join('');
+  $('#histList').querySelectorAll('li').forEach(li => li.onclick = () => {
+    current = store.get('orders', []).find(x => x.id === li.dataset.id); render(current); $('#result').scrollIntoView({ behavior: 'smooth' });
+  });
+}
+renderHistory();
+
+if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(() => {});
+</script>
+</body>
+</html>

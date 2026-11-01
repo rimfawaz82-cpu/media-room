@@ -1,0 +1,134 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>طلبيّة: الفويس بيصير طلبية</title>
+<meta name="description" content="للي بيبيعوا عالإنستغرام والواتساب: ابعت فويس الزبون، بتطلعلك الطلبية مرتبة مع العنوان عالخريطة والرد جاهز.">
+<meta property="og:title" content="طلبيّة: الفويس بيصير طلبية">
+<meta property="og:description" content="ابعت فويس الزبون، بتطلعلك الطلبية مرتبة مع العنوان عالخريطة والرد جاهز.">
+<meta name="theme-color" content="#0E7C66">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icons/icon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+<style>
+  nav { display: flex; justify-content: space-between; align-items: center; padding: 14px 0; }
+  nav .logo { display: flex; gap: 8px; align-items: center; font-weight: 800; font-size: 22px; }
+  nav img { width: 34px; height: 34px; }
+  .hero { display: grid; gap: 28px; align-items: center; padding: 24px 0 40px; }
+  @media (min-width: 860px) { .hero { grid-template-columns: 1.1fr .9fr; } }
+  .hero h1 { font-size: clamp(32px, 7vw, 52px); font-weight: 800; margin-bottom: 14px; }
+  .hero h1 em { font-style: normal; color: var(--brand); }
+  .hero p { font-size: 19px; color: var(--muted); margin: 0 0 20px; }
+  .cta { display: flex; gap: 10px; flex-wrap: wrap; }
+  .demo { background: var(--surface); border: 1px solid var(--line); border-radius: 22px; padding: 16px; box-shadow: var(--shadow); }
+  .bubble { background: #DCF8C6; color: #1D1A16; border-radius: 14px 14px 4px 14px; padding: 10px 12px; display: flex; gap: 10px; align-items: center; max-width: 85%; }
+  .wave { flex: 1; height: 22px; background: repeating-linear-gradient(90deg, #4A7C59 0 3px, transparent 3px 6px); mask: linear-gradient(90deg, #000 0 60%, rgba(0,0,0,.3) 60%); -webkit-mask: linear-gradient(90deg, #000 0 60%, rgba(0,0,0,.3) 60%); border-radius: 4px; }
+  .arrow { text-align: center; color: var(--muted); margin: 10px 0; font-weight: 700; }
+  .mini { border: 1px solid var(--line); border-radius: 14px; padding: 12px; }
+  .mini div { display: flex; justify-content: space-between; padding: 4px 0; border-bottom: 1px dashed var(--line); font-size: 15px; }
+  .mini div:last-child { border: 0; }
+  section.block { padding: 36px 0; border-top: 1px solid var(--line); }
+  section.block h2 { font-size: clamp(24px, 5vw, 34px); margin-bottom: 18px; }
+  .grid { display: grid; gap: 14px; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); }
+  .grid .card h3 { font-size: 19px; }
+  .step { font-weight: 800; color: var(--accent); font-size: 28px; }
+  .price { text-align: center; }
+  .price .big { font-size: 44px; font-weight: 800; }
+  .price s { color: var(--muted); }
+  details { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 12px 14px; margin-bottom: 8px; }
+  summary { font-weight: 700; cursor: pointer; }
+  footer { padding: 30px 0; text-align: center; color: var(--muted); font-size: 14px; }
+</style>
+</head>
+<body>
+<div class="wrap wide">
+  <nav>
+    <div class="logo"><img src="icons/icon.svg" alt=""> طلبيّة</div>
+    <a class="btn ghost" href="app.html" style="min-height:40px;padding:8px 14px">جرّب هلّق</a>
+  </nav>
+
+  <div class="hero">
+    <div>
+      <h1>الزبونة بعتتلك فويس دقيقتين؟<br><em>بـ ١٠ ثواني بيصير طلبية.</em></h1>
+      <p>للي بيبيعوا عالإنستغرام والواتساب. ابعت الفويس أو المحادثة، بتطلعلك الطلبية مرتبة: القطع، المقاسات، السعر، العنوان عالخريطة، والرد جاهز تبعتو.</p>
+      <div class="cta">
+        <a class="btn wa" id="join" target="_blank" rel="noopener">بدي جرّب ببلاش</a>
+        <a class="btn ghost" href="app.html">شوف كيف بتشتغل</a>
+      </div>
+      <p class="small muted" style="margin-top:12px">بتفهم اللبناني، والعربي، والإنكليزي، وكلن مخلوطين.</p>
+    </div>
+    <div class="demo" aria-label="مثال">
+      <div class="bubble"><span>▶</span><span class="wave"></span><span class="small">1:48</span></div>
+      <div class="arrow">↓ طلبيّة</div>
+      <div class="mini">
+        <div><span>كنزة صوف بيج · L</span><b>25$</b></div>
+        <div><span>جينز أزرق · 30</span><b>30$</b></div>
+        <div><span>المجموع · كاش</span><b>55$</b></div>
+        <div><span>📍 الحمرا، حد صيدلية مازن، ط3</span><a href="app.html">الخريطة</a></div>
+        <div><span class="pill warn">ناقص: رقم الشقة</span><span class="pill">الرد جاهز</span></div>
+      </div>
+    </div>
+  </div>
+
+  <section class="block">
+    <h2>بتعرف هالشي؟</h2>
+    <div class="grid">
+      <div class="card"><h3>🎧 تسمع الفويس ٣ مرات</h3><p class="muted">لتفهم شو بدها ومقاس شو، وبعدين تنقلها عالورقة.</p></div>
+      <div class="card"><h3>📍 «حد الفرن، بعد الجامع»</h3><p class="muted">الديليفري بيضيع، بيتصل ٤ مرات، وأحياناً الطلبية بترجع.</p></div>
+      <div class="card"><h3>📒 طلبيات ضايعة بالشات</h3><p class="muted">مين أكّد، مين بعدو، شو انبعت. كلو مدفون بالواتساب.</p></div>
+    </div>
+  </section>
+
+  <section class="block">
+    <h2>كيف بتشتغل</h2>
+    <div class="grid">
+      <div class="card"><div class="step">١</div><h3>شارك الفويس</h3><p class="muted">من واتساب: مشاركة ← طلبيّة. أو الصق المحادثة.</p></div>
+      <div class="card"><div class="step">٢</div><h3>الطلبية بتطلع لحالها</h3><p class="muted">القطع والسعر والعنوان، وشو ناقص لازم تسأل عنو.</p></div>
+      <div class="card"><div class="step">٣</div><h3>كبسة وحدة</h3><p class="muted">ابعت الرد للزبون، واطلب منو دبّوس موقعو، وابعت الطلبية للديليفري.</p></div>
+    </div>
+  </section>
+
+  <section class="block">
+    <h2>📍 دبّوس: العنوان اللبناني صار موقع</h2>
+    <div class="grid">
+      <div class="card"><p>بتبعت للزبون رابط، بيكبس «حدّد موقعي»، وبيرجعلك عالواتساب الموقع بالظبط مع البناية والطابق وكيف بيوصل الديليفري.</p><p class="muted small">بلا تطبيق ولا تسجيل للزبون. وعنوانو بينحفظ عتلفونو للمرة الجاية.</p></div>
+    </div>
+  </section>
+
+  <section class="block">
+    <h2>السعر</h2>
+    <div class="grid">
+      <div class="card price">
+        <span class="pill">أول ٥٠ محل بس</span>
+        <div class="big"><span id="early">79$</span><span class="small muted"> للسنة</span></div>
+        <p class="muted">بدل <s id="normal">149$</s>، والسعر بيضل هيك طول ما إنت مشترك.</p>
+        <p>أول ١٤ يوم ببلاش. الدفع Whish أو OMT أو USDT.</p>
+        <a class="btn wa block" id="join2" target="_blank" rel="noopener">احجز محلّك</a>
+      </div>
+    </div>
+  </section>
+
+  <section class="block">
+    <h2>أسئلة</h2>
+    <details><summary>لازم نزّل تطبيق؟</summary><p class="muted">لا. بينفتح من المتصفح وبينزل عالشاشة متل التطبيق. والزبون ما بيحتاج شي.</p></details>
+    <details><summary>بتفهم اللهجة اللبنانية؟</summary><p class="muted">إيه، ومعمولة إلها. وإذا شي مش واضح، بتقلك شو ناقص بدل ما تخمّن.</p></details>
+    <details><summary>وين بتنحفظ طلبياتي؟</summary><p class="muted">على تلفونك. الفويس بيتحلل وما منحفظو عنا.</p></details>
+    <details><summary>بتشتغل عالآيفون؟</summary><p class="muted">إيه. عالآيفون بتحفظ الفويس بالملفات وبتختارو، أو بتلصق المحادثة.</p></details>
+  </section>
+
+  <footer>طلبيّة · صُنعت بلبنان للي بيبيعوا من البيت</footer>
+</div>
+<script src="config.js"></script>
+<script>
+const C = window.TALABIYE_CFG || {};
+document.getElementById('early').textContent = C.EARLY_PRICE || '79$';
+document.getElementById('normal').textContent = C.PRICE || '149$';
+const msg = encodeURIComponent('مرحبا، بدي جرّب طلبيّة لمحلي.\nاسم المحل: \nشو بتبيعو: ');
+const join = C.OWNER_WHATSAPP ? 'https://wa.me/' + C.OWNER_WHATSAPP + '?text=' + msg : 'app.html';
+['join', 'join2'].forEach(id => { const a = document.getElementById(id); a.href = join; if (!C.OWNER_WHATSAPP) a.removeAttribute('target'); });
+</script>
+</body>
+</html>

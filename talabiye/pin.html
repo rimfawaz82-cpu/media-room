@@ -1,0 +1,97 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>حدّد موقعك</title>
+<meta name="theme-color" content="#0E7C66">
+<link rel="icon" href="icons/icon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+<style>
+  .hero { text-align: center; padding: 18px 0 6px; }
+  .hero .icon { font-size: 44px; }
+  .got { background: var(--soft); color: var(--brand); border-radius: 12px; padding: 12px; font-weight: 700; margin-top: 10px; }
+  .foot { text-align: center; margin-top: 18px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="hero">
+    <div class="icon" aria-hidden="true">📍</div>
+    <h1 id="title">حدّد موقعك</h1>
+    <p class="muted">كبسة وحدة، والديليفري بيوصلك بلا ما يتصل ويسأل.</p>
+  </div>
+
+  <section class="card">
+    <button class="btn block" id="locate">حدّد موقعي هلّق</button>
+    <div class="got hide" id="got"></div>
+    <p class="muted small" id="hint">لازم تكون عند العنوان اللي بدك التوصيل عليه. إذا مش هونيك، اكتب العنوان تحت.</p>
+
+    <label for="building">البناية والطابق</label>
+    <input id="building" placeholder="بناية الريحان، طابق 3، شقة يمين">
+    <label for="notes">كيف بيوصل الديليفري؟</label>
+    <textarea id="notes" placeholder="المدخل حد الصيدلية، البوابة السودا، اتصل لما توصل"></textarea>
+    <label style="display:flex;gap:8px;align-items:center;font-weight:400">
+      <input type="checkbox" id="remember" checked style="width:auto"> احفظ عنواني عهالتلفون للمرة الجاية
+    </label>
+    <div style="margin-top:12px"><a class="btn wa block" id="send" target="_blank" rel="noopener">ابعت العنوان عالواتساب</a></div>
+  </section>
+
+  <p class="foot small muted">صفحة من <a href="index.html">طلبيّة</a>: الفويس بيصير طلبية، والعنوان بيصير دبّوس.<br><a href="index.html">بتبيع أونلاين؟ جرّبها لمحلك</a></p>
+</div>
+
+<script>
+const $ = s => document.querySelector(s);
+const q = new URLSearchParams(location.search);
+const seller = (q.get('s') || '').replace(/\D/g, ''), sellerName = q.get('n') || '', ref = q.get('r') || '';
+let pos = null;
+const store = {
+  get(k, d) { try { const v = localStorage.getItem('tb_' + k); return v ? JSON.parse(v) : d; } catch { return d; } },
+  set(k, v) { try { localStorage.setItem('tb_' + k, JSON.stringify(v)); } catch {} },
+};
+if (sellerName) $('#title').textContent = 'حدّد موقعك لـ ' + sellerName;
+
+// عنوان محفوظ من قبل
+const saved = store.get('myaddress', null);
+if (saved) {
+  pos = saved.pos || null; $('#building').value = saved.building || ''; $('#notes').value = saved.notes || '';
+  if (pos) showPos('عنوانك المحفوظ جاهز. إذا تغيّر، كبّس «حدّد موقعي هلّق».');
+}
+
+function showPos(msg) {
+  $('#got').textContent = msg || ('✓ تحدّد موقعك (دقة تقريباً ' + Math.round(pos.acc || 0) + ' متر)');
+  $('#got').classList.remove('hide'); update();
+}
+$('#locate').onclick = () => {
+  if (!navigator.geolocation) return alert('تلفونك ما بيدعم تحديد الموقع. اكتب العنوان تحت.');
+  $('#locate').textContent = 'عم حدّد...';
+  navigator.geolocation.getCurrentPosition(p => {
+    pos = { lat: +p.coords.latitude.toFixed(6), lng: +p.coords.longitude.toFixed(6), acc: p.coords.accuracy };
+    $('#locate').textContent = 'حدّد موقعي من جديد'; showPos();
+  }, () => {
+    $('#locate').textContent = 'حدّد موقعي هلّق';
+    alert('ما قدرنا نحدد الموقع. اسمح للمتصفح يوصل للموقع، أو اكتب العنوان تحت.');
+  }, { enableHighAccuracy: true, timeout: 15000 });
+};
+
+function message() {
+  return [
+    '📍 عنواني' + (ref ? ' (طلبية ' + ref + ')' : ''),
+    pos ? 'https://maps.google.com/?q=' + pos.lat + ',' + pos.lng : '',
+    $('#building').value.trim() ? '🏢 ' + $('#building').value.trim() : '',
+    $('#notes').value.trim() ? '📝 ' + $('#notes').value.trim() : '',
+  ].filter(Boolean).join('\n');
+}
+function update() { $('#send').href = 'https://wa.me/' + seller + '?text=' + encodeURIComponent(message()); }
+$('#building').oninput = update; $('#notes').oninput = update;
+$('#send').onclick = e => {
+  if (!pos && !$('#building').value.trim() && !$('#notes').value.trim()) { e.preventDefault(); return alert('حدّد موقعك أو اكتب العنوان الأول'); }
+  if ($('#remember').checked) store.set('myaddress', { pos, building: $('#building').value.trim(), notes: $('#notes').value.trim() });
+  update();
+};
+update();
+</script>
+</body>
+</html>
