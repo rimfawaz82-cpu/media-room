@@ -7,7 +7,7 @@
 //    GEMINI_API_KEY : مفتاح Google AI Studio
 //    GEMINI_MODEL   : اختياري، الافتراضي gemini-2.5-flash
 //
-//  الطلب:  POST { audio?: base64, mime?: string, text?: string }
+//  الطلب:  POST { audio?: base64, mime?: string, text?: string, mode?: 'wholesale', catalog?: string[] }
 //  الرد:   { order: {...} }  أو  { error: string }
 // =====================================================================
 
@@ -62,6 +62,12 @@ const PROMPT = `إنت مساعد لبيّاع أونلاين بلبنان. رح
 - إذا في أكتر من قطعة، كل وحدة لحالها.
 - reply بلا إيموجي كتير، جملتين أو تلاتة.`;
 
+const WHOLESALE_PROMPT = `إنت مساعد لتاجر جملة بلبنان. هيدي طلبية من زبون (دكانة أو محل)، فويس أو رسالة، باللهجة اللبنانية أو العربي أو مخلوط.
+رجّع JSON بس: {"customer":"اسم الزبون إذا انذكر","lines":[{"said":"الكلام الأصلي لهالصنف","product":"اسم الصنف بأقرب اسم من لائحة التاجر","qty":عدد,"unit":"كرتونة/كيس/علبة/ربطة... أو فاضي"}],"notes":""}
+- "كرتونتين" = 2، "نص كرتونة" = 0.5.
+- الأسئلة عن الأسعار مش أصناف مطلوبة.
+- ما تخترع أصناف ما انطلبت.`;
+
 function json(body: unknown, status = 200) {
   return new Response(JSON.stringify(body), { status, headers: { ...CORS, 'Content-Type': 'application/json' } });
 }
@@ -80,7 +86,10 @@ Deno.serve(async (req) => {
   if (!audio && !text.trim()) return json({ error: 'ابعت فويس أو نص' }, 400);
   if (audio.length > MAX_AUDIO_B64) return json({ error: 'الفويس طويل كتير' }, 413);
 
-  const parts: unknown[] = [{ text: PROMPT }];
+  const wholesale = body.mode === 'wholesale';
+  const catalog: string[] = Array.isArray(body.catalog) ? body.catalog.slice(0, 400).map(String) : [];
+  const head = wholesale ? WHOLESALE_PROMPT + (catalog.length ? '\nلائحة أصناف التاجر:\n' + catalog.join('\n') : '') : PROMPT;
+  const parts: unknown[] = [{ text: head }];
   if (audio) parts.push({ inline_data: { mime_type: String(body.mime || 'audio/ogg'), data: audio } });
   if (text.trim()) parts.push({ text: 'المحادثة:\n' + text });
 

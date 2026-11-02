@@ -1,0 +1,427 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>طلبيّة للجملة</title>
+<meta name="theme-color" content="#0E7C66">
+<link rel="icon" href="icons/icon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+<style>
+  .wrap { max-width: 760px; }
+  header { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 14px; }
+  header .logo { display: flex; align-items: center; gap: 8px; font-weight: 800; font-size: 22px; }
+  header .logo small { font-size: 14px; font-weight: 700; color: var(--brand); background: var(--soft); padding: 2px 8px; border-radius: 99px; }
+  header img { width: 34px; height: 34px; }
+  .steps { display: flex; gap: 6px; margin-bottom: 14px; }
+  .steps button { flex: 1; border: 1px solid var(--line); background: var(--surface); font: inherit; font-weight: 700; padding: 11px 6px; border-radius: 12px; color: var(--muted); cursor: pointer; }
+  .steps button.on { background: var(--ink); color: var(--bg); border-color: var(--ink); }
+  .steps button .n { display: inline-block; min-width: 22px; padding: 0 6px; border-radius: 99px; background: var(--line); color: var(--ink); font-size: 13px; margin-inline-start: 6px; }
+  .steps button.on .n { background: var(--bg); }
+  table { width: 100%; border-collapse: collapse; font-size: 15px; }
+  th, td { text-align: right; padding: 8px 6px; border-bottom: 1px solid var(--line); vertical-align: middle; }
+  th { font-size: 13px; color: var(--muted); }
+  td.n, th.n { text-align: left; font-variant-numeric: tabular-nums; white-space: nowrap; direction: ltr; }
+  .tblwrap { overflow-x: auto; }
+  .tblwrap table { min-width: 520px; }
+  .catlist { max-height: 300px; overflow: auto; }
+  .said { display: block; font-size: 13px; color: var(--muted); }
+  select.match { padding: 8px; font-size: 15px; }
+  input.qty { width: 74px; padding: 8px; text-align: center; }
+  tr.bad td { background: var(--warn-soft); }
+  .sum { display: flex; justify-content: space-between; align-items: baseline; padding: 12px 0 0; font-weight: 800; font-size: 22px; }
+  .sum .n { font-variant-numeric: tabular-nums; }
+  .actions { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 14px; }
+  .actions .btn { font-size: 15px; padding: 11px 8px; }
+  .spin { width: 22px; height: 22px; border: 3px solid currentColor; border-top-color: transparent; border-radius: 50%; animation: s 1s linear infinite; }
+  @keyframes s { to { transform: rotate(360deg); } }
+  .banner { background: var(--soft); color: var(--brand); padding: 10px 12px; border-radius: 12px; font-size: 14px; margin-bottom: 12px; }
+  .banner.warn { background: var(--warn-soft); color: var(--warn); }
+  .rows { list-style: none; margin: 0; padding: 0; }
+  .rows li { display: flex; justify-content: space-between; align-items: center; gap: 8px; padding: 10px 0; border-bottom: 1px solid var(--line); cursor: pointer; }
+  .rows li small { display: block; color: var(--muted); font-size: 13px; }
+  .tiles { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 12px; }
+  .tile { background: var(--bg); border: 1px solid var(--line); border-radius: 12px; padding: 10px; }
+  .tile span { display: block; font-size: 13px; color: var(--muted); }
+  .tile b { font-size: 20px; font-variant-numeric: tabular-nums; }
+  .hint { font-size: 14px; color: var(--muted); }
+  @media (max-width: 600px) {
+    #invTable { min-width: 0; }
+    #invTable thead { display: none; }
+    #invTable tr { display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: 6px 10px; padding: 10px 6px; border-bottom: 1px solid var(--line); }
+    #invTable td { border: 0; padding: 0; }
+    #invTable td:first-child { grid-column: 1 / -1; }
+    #invTable td:nth-child(3)::before { content: "× "; color: var(--muted); }
+    #invTable td:nth-child(4) { font-weight: 800; }
+  }
+  .drop { display: block; border: 2px dashed var(--line); border-radius: 14px; padding: 18px 12px; text-align: center; cursor: pointer; }
+  .drop b { display: block; font-size: 17px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="logo"><img src="icons/icon.svg" alt=""> طلبيّة <small>للجملة</small></div>
+    <a class="btn ghost" href="index.html" style="min-height:40px;padding:8px 12px">الصفحة الرئيسية</a>
+  </header>
+
+  <div class="steps" role="tablist">
+    <button data-step="cat" role="tab">١. الأصناف <span class="n" id="catN">0</span></button>
+    <button data-step="order" role="tab" class="on">٢. طلبية</button>
+    <button data-step="day" role="tab">٣. اليوم <span class="n" id="dayN">0</span></button>
+  </div>
+
+  <!-- ١. لائحة الأصناف -->
+  <section id="stepCat" class="hide">
+    <div class="card">
+      <h2>لائحة الأصناف والأسعار</h2>
+      <p class="hint">ارفعي ملف Excel أو CSV فيه اسم الصنف والسعر (والكود والوحدة إذا في). منلاقي العواميد لحالنا.</p>
+      <label class="drop" for="catFile"><b>اختار ملف الأصناف</b><span class="hint">.xlsx أو .csv</span></label>
+      <input type="file" id="catFile" accept=".xlsx,.xls,.csv,text/csv" class="hide">
+      <label for="catPaste">أو الصقي اللائحة (كل صنف سطر: الاسم، السعر)</label>
+      <textarea id="catPaste" placeholder="زيت دوار الشمس ١ ليتر × ١٢، 28&#10;رز مصري ٥ كغ، 6.5"></textarea>
+      <div class="row" style="margin-top:10px">
+        <button class="btn" id="catUse">استعمل هاللائحة</button>
+        <button class="btn ghost" id="catSample">حط لائحة مثال</button>
+      </div>
+    </div>
+    <div class="card">
+      <h3>الأصناف <span class="hint" id="catInfo"></span></h3>
+      <div class="catlist tblwrap"><table><thead><tr><th>الكود</th><th>الصنف</th><th>الوحدة</th><th class="n">السعر</th></tr></thead><tbody id="catBody"></tbody></table></div>
+    </div>
+  </section>
+
+  <!-- ٢. الطلبية -->
+  <section id="stepOrder">
+    <div class="banner hide" id="noCat">ما في لائحة أصناف بعد. <a href="#" id="goCat">حطي لائحة</a> أو جربي بلائحة المثال.</div>
+    <div class="card">
+      <h2>شو طلب الزبون؟</h2>
+      <label for="cust">اسم الزبون (الدكانة)</label>
+      <input id="cust" placeholder="دكانة أبو سمير">
+      <label for="orderText">الصقي الرسالة أو اكتبي شو قال بالفويس</label>
+      <textarea id="orderText" style="min-height:140px" placeholder="مرحبا، بدي ٥ كراتين زيت، ١٠ أكياس رز، ٣ كراتين تونة وكرتونتين معكرونة"></textarea>
+      <label class="drop" for="voice" style="margin-top:10px"><b>أو اختاري فويس</b><span class="hint" id="voiceName">الفويس بيحتاج خدمة الذكاء الاصطناعي</span></label>
+      <input type="file" id="voice" accept="audio/*,.opus,.ogg,.m4a,.mp3" class="hide">
+      <div class="row" style="margin-top:12px">
+        <button class="btn" id="go">طلّعلي الفاتورة</button>
+        <button class="btn ghost" id="sampleOrder">طلبية مثال</button>
+      </div>
+      <p class="hint" id="engine" style="margin:8px 0 0"></p>
+    </div>
+
+    <div class="card hide" id="invoice">
+      <h3 id="invTitle">الفاتورة</h3>
+      <div class="banner warn hide" id="badNote"></div>
+      <div class="tblwrap">
+        <table id="invTable">
+          <thead><tr><th>الصنف</th><th class="n">الكمية</th><th class="n">السعر</th><th class="n">المجموع</th></tr></thead>
+          <tbody id="invBody"></tbody>
+        </table>
+      </div>
+      <div class="sum"><span>المجموع</span><span class="n" id="invTotal"></span></div>
+      <div class="actions">
+        <button class="btn" id="save">احفظ الطلبية</button>
+        <a class="btn wa" id="sendWa" target="_blank" rel="noopener">ابعت الفاتورة عالواتساب</a>
+        <button class="btn ghost" id="copyText">انسخ الفاتورة</button>
+        <button class="btn ghost" id="copyXl">انسخ للإكسل</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ٣. اليوم -->
+  <section id="stepDay" class="hide">
+    <div class="tiles">
+      <div class="tile"><span>طلبيات اليوم</span><b id="dCount">0</b></div>
+      <div class="tile"><span>مجموع اليوم</span><b id="dTotal">$0</b></div>
+      <div class="tile"><span>أصناف ناقصة</span><b id="dBad">0</b></div>
+    </div>
+    <div class="card">
+      <h3>طلبيات اليوم</h3>
+      <ul class="rows" id="dList"></ul>
+      <div class="row" style="margin-top:12px">
+        <button class="btn ghost" id="dCopy">انسخ كل اليوم للإكسل</button>
+        <button class="btn ghost" id="dCsv">نزّل ملف Excel</button>
+      </div>
+      <p class="hint" style="margin-top:8px">«انسخ للإكسل» بيحط كل سطر بخانتو. افتحي Excel وكبسي لصق.</p>
+    </div>
+  </section>
+</div>
+<div class="toast hide" id="toast"></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="config.js"></script>
+<script>
+const CFG = window.TALABIYE_CFG || {};
+const $ = s => document.querySelector(s);
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const store = {
+  get(k, d) { try { const v = localStorage.getItem('tbw_' + k); return v ? JSON.parse(v) : d; } catch { return d; } },
+  set(k, v) { try { localStorage.setItem('tbw_' + k, JSON.stringify(v)); } catch { toast('ما قدرنا نحفظ عهالجهاز'); } },
+};
+function toast(m) { const t = $('#toast'); t.textContent = m; t.classList.remove('hide'); clearTimeout(toast.t); toast.t = setTimeout(() => t.classList.add('hide'), 2400); }
+const money = n => '$' + (Math.round(n * 100) / 100).toLocaleString('en', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
+// ---------------- تطبيع العربي ----------------
+const AR_DIGITS = '٠١٢٣٤٥٦٧٨٩', FA_DIGITS = '۰۱۲۳۴۵۶۷۸۹';
+function digits(s) { return String(s).replace(/[٠-٩]/g, d => AR_DIGITS.indexOf(d)).replace(/[۰-۹]/g, d => FA_DIGITS.indexOf(d)).replace(/٫/g, '.'); }
+function norm(s) {
+  return digits(s).toLowerCase()
+    .replace(/[ً-ْـ]/g, '')      // تشكيل وتطويل
+    .replace(/[أإآٱ]/g, 'ا').replace(/ى/g, 'ي').replace(/ة/g, 'ه').replace(/ؤ/g, 'و').replace(/ئ/g, 'ي')
+    .replace(/[^\p{L}\p{N}\s.]/gu, ' ').replace(/\s+/g, ' ').trim();
+}
+// كلمات ما بتعني الصنف
+const STOP = new Set(['بدي', 'بدنا', 'ابعتلي', 'ابعتلنا', 'حطلي', 'حطلنا', 'من', 'و', 'مع', 'كمان', 'لو', 'سمحت', 'مرحبا', 'اهلين', 'هيك', 'يعطيك', 'العافيه', 'الله', 'اذا', 'فيك', 'بليز', 'please', 'عندك', 'في', 'شي', 'على', 'عل', 'هاد', 'هيدا', 'هيدي', 'تبع', 'حبيبي', 'خيي', 'يا', 'مرسي', 'شكرا', 'لي', 'نا', 'زيدلي', 'زيدلنا', 'زيد', 'بعتلي', 'جيبلي', 'جبلي', 'بدك', 'تبعتلي', 'كمانا']);
+// كلمات لبنانية لأسماء الأصناف
+const SYN = { 'مي': 'مياه', 'ميه': 'مياه', 'مَي': 'مياه', 'كلينكس': 'محارم', 'فاين': 'محارم', 'تواليت': 'ورق تواليت', 'بندوره': 'بندورة', 'رب': 'معجون', 'نسكافيه': 'قهوة', 'زيت قلي': 'زيت دوار الشمس' };
+const UNITS = { 'كرتونه': 'كرتونة', 'كراتين': 'كرتونة', 'كرتونتين': 'كرتونة', 'كرتونات': 'كرتونة', 'علبه': 'علبة', 'علب': 'علبة', 'علبتين': 'علبة', 'كيس': 'كيس', 'اكياس': 'كيس', 'كيسين': 'كيس', 'ربطه': 'ربطة', 'ربطات': 'ربطة', 'ربطتين': 'ربطة', 'دزينه': 'دزينة', 'دزينات': 'دزينة', 'قطعه': 'قطعة', 'قطع': 'قطعة', 'شوال': 'شوال', 'شوالات': 'شوال', 'شوالين': 'شوال', 'غالون': 'غالون', 'غالونات': 'غالون', 'باكيت': 'باكيت', 'باكيتات': 'باكيت', 'سطل': 'سطل', 'سطول': 'سطل', 'حبه': 'حبة', 'حبات': 'حبة', 'صندوق': 'صندوق', 'صناديق': 'صندوق', 'طرد': 'طرد', 'طرود': 'طرد' };
+const DUALS = new Set(['كرتونتين', 'علبتين', 'كيسين', 'ربطتين', 'شوالين']);
+const NUMWORDS = { 'واحد': 1, 'وحده': 1, 'وحدة': 1, 'اتنين': 2, 'تنين': 2, 'اثنين': 2, 'تلاته': 3, 'ثلاثه': 3, 'تلات': 3, 'اربعه': 4, 'اربع': 4, 'خمسه': 5, 'خمس': 5, 'سته': 6, 'ست': 6, 'سبعه': 7, 'سبع': 7, 'تمانيه': 8, 'ثمانيه': 8, 'تمن': 8, 'تسعه': 9, 'تسع': 9, 'عشره': 10, 'عشر': 10, 'عشرين': 20, 'تلاتين': 30, 'اربعين': 40, 'خمسين': 50, 'نص': 0.5, 'ربع': 0.25 };
+
+// ---------------- مطابقة الصنف ----------------
+function grams(s) { const t = ' ' + s + ' '; const g = new Set(); for (let i = 0; i < t.length - 2; i++) g.add(t.slice(i, i + 3)); return g; }
+function score(q, item) {
+  const qt = q.split(' ').filter(w => w.length > 1), it = item._tok;
+  if (!qt.length) return 0;
+  let hit = 0;
+  for (const w of qt) if (it.some(x => x === w || (w.length > 2 && (x.startsWith(w) || w.startsWith(x))))) hit++;
+  const tokScore = hit / qt.length;
+  const a = grams(q), b = item._gram; let inter = 0; for (const x of a) if (b.has(x)) inter++;
+  const dice = 2 * inter / (a.size + b.size || 1);
+  return tokScore * 0.7 + dice * 0.3;
+}
+function prepCatalog(list) { return list.map(x => { const n = norm(x.name); return { ...x, _n: n, _tok: n.split(' '), _gram: grams(n) }; }); }
+let CAT = prepCatalog(store.get('catalog', []));
+function bestMatches(q, k = 4) {
+  const nq = norm(q);
+  return CAT.map(it => ({ it, s: score(nq, it) })).sort((a, b) => b.s - a.s).slice(0, k);
+}
+
+// ---------------- تفكيك الطلبية بلا ذكاء اصطناعي ----------------
+function splitLines(text) {
+  return digits(text)
+    .split(/\n|،|,|؛|;|\?|؟|\.(?!\d)|\s+و(?=\s*(?:\d|ك|ع|ر|ش|د|غ|ب|س|ص|ط|ح|ز)\S*\s)/)
+    .map(s => s.trim()).filter(s => s.length > 1);
+}
+function parseLocal(text) {
+  const lines = [];
+  for (const raw of splitLines(text)) {
+    if (/(^|\s)(سعر|قديش|بكم|ادي|اديه)(\s|$)/.test(norm(raw))) continue;   // سؤال عن سعر، مش طلب
+    let words = norm(raw).split(' ');
+    let qty = null, unit = '';
+    const rest = [];
+    for (let i = 0; i < words.length; i++) {
+      let w = words[i];
+      if (w.startsWith('و') && w.length > 2 && (UNITS[w.slice(1)] || NUMWORDS[w.slice(1)] != null || STOP.has(w.slice(1)) || /^\d/.test(w.slice(1)))) w = w.slice(1);
+      if (SYN[w]) w = SYN[w];
+      if (/^\d+(\.\d+)?$/.test(w)) { if (qty == null) qty = parseFloat(w); else rest.push(w); continue; }
+      if (UNITS[w] && !unit) { unit = UNITS[w]; if (DUALS.has(w) && qty == null) qty = 2; continue; }
+      if (NUMWORDS[w] != null && qty == null && i < words.length - 1) { qty = NUMWORDS[w]; continue; }
+      if (STOP.has(w)) continue;
+      rest.push(w);
+    }
+    const product = rest.join(' ');
+    if (!product) continue;
+    lines.push({ said: raw, product, qty: qty ?? 1, unit });
+  }
+  return { customer: '', lines };
+}
+
+// ---------------- الذكاء الاصطناعي (إذا متوفر) ----------------
+let sampler = null;
+const samplerReady = (window.claude && window.claude.use) ? window.claude.use('sample').then(s => (sampler = s)).catch(() => null) : Promise.resolve(null);
+const AI_PROMPT = `إنت مساعد لتاجر جملة بلبنان. هيدي طلبية من زبون (دكانة أو محل) باللهجة اللبنانية أو العربي أو مخلوط.
+رجّع JSON بس: {"customer":"اسم الزبون إذا انذكر","lines":[{"said":"الكلام الأصلي لهالصنف","product":"اسم الصنف متل ما بيبيعو التاجر، بأقرب اسم من اللائحة إذا في","qty":عدد,"unit":"كرتونة/كيس/علبة/ربطة... أو فاضي"}],"notes":""}
+- "كرتونتين" = 2، "دزينة" = 12 قطعة، "نص كرتونة" = 0.5.
+- ما تخترع أصناف ما انطلبت.`;
+async function parseAI(text, audio) {
+  const catNames = CAT.slice(0, 400).map(x => x.name).join('\n');
+  const prompt = AI_PROMPT + (catNames ? '\nلائحة أصناف التاجر:\n' + catNames : '') + '\nالطلبية:\n';
+  if (CFG.PARSE_URL) {
+    const headers = { 'Content-Type': 'application/json' };
+    if (CFG.SUPABASE_ANON_KEY) { headers.apikey = CFG.SUPABASE_ANON_KEY; headers.Authorization = 'Bearer ' + CFG.SUPABASE_ANON_KEY; }
+    const body = { mode: 'wholesale', catalog: CAT.slice(0, 400).map(x => x.name), text };
+    if (audio) { body.audio = await new Promise((ok, no) => { const r = new FileReader(); r.onload = () => ok(String(r.result).split(',')[1]); r.onerror = no; r.readAsDataURL(audio); }); body.mime = /opus|ogg/.test(audio.type + audio.name) ? 'audio/ogg' : (audio.type || 'audio/ogg'); }
+    const r = await fetch(CFG.PARSE_URL, { method: 'POST', headers, body: JSON.stringify(body) });
+    const j = await r.json().catch(() => ({}));
+    if (!r.ok || !j.order) throw new Error(j.error || 'صار في مشكلة');
+    return j.order;
+  }
+  if (await samplerReady) return sampler.json(prompt + text, { modelTier: 'quick' });
+  return null;
+}
+async function engineLabel() {
+  $('#engine').textContent = CFG.PARSE_URL ? 'التحليل: خدمة الذكاء الاصطناعي (نص وفويس).'
+    : (await samplerReady) ? 'التحليل: Claude للنص. الفويس بيحتاج خدمة Gemini.'
+    : 'التحليل: قواعد بسيطة بلا ذكاء اصطناعي. بتشتغل منيح عالرسائل الواضحة، والفويس بيحتاج الخدمة.';
+}
+
+// ---------------- الفاتورة ----------------
+let current = null, voiceFile = null;
+function buildInvoice(parsed) {
+  return {
+    id: Date.now().toString(36), at: new Date().toISOString(),
+    customer: $('#cust').value.trim() || parsed.customer || '',
+    lines: (parsed.lines || []).map(l => {
+      const m = bestMatches(l.product || l.said);
+      const ok = m[0] && m[0].s >= 0.45;
+      return { said: l.said || l.product, qty: Number(l.qty) || 1, unit: l.unit || '', code: ok ? m[0].it.code : '', options: m.map(x => x.it.code), conf: m[0] ? m[0].s : 0 };
+    }),
+  };
+}
+const byCode = code => CAT.find(x => x.code === code);
+function lineTotal(l) { const it = byCode(l.code); return it ? it.price * l.qty : 0; }
+function renderInvoice() {
+  const o = current; if (!o) return;
+  $('#invoice').classList.remove('hide');
+  $('#invTitle').textContent = 'فاتورة' + (o.customer ? ' ' + o.customer : '');
+  $('#invBody').innerHTML = o.lines.map((l, i) => {
+    const it = byCode(l.code);
+    const opts = ['<option value="">ما لقيناه، اختاري</option>'].concat(
+      [...new Set(l.options.concat(l.code ? [l.code] : []))].map(c => { const x = byCode(c); return x ? `<option value="${esc(c)}" ${c === l.code ? 'selected' : ''}>${esc(x.name)}</option>` : ''; })
+    ).join('');
+    return `<tr class="${it ? '' : 'bad'}">
+      <td><select class="match" data-i="${i}" aria-label="الصنف">${opts}</select><span class="said">قال: ${esc(l.said)}</span></td>
+      <td class="n"><input class="qty" data-i="${i}" inputmode="decimal" value="${l.qty}" aria-label="الكمية"></td>
+      <td class="n">${it ? money(it.price) : '—'}</td>
+      <td class="n">${it ? money(lineTotal(l)) : '—'}</td></tr>`;
+  }).join('');
+  const bad = o.lines.filter(l => !byCode(l.code)).length;
+  $('#badNote').classList.toggle('hide', !bad);
+  $('#badNote').textContent = bad ? `${bad} صنف ما لقيناه بلائحتك. اختاريه من القائمة أو اتأكدي مع الزبون.` : '';
+  $('#invTotal').textContent = money(o.lines.reduce((t, l) => t + lineTotal(l), 0));
+  $('#invBody').querySelectorAll('select.match').forEach(s => s.onchange = () => { o.lines[s.dataset.i].code = s.value; renderInvoice(); });
+  $('#invBody').querySelectorAll('input.qty').forEach(q => q.onchange = () => { o.lines[q.dataset.i].qty = parseFloat(digits(q.value)) || 0; renderInvoice(); });
+  $('#sendWa').href = 'https://wa.me/?text=' + encodeURIComponent(invoiceText(o));
+}
+function invoiceText(o) {
+  const ls = o.lines.filter(l => byCode(l.code)).map(l => { const it = byCode(l.code); return `• ${l.qty} × ${it.name} = ${money(lineTotal(l))}`; });
+  const bad = o.lines.filter(l => !byCode(l.code)).map(l => `• ${l.said} (بدنا نتأكد)`);
+  return ['فاتورة' + (o.customer ? ' ' + o.customer : ''), ...ls, ...(bad.length ? ['', 'ناقص:', ...bad] : []), '', 'المجموع: ' + money(o.lines.reduce((t, l) => t + lineTotal(l), 0))].join('\n');
+}
+function tsv(orders) {
+  const rows = [['التاريخ', 'الزبون', 'الكود', 'الصنف', 'الكمية', 'السعر', 'المجموع']];
+  for (const o of orders) for (const l of o.lines) { const it = byCode(l.code); rows.push([o.at.slice(0, 10), o.customer, l.code, it ? it.name : 'ناقص: ' + l.said, l.qty, it ? it.price : '', it ? lineTotal(l) : '']); }
+  return rows;
+}
+function copy(text) { return navigator.clipboard.writeText(text).then(() => toast('انتسخت'), () => toast('ما زبط النسخ')); }
+
+$('#go').onclick = async () => {
+  const text = $('#orderText').value.trim();
+  if (!CAT.length) { toast('حطي لائحة الأصناف الأول'); return show('cat'); }
+  if (!text && !voiceFile) return toast('الصقي الطلبية أو اختاري فويس');
+  const btn = $('#go'); btn.disabled = true; btn.innerHTML = '<span class="spin"></span> عم طابق...';
+  try {
+    let parsed = null;
+    if (voiceFile && !CFG.PARSE_URL) { toast('الفويس بيحتاج خدمة Gemini. اكتبي شو قال الزبون.'); }
+    else { try { parsed = await parseAI(text, voiceFile); } catch (e) { toast(e.message || 'الذكاء الاصطناعي ما ردّ، استعملنا القواعد البسيطة'); } }
+    if (!parsed) parsed = parseLocal(text);
+    if (!parsed.lines || !parsed.lines.length) throw new Error('ما لقينا أصناف بالرسالة');
+    current = buildInvoice(parsed); renderInvoice();
+    $('#invoice').scrollIntoView({ behavior: 'smooth' });
+  } catch (e) { toast(e.message || 'صار في مشكلة'); }
+  finally { btn.disabled = false; btn.textContent = 'طلّعلي الفاتورة'; }
+};
+$('#voice').onchange = e => { voiceFile = e.target.files[0] || null; $('#voiceName').textContent = voiceFile ? voiceFile.name : ''; };
+$('#sampleOrder').onclick = () => {
+  if (!CAT.length) useCatalog(SAMPLE_CAT, 'مثال');
+  $('#cust').value = 'دكانة أبو سمير (مثال)';
+  $('#orderText').value = 'مرحبا خيي، بدي ٥ كراتين زيت دوار الشمس، ١٠ أكياس رز مصري، ٣ كراتين تونة، وكرتونتين معكرونة، و٢٠ ربطة محارم. وزيدلي ٤ غالونات جلي';
+};
+$('#copyText').onclick = () => current && copy(invoiceText(current));
+$('#copyXl').onclick = () => current && copy(tsv([current]).map(r => r.join('\t')).join('\n'));
+$('#save').onclick = () => {
+  if (!current) return;
+  const list = store.get('orders', []); const i = list.findIndex(x => x.id === current.id);
+  const clean = JSON.parse(JSON.stringify(current));
+  if (i >= 0) list[i] = clean; else list.unshift(clean);
+  store.set('orders', list.slice(0, 3000)); renderDay(); toast('انحفظت');
+};
+
+// ---------------- لائحة الأصناف ----------------
+const SAMPLE_CAT = [
+  ['A01', 'زيت دوار الشمس ١ ليتر × ١٢', 'كرتونة', 28], ['A02', 'زيت ذرة ١٫٨ ليتر × ٦', 'كرتونة', 26], ['A03', 'رز مصري ٥ كغ', 'كيس', 6.5], ['A04', 'رز بسمتي ٥ كغ', 'كيس', 9.75],
+  ['A05', 'سكر ١ كغ × ١٠', 'كرتونة', 9], ['A06', 'معكرونة ٥٠٠ غ × ٢٠', 'كرتونة', 11], ['A07', 'شعيرية ٥٠٠ غ × ٢٠', 'كرتونة', 10.5], ['A08', 'حمص حب ١ كغ', 'كيس', 1.8],
+  ['A09', 'عدس أحمر ١ كغ', 'كيس', 1.6], ['A10', 'تونة علبة ١٦٠ غ × ٤٨', 'كرتونة', 52], ['A11', 'سردين علبة × ٥٠', 'كرتونة', 30], ['A12', 'حليب بودرة ٢٫٥ كغ', 'علبة', 24],
+  ['A13', 'شاي ٤٥٠ غ', 'علبة', 4.2], ['A14', 'قهوة ٢٠٠ غ × ١٢', 'كرتونة', 38], ['A15', 'مياه ٥٠٠ مل × ١٢', 'ربطة', 2.2], ['A16', 'عصير برتقال ١ ليتر × ١٢', 'كرتونة', 9],
+  ['A17', 'مسحوق غسيل ٦ كغ', 'كيس', 11], ['A18', 'سائل جلي ١ ليتر × ١٢', 'كرتونة', 13], ['A19', 'سائل جلي ٤ ليتر', 'غالون', 4.5], ['A20', 'محارم ورق × ١٠', 'ربطة', 3.1],
+  ['A21', 'ورق تواليت ١٠ رول', 'ربطة', 4.4], ['A22', 'كلور ٢ ليتر × ٦', 'كرتونة', 7.8], ['A23', 'طحين ٢٥ كغ', 'شوال', 14], ['A24', 'معجون بندورة ٤٠٠ غ × ٢٤', 'كرتونة', 15.5],
+].map(([code, name, unit, price]) => ({ code, name, unit, price }));
+
+function useCatalog(list, label) {
+  const clean = list.filter(x => x.name && isFinite(x.price)).map((x, i) => ({ code: String(x.code || 'P' + (i + 1)), name: String(x.name).trim(), unit: x.unit || '', price: Number(x.price) }));
+  if (!clean.length) return toast('ما لقينا أصناف بأسعار بالملف');
+  store.set('catalog', clean); store.set('catLabel', label || ''); CAT = prepCatalog(clean); renderCat();
+  toast(`انحطّ ${clean.length} صنف`);
+}
+function rowsToCatalog(rows) {
+  // منلاقي سطر العناوين وعواميد الاسم والسعر والكود والوحدة
+  const head = rows.findIndex(r => r.some(c => /اسم|صنف|name|item|product|منتج/i.test(String(c))));
+  const H = head >= 0 ? rows[head].map(c => norm(String(c))) : [];
+  const find = re => H.findIndex(h => re.test(h));
+  let ci = { name: find(/اسم|صنف|name|item|product|منتج|بيان/), price: find(/سعر|price|ثمن/), code: find(/كود|رمز|code|sku|رقم/), unit: find(/وحده|unit|عبوه/) };
+  const data = rows.slice(head + 1);
+  if (ci.name < 0 || ci.price < 0) { // بلا عناوين: أطول نص = الاسم، آخر رقم = السعر
+    const sample = data.find(r => r.length >= 2) || [];
+    ci.name = sample.findIndex(c => typeof c === 'string' && isNaN(parseFloat(digits(c))));
+    ci.price = sample.map((c, i) => [c, i]).filter(([c]) => !isNaN(parseFloat(digits(c)))).map(([, i]) => i).pop();
+  }
+  return data.map(r => ({ code: ci.code >= 0 ? r[ci.code] : '', name: r[ci.name], unit: ci.unit >= 0 ? r[ci.unit] : '', price: parseFloat(digits(String(r[ci.price] ?? '').replace(/[^\d.٠-٩٫]/g, ''))) }))
+    .filter(x => x.name && isFinite(x.price));
+}
+$('#catFile').onchange = async e => {
+  const f = e.target.files[0]; if (!f) return;
+  try {
+    let rows;
+    if (/\.csv$/i.test(f.name) || !window.XLSX) rows = (await f.text()).split(/\r?\n/).map(l => l.split(/,|;|\t/));
+    else { const wb = XLSX.read(await f.arrayBuffer()); rows = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], { header: 1, raw: false }); }
+    useCatalog(rowsToCatalog(rows), f.name);
+  } catch { toast('ما قدرنا نقرا الملف'); }
+  e.target.value = '';
+};
+$('#catUse').onclick = () => {
+  const rows = $('#catPaste').value.split('\n').map(l => l.split(/،|,|\t|;/).map(s => s.trim())).filter(r => r.length >= 2);
+  useCatalog(rows.map(r => ({ name: r[0], price: parseFloat(digits(r[r.length - 1])) })), 'ملصوقة');
+};
+$('#catSample').onclick = () => useCatalog(SAMPLE_CAT, 'مثال');
+function renderCat() {
+  $('#catN').textContent = CAT.length;
+  $('#noCat').classList.toggle('hide', CAT.length > 0);
+  const label = store.get('catLabel', '');
+  $('#catInfo').textContent = CAT.length ? `(${CAT.length}${label ? ' · ' + label : ''})` : '';
+  $('#catBody').innerHTML = CAT.map(x => `<tr><td>${esc(x.code)}</td><td>${esc(x.name)}</td><td>${esc(x.unit)}</td><td class="n">${money(x.price)}</td></tr>`).join('') || '<tr><td colspan="4" class="hint">ما في أصناف بعد.</td></tr>';
+}
+
+// ---------------- اليوم ----------------
+const today = () => new Date().toISOString().slice(0, 10);
+function renderDay() {
+  const list = store.get('orders', []).filter(o => o.at.slice(0, 10) === today());
+  $('#dayN').textContent = list.length; $('#dCount').textContent = list.length;
+  $('#dTotal').textContent = money(list.reduce((t, o) => t + o.lines.reduce((s, l) => s + lineTotal(l), 0), 0));
+  $('#dBad').textContent = list.reduce((t, o) => t + o.lines.filter(l => !byCode(l.code)).length, 0);
+  $('#dList').innerHTML = list.map(o => `<li data-id="${esc(o.id)}"><div><b>${esc(o.customer || 'زبون')}</b><small>${o.lines.length} صنف · ${new Date(o.at).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })}</small></div><b class="n">${money(o.lines.reduce((s, l) => s + lineTotal(l), 0))}</b></li>`).join('') || '<li class="hint">ما في طلبيات محفوظة اليوم.</li>';
+  $('#dList').querySelectorAll('li[data-id]').forEach(li => li.onclick = () => { current = store.get('orders', []).find(x => x.id === li.dataset.id); show('order'); renderInvoice(); });
+}
+$('#dCopy').onclick = () => copy(tsv(store.get('orders', []).filter(o => o.at.slice(0, 10) === today())).map(r => r.join('\t')).join('\n'));
+$('#dCsv').onclick = () => {
+  const rows = tsv(store.get('orders', []).filter(o => o.at.slice(0, 10) === today()));
+  const csv = '﻿' + rows.map(r => r.map(c => '"' + String(c).replace(/"/g, '""') + '"').join(',')).join('\n');
+  const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv' })); a.download = 'talabiye-' + today() + '.csv';
+  document.body.appendChild(a); a.click(); a.remove();
+};
+
+// ---------------- التنقل ----------------
+function show(step) {
+  document.querySelectorAll('[data-step]').forEach(b => b.classList.toggle('on', b.dataset.step === step));
+  $('#stepCat').classList.toggle('hide', step !== 'cat'); $('#stepOrder').classList.toggle('hide', step !== 'order'); $('#stepDay').classList.toggle('hide', step !== 'day');
+  if (step === 'day') renderDay();
+}
+document.querySelectorAll('[data-step]').forEach(b => b.onclick = () => show(b.dataset.step));
+$('#goCat').onclick = e => { e.preventDefault(); show('cat'); };
+renderCat(); renderDay(); engineLabel();
+window.__tbw = { parseLocal, buildInvoice, useCatalog, SAMPLE_CAT, lineTotal };
+</script>
+</body>
+</html>
