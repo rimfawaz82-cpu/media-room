@@ -9,6 +9,7 @@
 | `index.html` | صفحة البيع |
 | `app.html` | التطبيق: الطلبيات، والحسابات (مين بعدو، الربح، المصاريف، نسخة احتياطية)، وعداد الباقة |
 | `wholesale.html` | طلبيّة للجملة: لائحة أصناف، مطابقة الطلبية، فاتورة، وطلبيات اليوم |
+| `inbox.html` | صندوق مساعد واتساب: الطلبيات من الواتساب، والردود للموافقة |
 | `pin.html` | صفحة الزبون ليحدد موقعو. بلا تسجيل، وبتحفظ عنوانو عتلفونو |
 | `supabase/functions/talabiye-parse` | الخدمة اللي بتحلل الفويس بـ Gemini |
 | `config.js` | الإعدادات: رابط الخدمة، رقمك، الأسعار |
@@ -27,6 +28,62 @@
 3. **النشر:** اسحبي مجلد `talabiye` كلو على **app.netlify.com/drop**، متل ما عملتي بتطبيق الشكاوى. غيّري اسم الموقع لـ `talabiye`.
 
 ---
+
+# مساعد واتساب
+
+الزبون بيبعت عرقم المحل رسالة أو فويس أو موقع، والمساعد بيفهمها وبيكتب الطلبية والرد. المحل بيشوف كل شي بـ **`inbox.html`** وبيكبس «ابعت الرد».
+
+```
+الزبون ← واتساب (Meta) ← talabiye-whatsapp ← Gemini بيفهم ← wa_orders
+                                                    ↓
+                           inbox.html (المحل بيراجع) ← talabiye-send ← واتساب ← الزبون
+```
+
+- **الرد ما بينبعت لحالو** إلا إذا شغّلتي «الرد بينبعت لحالو» بالإعدادات. بالبداية خلّيه مطفي.
+- **الدبّوس:** إذا العنوان ناقص، المساعد بيطلب من الزبون يبعت موقعو من زر «الموقع» بالواتساب، والموقع بيوصل عالطلبية لحالو.
+- **كل زبون إلو طلبية مفتوحة** لـ ٢٤ ساعة. كل رسالة جديدة بتزيد أو بتعدّل عليها.
+- **لائحة الأصناف والأسعار** (اختياري، من الإعدادات) بتخلّي المساعد يحط الأسعار الصح، وما يبيع شي مش موجود.
+- **الحماية:** الخدمة بتتأكد إنو كل رسالة جايي من Meta (توقيع `WHATSAPP_APP_SECRET`)، والصندوق بيفتح بس للإيميلات اللي بجدول `talabiye_members`.
+
+| الملف | شو هو |
+|---|---|
+| `supabase/whatsapp.sql` | الجداول والحماية |
+| `supabase/functions/talabiye-whatsapp` | بيستقبل رسائل واتساب، بيفهمها، وبيحفظ الطلبية |
+| `supabase/functions/talabiye-send` | بيبعت الرد اللي وافقتي عليه |
+| `supabase/functions/_shared/whatsapp.ts` | Gemini + Meta API |
+| `inbox.html` | صندوق الطلبيات للمحل |
+
+## الإعداد
+
+**١. Supabase** (نفس مشروع نصيب):
+1. **SQL Editor:** الصقي `supabase/whatsapp.sql`، غيّري الإيميل بآخر الملف، وكبسي Run.
+2. **Authentication ← Users:** اعملي حساب بنفس الإيميل.
+3. انشري الخدمتين:
+   ```
+   supabase functions deploy talabiye-whatsapp --no-verify-jwt
+   supabase functions deploy talabiye-send
+   ```
+4. **Edge Functions ← Secrets:** `GEMINI_API_KEY`، `WHATSAPP_VERIFY_TOKEN` (كلمة بتختاريها)، `WHATSAPP_APP_SECRET`، `WHATSAPP_TOKEN`، `WHATSAPP_PHONE_ID`. واختياري: `GEMINI_MODEL` و`GRAPH_VERSION`.
+5. بـ `config.js`: حطي `SUPABASE_URL` و`SUPABASE_ANON_KEY` (من Project Settings ← API).
+
+**٢. Meta (developers.facebook.com):**
+1. **My Apps ← Create App**، واختاري الاستعمال تبع WhatsApp أو نوع Business.
+2. **WhatsApp ← API Setup:** بيعطيكِ **رقم تجربة ببلاش** وتوكن مؤقت (٢٤ ساعة). زيدي رقمك كمستلم (لحد ٥ أرقام بالتجربة). خدي **Phone number ID**.
+3. **WhatsApp ← Configuration ← Webhook:**
+   - Callback URL: `https://<project>.supabase.co/functions/v1/talabiye-whatsapp`
+   - Verify token: نفس `WHATSAPP_VERIFY_TOKEN`
+   - Verify and save، وبعدين اشتركي بحقل **messages**.
+4. **App settings ← Basic:** خدي **App secret** وحطيه بـ `WHATSAPP_APP_SECRET`.
+5. **التوكن الدائم:** Business Settings ← System users ← زيدي واحد، أعطيه التطبيق بصلاحيات `whatsapp_business_messaging` و`whatsapp_business_management`، واعملي Generate token. هيدا بيصير `WHATSAPP_TOKEN`.
+
+**٣. جربي:** من تلفونك، ابعتي رسالة أو فويس لرقم التجربة. الطلبية لازم تطلع بـ `inbox.html` خلال ثواني.
+
+**٤. الرقم الحقيقي (بعد التجربة):** زيدي رقم المحل بـ WhatsApp Manager. إذا بدك نفس الرقم يضل شغّال على تطبيق واتساب بزنس (Coexistence)، اتأكدي إنو الخيار بيطلع وقت التسجيل. وزيدي طريقة دفع بـ Billing لما تتخطي الرسائل المجانية.
+
+**انتبهي:**
+- واتساب بيسمح بالرد العادي بس **خلال ٢٤ ساعة** من آخر رسالة من الزبون. بعدها لازم رسالة جاهزة (template)، وهيدي مش مبنية بعد.
+- Meta بتوقف نسخ الـ API القديمة. إذا طلع خطأ فيه «version»، حطي النسخة الجديدة بـ `GRAPH_VERSION`.
+- الأسعار: من ١ تشرين الأول ٢٠٢٦، أول ١٠٠٠ رد بالشهر لكل رقم ببلاش، وبعدها بيندفعوا (بحسب المصادر اللي لقيناها، اتأكدي من صفحة Meta).
 
 # طلبيّة للجملة (الهدف الجديد)
 

@@ -8,6 +8,7 @@
 // =====================================================================
 window.TALABIYE_CFG = {
   PARSE_URL: '',
+  SUPABASE_URL: '',           // لصندوق مساعد واتساب (inbox.html): https://xxxx.supabase.co
   SUPABASE_ANON_KEY: '',
   OWNER_WHATSAPP: '',
   BASIC_PRICE: '79$',         // الباقة الأساسية للسنة

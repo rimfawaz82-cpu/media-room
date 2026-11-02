@@ -1,0 +1,227 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>صندوق طلبيّة</title>
+<meta name="theme-color" content="#0E7C66">
+<link rel="icon" href="icons/icon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+<style>
+  .wrap { max-width: 720px; }
+  header { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 14px; }
+  header .logo { display: flex; align-items: center; gap: 8px; font-weight: 800; font-size: 22px; }
+  header img { width: 34px; height: 34px; }
+  header .live { font-size: 13px; color: var(--muted); display: flex; align-items: center; gap: 6px; }
+  header .live i { width: 8px; height: 8px; border-radius: 50%; background: var(--muted); }
+  header .live.on i { background: #25D366; }
+  .filters { display: flex; gap: 6px; margin-bottom: 12px; }
+  .filters button { flex: 1; border: 1px solid var(--line); background: var(--surface); font: inherit; font-weight: 700; padding: 10px 6px; border-radius: 12px; color: var(--muted); cursor: pointer; }
+  .filters button.on { background: var(--ink); color: var(--bg); border-color: var(--ink); }
+  .o-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; }
+  .o-head h3 { margin: 0; }
+  .o-head small { display: block; color: var(--muted); font-size: 13px; direction: ltr; text-align: right; }
+  .items { list-style: none; padding: 0; margin: 10px 0; }
+  .items li { display: flex; justify-content: space-between; gap: 8px; padding: 7px 10px; border-radius: 10px; background: var(--bg); margin-bottom: 5px; }
+  .meta { display: grid; grid-template-columns: 80px 1fr; gap: 4px 10px; font-size: 15px; margin: 6px 0; }
+  .meta dt { color: var(--muted); }
+  .meta dd { margin: 0; font-weight: 700; overflow-wrap: anywhere; }
+  .missing { background: var(--warn-soft); color: var(--warn); border-radius: 10px; padding: 8px 12px; font-size: 14px; margin: 8px 0; }
+  .err { background: var(--warn-soft); color: var(--warn); border-radius: 10px; padding: 8px 12px; font-size: 14px; margin-top: 8px; }
+  .acts { display: grid; grid-template-columns: 2fr 1fr 1fr; gap: 8px; margin-top: 10px; }
+  .acts .btn { font-size: 15px; padding: 10px 6px; }
+  .chat { margin-top: 10px; display: flex; flex-direction: column; gap: 6px; background: var(--bg); border-radius: 12px; padding: 10px; }
+  .msg { max-width: 85%; padding: 7px 11px; border-radius: 12px; font-size: 14px; line-height: 1.5; white-space: pre-wrap; overflow-wrap: anywhere; }
+  .msg.in { align-self: flex-end; background: var(--surface); border: 1px solid var(--line); }
+  .msg.out { align-self: flex-start; background: var(--soft); }
+  .msg small { display: block; color: var(--muted); font-size: 11px; }
+  .toggle { display: flex; align-items: center; gap: 10px; font-weight: 700; }
+  .toggle input { width: auto; }
+  .empty { text-align: center; color: var(--muted); padding: 30px 10px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="logo"><img src="icons/icon.svg" alt=""> صندوق طلبيّة</div>
+    <div class="row" style="flex:none;gap:8px;align-items:center">
+      <span class="live" id="live"><i></i><span>مش متصل</span></span>
+      <button class="btn ghost hide" id="openSettings" style="min-height:38px;padding:6px 12px">الإعدادات</button>
+    </div>
+  </header>
+
+  <section class="card hide" id="setup">
+    <h2>لازم نربط قاعدة البيانات</h2>
+    <p class="muted">حطي <b>SUPABASE_URL</b> و<b>SUPABASE_ANON_KEY</b> بملف <code>config.js</code>. الخطوات كاملة بالـ README، قسم «مساعد واتساب».</p>
+  </section>
+
+  <section class="card hide" id="login">
+    <h2>تسجيل الدخول</h2>
+    <form id="loginForm">
+      <label for="email">الإيميل</label>
+      <input id="email" type="email" autocomplete="username" required>
+      <label for="pass">كلمة السر</label>
+      <input id="pass" type="password" autocomplete="current-password" required>
+      <div style="margin-top:12px"><button class="btn block" type="submit">فوت</button></div>
+    </form>
+  </section>
+
+  <section class="card hide" id="settings">
+    <h2>إعدادات المساعد</h2>
+    <label for="shopName">اسم المحل</label>
+    <input id="shopName" placeholder="Lara Boutique">
+    <label class="toggle" for="autoReply" style="margin-top:14px"><input type="checkbox" id="autoReply"> الرد بينبعت لحالو</label>
+    <p class="muted small" style="margin:4px 0 0">بالبداية خلّيه مطفي: المساعد بيكتب الرد وإنتِ بتوافقي. لما تتأكدي إنو دقيق، شغّليه.</p>
+    <label for="catalog">الأصناف والأسعار (اختياري، سطر لكل صنف)</label>
+    <textarea id="catalog" placeholder="كنزة صوف، كل المقاسات، 25$&#10;جينز، 28 لـ 34، 30$"></textarea>
+    <div class="row" style="margin-top:12px">
+      <button class="btn" id="saveSettings">حفظ</button>
+      <button class="btn ghost" id="logout">طلاع</button>
+    </div>
+  </section>
+
+  <div id="main" class="hide">
+    <div class="filters" role="tablist">
+      <button data-f="draft" class="on">جديدة <span id="nDraft"></span></button>
+      <button data-f="confirmed">مأكدة</button>
+      <button data-f="all">الكل</button>
+    </div>
+    <div id="list"></div>
+  </div>
+</div>
+<div class="toast hide" id="toast"></div>
+
+<script src="vendor/supabase.js"></script>
+<script src="config.js"></script>
+<script>
+const CFG = window.TALABIYE_CFG || {};
+const $ = s => document.querySelector(s);
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+function toast(m) { const t = $('#toast'); t.textContent = m; t.classList.remove('hide'); clearTimeout(toast.t); toast.t = setTimeout(() => t.classList.add('hide'), 2800); }
+const ago = d => { const m = Math.round((Date.now() - new Date(d)) / 60000); return m < 1 ? 'هلّق' : m < 60 ? `من ${m} دقيقة` : m < 1440 ? `من ${Math.round(m / 60)} ساعة` : new Date(d).toLocaleDateString('en-GB'); };
+
+if (!CFG.SUPABASE_URL || !CFG.SUPABASE_ANON_KEY) { $('#setup').classList.remove('hide'); throw new Error('no config'); }
+const sb = supabase.createClient(CFG.SUPABASE_URL, CFG.SUPABASE_ANON_KEY);
+let filter = 'draft', orders = [], openChat = new Set(), drafts = {};
+
+// ---------- الدخول ----------
+$('#loginForm').onsubmit = async e => {
+  e.preventDefault();
+  const { error } = await sb.auth.signInWithPassword({ email: $('#email').value.trim(), password: $('#pass').value });
+  if (error) toast('الإيميل أو كلمة السر غلط');
+};
+$('#logout').onclick = () => sb.auth.signOut();
+sb.auth.onAuthStateChange((_e, session) => session ? start() : stop());
+sb.auth.getSession().then(({ data }) => data.session ? start() : stop());
+
+function stop() {
+  $('#login').classList.remove('hide'); $('#main').classList.add('hide'); $('#settings').classList.add('hide'); $('#openSettings').classList.add('hide');
+  sb.removeAllChannels(); setLive(false);
+}
+let started = false;
+async function start() {
+  if (started) return; started = true;
+  $('#login').classList.add('hide'); $('#main').classList.remove('hide'); $('#openSettings').classList.remove('hide');
+  await loadSettings(); await load();
+  sb.channel('orders').on('postgres_changes', { event: '*', schema: 'public', table: 'wa_orders' }, () => load())
+    .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'wa_messages' }, p => { if (openChat.has(p.new.order_id)) loadChat(p.new.order_id); })
+    .subscribe(st => setLive(st === 'SUBSCRIBED'));
+}
+function setLive(on) { $('#live').classList.toggle('on', on); $('#live span').textContent = on ? 'متصل' : 'مش متصل'; }
+
+// ---------- الإعدادات ----------
+$('#openSettings').onclick = () => $('#settings').classList.toggle('hide');
+async function loadSettings() {
+  const { data, error } = await sb.from('talabiye_settings').select('*').eq('id', 1).maybeSingle();
+  if (error || !data) { toast('ما عندك صلاحية. زيدي إيميلك بجدول talabiye_members'); return; }
+  $('#shopName').value = data.shop_name; $('#autoReply').checked = data.auto_reply; $('#catalog').value = data.catalog;
+}
+$('#saveSettings').onclick = async () => {
+  const { error } = await sb.from('talabiye_settings').update({ shop_name: $('#shopName').value.trim(), auto_reply: $('#autoReply').checked, catalog: $('#catalog').value.trim() }).eq('id', 1);
+  toast(error ? 'ما انحفظ: ' + error.message : 'انحفظ'); if (!error) $('#settings').classList.add('hide');
+};
+
+// ---------- الطلبيات ----------
+document.querySelectorAll('[data-f]').forEach(b => b.onclick = () => { filter = b.dataset.f; document.querySelectorAll('[data-f]').forEach(x => x.classList.toggle('on', x === b)); render(); });
+async function load() {
+  const { data, error } = await sb.from('wa_orders').select('*').order('updated_at', { ascending: false }).limit(200);
+  if (error) return toast('ما قدرنا نجيب الطلبيات');
+  orders = data; render();
+}
+function money(o) { const d = o.data || {}; if (d.total == null) return ''; return (/LBP|ليرة/i.test(d.currency || '') ? Number(d.total).toLocaleString('en') + ' ل.ل.' : '$' + d.total); }
+function render() {
+  const n = orders.filter(o => o.status === 'draft').length;
+  $('#nDraft').textContent = n ? `(${n})` : '';
+  const list = orders.filter(o => filter === 'all' || o.status === filter);
+  if (!list.length) { $('#list').innerHTML = `<div class="card empty">${filter === 'draft' ? 'ما في طلبيات جديدة. أول ما زبون يبعت عالواتساب، بتطلع هون.' : 'ما في شي هون بعد.'}</div>`; return; }
+  // منرجّع المؤشر لمكانو إذا كانت عم تكتب رد وإجت رسالة جديدة
+  const f = document.activeElement, fid = f && f.tagName === 'TEXTAREA' ? f.id : null, sel = fid ? [f.selectionStart, f.selectionEnd] : null;
+  $('#list').innerHTML = list.map(card).join('');
+  if (fid && document.getElementById(fid)) { const t = document.getElementById(fid); t.focus(); t.setSelectionRange(sel[0], sel[1]); }
+  list.forEach(o => {
+    const el = document.getElementById('o-' + o.id);
+    const ta = el.querySelector('textarea');
+    ta.oninput = () => { drafts[o.id] = ta.value; };
+    el.querySelector('[data-send]').onclick = () => send(o, ta.value);
+    el.querySelector('[data-confirm]').onclick = () => setStatus(o, o.status === 'confirmed' ? 'draft' : 'confirmed');
+    el.querySelector('[data-cancel]').onclick = () => setStatus(o, o.status === 'cancelled' ? 'draft' : 'cancelled');
+    el.querySelector('[data-chat]').onclick = () => { if (openChat.has(o.id)) { openChat.delete(o.id); el.querySelector('.chat').classList.add('hide'); } else { openChat.add(o.id); loadChat(o.id); } };
+    if (openChat.has(o.id)) loadChat(o.id);
+  });
+}
+function card(o) {
+  const d = o.data || {}, a = d.address || {};
+  const old = Date.now() - new Date(o.last_in_at) > 24 * 3600_000;
+  const pill = { pending: ['warn', 'الرد بيستنى موافقتك'], sent: ['', 'الرد انبعت'], failed: ['warn', 'الرد ما انبعت'], none: ['', ''] }[o.reply_status] || ['', ''];
+  const status = { draft: '', confirmed: 'مأكدة', cancelled: 'ملغاة' }[o.status];
+  return `<section class="card" id="o-${o.id}">
+    <div class="o-head"><div><h3>${esc(o.name || 'زبون')}</h3><small>+${esc(o.phone)} · ${ago(o.last_in_at)}</small></div>
+      <div>${status ? `<span class="pill">${status}</span> ` : ''}${pill[1] ? `<span class="pill ${pill[0]}">${pill[1]}</span>` : ''}</div></div>
+    ${(d.items || []).length ? `<ul class="items">${d.items.map(i => `<li><span>${esc([i.qty > 1 ? i.qty + '×' : '', i.name, i.color, i.size].filter(Boolean).join(' '))}</span><b>${i.price != null ? esc(i.price) : ''}</b></li>`).join('')}</ul>` : '<p class="muted small" style="margin:8px 0">لسا ما في قطع.</p>'}
+    <dl class="meta">
+      ${money(o) ? `<dt>المجموع</dt><dd>${esc(money(o))}</dd>` : ''}
+      ${a.text ? `<dt>العنوان</dt><dd>${esc(a.text)}</dd>` : ''}
+      ${d.location ? `<dt>الموقع</dt><dd><a href="https://maps.google.com/?q=${d.location.lat},${d.location.lng}" target="_blank" rel="noopener">📍 عالخريطة</a></dd>` : ''}
+      ${d.payment ? `<dt>الدفع</dt><dd>${esc(d.payment)}</dd>` : ''}
+      ${d.delivery_time ? `<dt>الوقت</dt><dd>${esc(d.delivery_time)}</dd>` : ''}
+    </dl>
+    ${(d.missing || []).length ? `<div class="missing"><b>ناقص:</b> ${d.missing.map(esc).join('، ')}</div>` : ''}
+    <label for="r-${o.id}">الرد</label>
+    <textarea id="r-${o.id}">${esc(drafts[o.id] ?? o.reply)}</textarea>
+    ${old ? '<div class="err">مرق أكتر من ٢٤ ساعة على آخر رسالة من الزبون، فواتساب ما بيسمح بالرد من هون. ردّي من تلفونك.</div>' : ''}
+    ${o.reply_status === 'failed' && o.reply_error ? `<div class="err">${esc(o.reply_error)}</div>` : ''}
+    <div class="acts">
+      <button class="btn wa" data-send ${old ? 'disabled' : ''}>ابعت الرد</button>
+      <button class="btn ghost" data-confirm>${o.status === 'confirmed' ? 'رجّعها' : 'أكّد'}</button>
+      <button class="btn ghost" data-cancel>${o.status === 'cancelled' ? 'رجّعها' : 'ألغي'}</button>
+    </div>
+    <button class="btn ghost block" data-chat style="margin-top:8px;min-height:40px">المحادثة</button>
+    <div class="chat hide"></div>
+  </section>`;
+}
+async function send(o, text) {
+  if (!text.trim()) return toast('الرد فاضي');
+  const { data, error } = await sb.functions.invoke('talabiye-send', { body: { order_id: o.id, text } });
+  if (error || data?.error) {
+    let msg = data?.error; try { msg = msg || (await error.context.json()).error; } catch {}
+    return toast('ما انبعت: ' + (msg || 'صار في مشكلة'));
+  }
+  delete drafts[o.id]; toast('انبعت');
+}
+async function setStatus(o, status) {
+  const { error } = await sb.from('wa_orders').update({ status }).eq('id', o.id);
+  if (error) toast('ما زبط: ' + error.message);
+}
+async function loadChat(id) {
+  const el = document.querySelector('#o-' + id + ' .chat'); if (!el) return;
+  const o = orders.find(x => x.id === id);
+  const { data } = await sb.from('wa_messages').select('direction, type, body, created_at').eq('phone', o.phone).order('created_at', { ascending: false }).limit(20);
+  el.innerHTML = (data || []).reverse().map(m => `<div class="msg ${m.direction}">${m.type === 'audio' ? '🎤 فويس' : esc(m.body) || esc(m.type)}<small>${new Date(m.created_at).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })}</small></div>`).join('') || '<span class="muted small">ما في رسائل.</span>';
+  el.classList.remove('hide');
+}
+setInterval(() => { if (orders.length && document.activeElement?.tagName !== 'TEXTAREA') render(); }, 60_000);   // «من كم دقيقة» بيتحدّث
+</script>
+</body>
+</html>
