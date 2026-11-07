@@ -1,0 +1,201 @@
+{
+  "ticks": {
+    "rows": 69288840,
+    "first": "2026-03-27 01:00:01.710000",
+    "last": "2026-11-06 23:54:59.927000",
+    "days": 160,
+    "bid_only_rows": 4693588,
+    "ask_only_rows": 4850655,
+    "both_rows": 59744597,
+    "neither_rows": 0
+  },
+  "tick_integrity": {
+    "non_monotonic": 0,
+    "same_ms_timestamp": 774195,
+    "crossed_ask_lt_bid": 0,
+    "locked_ask_eq_bid": 50,
+    "spread_gt_1usd": 10157,
+    "spread_gt_5usd": 374,
+    "max_spread": 38.710000000000036,
+    "max_spread_ts": "2026-06-15 01:00:07.347000"
+  },
+  "tick_silences_gt_60s_in_session": 2,
+  "tick_silence_examples": [
+    {
+      "prev": "2026-05-25 21:29:59.916",
+      "ts": "2026-05-26 01:00:01.276",
+      "sec": "12601.36"
+    },
+    {
+      "prev": "2026-09-07 21:29:59.812",
+      "ts": "2026-09-08 01:00:00.722",
+      "sec": "12600.91"
+    }
+  ],
+  "consecutive_bid_jump": {
+    "gt_2usd": 3988,
+    "gt_5usd": 753,
+    "max": 69.09000000000015,
+    "max_ts": "2026-04-13 01:00:19.311000"
+  },
+  "spread_tick_level_usd": {
+    "p50": 0.1,
+    "p75": 0.11,
+    "p90": 0.14,
+    "p95": 0.15,
+    "p99": 0.19,
+    "p99.9": 0.27,
+    "mean": 0.1112,
+    "min": 0.0
+  },
+  "spread_time_weighted_minute_usd": {
+    "p50": 0.1042,
+    "p75": 0.1146,
+    "p90": 0.1285,
+    "p95": 0.1408,
+    "p99": 0.176,
+    "p99.9": 0.2706,
+    "mean": 0.1109
+  },
+  "spread_minute_max_usd": {
+    "p50": 0.15,
+    "p75": 0.16,
+    "p90": 0.19,
+    "p95": 0.21,
+    "p99": 0.3,
+    "p99.9": 1.7904
+  },
+  "spread_points_share_top": {
+    "10": 0.7065,
+    "11": 0.0575,
+    "12": 0.0524,
+    "15": 0.0512,
+    "13": 0.0467,
+    "14": 0.0438,
+    "16": 0.0131,
+    "19": 0.0104,
+    "17": 0.0067,
+    "18": 0.0066,
+    "23": 0.0009,
+    "20": 0.0007
+  },
+  "spread_bps_twmean": {
+    "p50": 0.2468,
+    "p75": 0.2674,
+    "p90": 0.2994,
+    "p95": 0.3225,
+    "p99": 0.3783,
+    "p99.9": 0.5787
+  },
+  "corr_spread_vs_minute_range": 0.194,
+  "spread_over_minute_range_median": 0.063,
+  "reconciliation": {
+    "m1_file_minutes_in_window": 219742,
+    "tick_minutes": 219742,
+    "matched": 219742,
+    "in_m1_file_not_in_ticks": 0,
+    "in_ticks_not_in_m1_file": 0,
+    "bid_open_exact_match": 1.0,
+    "bid_open_within_0.05": 1.0,
+    "bid_open_p99_absdiff": 0.0,
+    "bid_high_exact_match": 1.0,
+    "bid_high_within_0.05": 1.0,
+    "bid_high_p99_absdiff": 0.0,
+    "bid_low_exact_match": 1.0,
+    "bid_low_within_0.05": 1.0,
+    "bid_low_p99_absdiff": 0.0,
+    "bid_close_exact_match": 1.0,
+    "bid_close_within_0.05": 1.0,
+    "bid_close_p99_absdiff": 0.0,
+    "m1SPREAD_vs_spr_open_exact": 0.7294,
+    "m1SPREAD_vs_spr_open_mae": 0.0115,
+    "m1SPREAD_vs_spr_min_exact": 1.0,
+    "m1SPREAD_vs_spr_min_mae": 0.0,
+    "m1SPREAD_vs_spr_twmean_exact": 0.5301,
+    "m1SPREAD_vs_spr_twmean_mae": 0.0108,
+    "m1SPREAD_vs_spr_close_exact": 0.7311,
+    "m1SPREAD_vs_spr_close_mae": 0.0104,
+    "m1SPREAD_vs_spr_max_exact": 0.1901,
+    "m1SPREAD_vs_spr_max_mae": 0.0532,
+    "m1SPREAD_median_usd": 0.1,
+    "real_twspread_median_usd_same_minutes": 0.10417154857006942,
+    "share_minutes_real_max_spread_gt_m1SPREAD": 0.8099,
+    "tickvol_vs_ticks_bid_spearman": 1.0,
+    "tickvol_over_ticks_bid_median": 1.0,
+    "ticks_all_per_minute_max": 973,
+    "tickvol_m1file_max_in_window": 938
+  },
+  "intra_minute_ambiguity": {
+    "both_\u00b10.5$_touched_in_same_minute": {
+      "share_of_minutes": 0.28332,
+      "n": 62258,
+      "high_came_first_share": 0.496
+    },
+    "both_\u00b11.0$_touched_in_same_minute": {
+      "share_of_minutes": 0.0773,
+      "n": 16985,
+      "high_came_first_share": 0.498
+    },
+    "both_\u00b12.0$_touched_in_same_minute": {
+      "share_of_minutes": 0.0096,
+      "n": 2110,
+      "high_came_first_share": 0.499
+    },
+    "both_\u00b13.0$_touched_in_same_minute": {
+      "share_of_minutes": 0.00206,
+      "n": 453,
+      "high_came_first_share": 0.481
+    }
+  },
+  "mid_move_after_delay_usd": {
+    "100ms": {
+      "mean": 0.027,
+      "median": 0.0,
+      "p90": 0.075,
+      "p99": 0.31
+    },
+    "250ms": {
+      "mean": 0.057,
+      "median": 0.02,
+      "p90": 0.15,
+      "p99": 0.48
+    },
+    "500ms": {
+      "mean": 0.097,
+      "median": 0.04,
+      "p90": 0.25,
+      "p99": 0.705
+    },
+    "1000ms": {
+      "mean": 0.151,
+      "median": 0.08,
+      "p90": 0.37,
+      "p99": 0.985
+    },
+    "3000ms": {
+      "mean": 0.285,
+      "median": 0.175,
+      "p90": 0.66,
+      "p99": 1.655
+    }
+  },
+  "latency_sample_seed": 20261107,
+  "markup_tw_overall": {
+    "p50": 0.0042,
+    "p75": 0.0145,
+    "p90": 0.0284,
+    "p95": 0.0403,
+    "p99": 0.0753,
+    "p99.9": 0.1645
+  },
+  "corr_spread_usd_vs_price_daily": 0.486,
+  "cost_model": {
+    "C0_measured": "fill at the real Ask (buy) / Bid (sell); no commission, no slippage",
+    "C1_base": "real Ask/Bid fill + $0.10 adverse slippage on market & stop orders (~mean |mid move| over 0.5-1 s), $0 on limit orders + broker commission (unknown, $0 until confirmed)",
+    "C2_stress": "C1 with spread x2 and $0.30 slippage on market & stop orders (~p90 of 1 s mid move)",
+    "C3_news": "C1 + extra $0.50 slippage within \u00b12 min of 15:30/17:00/21:00 server; no entries 23:55-01:05 server",
+    "historical_2022_2026_03": "Ask = Bid + (M1-file SPREAD, which equals the minute's minimum spread) + measured hour-of-day median markup (table ba_spread_markup_by_hour.csv). Spread is modelled in USD, not bps, because the $0.10 floor does not scale with price",
+    "measured_median_roundtrip_spread_usd": 0.104,
+    "measured_p90_roundtrip_spread_usd": 0.129
+  }
+}

@@ -161,7 +161,7 @@ def main() -> None:
     for ms in [100, 250, 500, 1000, 3000]:
         j2 = np.searchsorted(ts_ns, ts_ns[sample] + ms, side="right") - 1
         d = np.abs(mid[j2] - mid[sample])
-        lat[f"{ms}ms"] = {"median": round(float(np.median(d)), 3), "p90": round(float(np.quantile(d, .9)), 3),
+        lat[f"{ms}ms"] = {"mean": round(float(np.mean(d)), 3), "median": round(float(np.median(d)), 3), "p90": round(float(np.quantile(d, .9)), 3),
                           "p99": round(float(np.quantile(d, .99)), 3)}
     R["mid_move_after_delay_usd"] = lat
     R["latency_sample_seed"] = 20261107
@@ -169,12 +169,21 @@ def main() -> None:
     # ------------------------------------------------------------------ calibrated cost model
     base_rt = float(m.spr_twmean.median())
     p90_rt = float(m.spr_twmean.quantile(.9))
+    # markup of the real (time-weighted / max) spread over the minimum spread that the M1 file records
+    m["mk_tw"] = m.spr_twmean - m.spr_min
+    m["mk_max"] = m.spr_max - m.spr_min
+    mk = m.groupby("hour").agg(markup_tw_median=("mk_tw", "median"), markup_tw_p90=("mk_tw", lambda s: s.quantile(.9)),
+                               markup_max_median=("mk_max", "median")).reset_index()
+    mk.to_csv(TAB / "ba_spread_markup_by_hour.csv", index=False)
+    R["markup_tw_overall"] = q(m.mk_tw)
+    # does the $ spread scale with price? (bps falls as price rises => fixed-$ floor)
+    R["corr_spread_usd_vs_price_daily"] = round(float(m.groupby(m.ts.dt.date)[["spr_twmean", "mid_c"]].median().corr(method="spearman").iloc[0, 1]), 3)
     R["cost_model"] = {
-        "C0_measured": "pay the actual Ask (buy) / Bid (sell) from the tick-built minute bars at the moment of the fill; no commission, no slippage",
-        "C1_base": f"actual Ask/Bid fill + slippage $0.05 on market/stop orders + commission (broker-specific, user must confirm; $0 assumed)",
-        "C2_stress": "C1 with slippage $0.20 and spread multiplied by 2",
-        "C3_news": "C1 + extra $0.50 slippage within ±2 min of 15:30/17:00/21:00 server",
-        "historical_2022_2025_transport": "spread_bps of price (median and p90 by hour) applied to the M1 Bid history, since Ask is unavailable before 2026-03-27",
+        "C0_measured": "fill at the real Ask (buy) / Bid (sell); no commission, no slippage",
+        "C1_base": "real Ask/Bid fill + $0.10 adverse slippage on market & stop orders (~mean |mid move| over 0.5-1 s), $0 on limit orders + broker commission (unknown, $0 until confirmed)",
+        "C2_stress": "C1 with spread x2 and $0.30 slippage on market & stop orders (~p90 of 1 s mid move)",
+        "C3_news": "C1 + extra $0.50 slippage within ±2 min of 15:30/17:00/21:00 server; no entries 23:55-01:05 server",
+        "historical_2022_2026_03": "Ask = Bid + (M1-file SPREAD, which equals the minute's minimum spread) + measured hour-of-day median markup (table ba_spread_markup_by_hour.csv). Spread is modelled in USD, not bps, because the $0.10 floor does not scale with price",
         "measured_median_roundtrip_spread_usd": round(base_rt, 3), "measured_p90_roundtrip_spread_usd": round(p90_rt, 3),
     }
 
@@ -284,13 +293,25 @@ These minutes are where an M1 backtest must guess; the conservative rule is "SL 
 | C1 (base) | {R['cost_model']['C1_base']} |
 | C2 (stress) | {R['cost_model']['C2_stress']} |
 | C3 (news) | {R['cost_model']['C3_news']} |
-| 2022 → 2026-03 | {R['cost_model']['historical_2022_2025_transport']} |
+| 2022 → 2026-03 | {R['cost_model']['historical_2022_2026_03']} |
 
 Measured median round-trip spread ${R['cost_model']['measured_median_roundtrip_spread_usd']:.3f}, p90 ${R['cost_model']['measured_p90_roundtrip_spread_usd']:.3f} (time-weighted, 2026 price levels).
 
-## 7. Verdict
+Real spread minus the minimum spread recorded in the M1 file ("markup"), time-weighted: {R['markup_tw_overall']}. Spearman(daily spread $, daily price) = {R['corr_spread_usd_vs_price_daily']}: the dollar spread rises only weakly with price (monthly table: price +18% from Nov to Apr, spread +8%), while its *minimum* stays on a fixed $0.10 floor. The M1 file shows the same 10-point minimum back to 2022, at less than half today's price. Scaling the spread in bps would therefore understate 2022–2024 costs by more than half, so cost is modelled **in USD** for the whole history (the conservative choice).
 
-The tick file is clean and consistent with the M1 Bid file, and it gives the lab what the M1 file lacked: the **real Ask**, the **real spread** including news-time widening, the **true order of highs and lows inside each minute**, and a measure of **latency risk**. Its main limitation is coverage: 7.4 months, all inside the holdout period.
+By hour: `reports/tables/ba_spread_markup_by_hour.csv`.
+
+## 7. Findings
+
+1. **The two files agree perfectly.** Every one of the {rc['matched']:,} overlapping minutes has identical Bid OHLC and identical tick volume. The M1 file is therefore a faithful Bid series built from these ticks, which raises confidence in the 2022–2026 history.
+2. **The M1 file's SPREAD column is the minimum spread of the minute** (100% exact match). It systematically understates cost: the real maximum spread exceeded it in {rc['share_minutes_real_max_spread_gt_m1SPREAD']*100:.0f}% of minutes.
+3. **Normal cost is low and stable:** a round trip costs about $0.10 (median) to $0.13 (p90), roughly 0.25 bps of price. Hours 01–08 server (Asia) are ~10–15% wider than London/NY.
+4. **The danger zone is the daily reopen.** At 01:00 server the median *maximum* spread is ${evdf.set_index('minute').loc['01:00 reopen','max_median']:.2f} and reached ${evdf.set_index('minute').loc['01:00 reopen','max_max']:.2f}; stops resting over the halt can fill far away. Rule: no new entries 23:55–01:05 server, and positions are not held through the halt unless a strategy is explicitly designed for it.
+5. **News minutes widen the spread less than feared** (15:30 median max spread ${evdf.set_index('minute').loc['15:30 (08:30 NY data)','max_median']:.2f}, p90 ${evdf.set_index('minute').loc['15:30 (08:30 NY data)','max_p90']:.2f}), but price moves a lot, so the real news cost is slippage, not spread.
+6. **Same-minute ambiguity is a coin flip.** When price touches ±X in both directions inside one minute, the high came first ≈50% of the time. "SL first" is therefore genuinely conservative, and it matters: at 2026 volatility, ±$1 is touched both ways in {amb['both_±1.0$_touched_in_same_minute']['share_of_minutes']*100:.1f}% of minutes. Scalping models with stops/targets of ~$1 or less must be validated on ticks, not on M1 bars.
+7. **Latency is a real cost for scalping:** a 1-second delay moves the mid by ${lat['1000ms']['mean']:.2f} on average (p90 ${lat['1000ms']['p90']:.2f}), comparable to the whole spread.
+
+**Limitation:** 7.4 months only, all inside the holdout period. Used for cost calibration and simulator validation only, never for selecting strategy rules.
 """
     (OUT / "01b_bidask_audit.md").write_text(report, encoding="utf-8")
     (OUT / "bidask_results.json").write_text(json.dumps(R, indent=2, default=str), encoding="utf-8")
