@@ -1,0 +1,19 @@
+{
+  "name": "XAE-Swing v1 (frozen 2026-11-07, before any holdout data was used)",
+  "instrument": "XAUUSD (research feed XAUUSD.c; live account CFI XAUUSD_, contract 100 oz, 0.01 lot = 1 oz)",
+  "timeframe": "Daily bars; trading day ends at the daily halt (17:00 New York = 00:00 server NY+7)",
+  "direction": "LONG ONLY",
+  "indicators": {
+    "entry_channel": "highest HIGH of the previous 20 completed days (today excluded)",
+    "exit_channel": "lowest LOW of the previous 10 completed days (today excluded)",
+    "ATR": "20-day Wilder ATR (EMA of true range, alpha = 1/20)"
+  },
+  "entry": "If today's daily CLOSE > entry_channel and no position is open -> BUY at the next day's open (practically: after 01:05 server, once the reopen spread has normalised)",
+  "initial_stop": "entry price - 2.0 x ATR20 (ATR of the signal day)",
+  "trailing_stop": "after each daily close: stop = max(stop, highest close since entry - 2.0 x ATR20). Checked intraday; a gap below the stop fills at the open",
+  "exit": "If the daily CLOSE < exit_channel -> SELL at the next day's open; or the stop is hit",
+  "re_entry_after_stop": "No new entry until the exit-channel condition has reset (system state goes flat) and a fresh 20-day breakout close occurs",
+  "max_positions": 1,
+  "costs_assumed": "$0.50 per side (spread + slippage at the reopen); swap CFI: long -515.76 pts/night (~4.6%/yr), triple on Wednesday",
+  "not_included_yet": "position sizing / risk per trade (Phase 8)"
+}

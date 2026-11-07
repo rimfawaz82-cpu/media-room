@@ -27,7 +27,11 @@ from load import RAW_PARQUET, ROOT
 TAB = ROOT / "reports" / "tables"
 COST_SIDE = 0.50          # spread 0.20 + slippage 0.30 at the open
 STOP_SLIP = 0.30
-SWAP = {"W0": 0.0, "W1": 0.04, "W2": 0.08}
+SWAP = {"W0": 0.0, "W1": 0.04, "W2": 0.08,
+        # CFI XAUUSD_ (user's live account, spec screenshot 2026-11): swap in points (1 pt = $0.001), contract 100 oz.
+        # long -515.76 pts = -$0.5158/oz/night, short +279.2 pts = +$0.2792/oz/night; triple on Wednesday (7 charges/week).
+        # Expressed as % of the current price (~$4,071): long pays 4.62 %/yr, short RECEIVES 2.50 %/yr.
+        "W_CFI": (0.5158 * 365 / 4071, -0.2792 * 365 / 4071)}
 END = "2025-06-30"        # holdout starts 2025-07-01
 
 
@@ -144,7 +148,8 @@ def simulate_daily(d: pd.DataFrame, target: pd.Series, stop_atr: float, swap_rat
             # 3) financing for the nights until the next trading day
             if t + 1 < len(d):
                 nights = (d.day.iat[t + 1] - d.day.iat[t]).days
-                day_pnl -= abs(pos) * c * swap_rate * nights / 365
+                rate = (swap_rate[0] if pos > 0 else swap_rate[1]) if isinstance(swap_rate, tuple) else swap_rate
+                day_pnl -= abs(pos) * c * rate * nights / 365
         pnl[t] = day_pnl
     if pos != 0:
         trades.append({"entry_day": entry_day, "exit_day": d.day.iat[-1], "side": pos, "entry": entry, "exit": d.close.iat[-1], "reason": "open_at_end",

@@ -28,6 +28,8 @@ COSTS = {
     "C0": {"spr_mult": 1.0, "slip": 0.00},
     "C1": {"spr_mult": 1.0, "slip": 0.10},
     "C2": {"spr_mult": 2.0, "slip": 0.30},
+    "C1_CFI": {"spr_mult": 1.0, "slip": 0.10, "spr_add": 0.07},   # live account XAUUSD_ on CFI: ~$0.17 spread seen vs $0.10 in the data
+    "C2_CFI": {"spr_mult": 2.0, "slip": 0.30, "spr_add": 0.07},
 }
 TT = 0.01  # 1-point trade-through for limit orders / TP
 
@@ -71,7 +73,7 @@ class Market:
 
 def simulate(mkt: Market, o: Order, cost: str = "C1") -> dict | None:
     c = COSTS[cost]
-    spr = mkt.spr0 * c["spr_mult"]
+    spr = mkt.spr0 * c["spr_mult"] + c.get("spr_add", 0.0)
     slip = c["slip"]
     s = o.side
     if o.i0 >= mkt.n:
