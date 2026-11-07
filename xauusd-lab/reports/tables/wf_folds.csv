@@ -1,0 +1,109 @@
+fold,track,chosen,train_avgR,test_n,test_avgR
+2023-04-01,H01_asia_range_breakout,FLAT (no positive config),,0,
+2023-04-01,H02_asia_sweep_reverse,FLAT (no positive config),,0,
+2023-04-01,H03_pdhl_sweep_reverse,"tf=5min,tp_R=2.0",0.11662840030856944,49,-0.2763669589986379
+2023-04-01,H04_ny_opening_range_breakout,"or_len=30,tp_R=1.0,width_filter=narrow",0.13494695375648844,28,-0.05064572359075984
+2023-04-01,H05_trend_pullback,FLAT (no positive config),,0,
+2023-04-01,H06_bollinger_revert_asia,FLAT (no positive config),,0,
+2023-04-01,H07_last_hour_fade,"thr=0.5,sl_atr=1.0",0.08145755975327489,40,-0.018556246841099983
+2023-04-01,H08_ict_sweep_fvg_limit,FLAT (no positive config),,0,
+2023-04-01,H09_asia_sweep_continuation,"tf=15min,tp_R=nan,d1=False",0.06503975122874923,59,-0.08377092146156578
+2023-04-01,H10_bb_momentum_asia,FLAT (no positive config),,0,
+2023-04-01,H11_wide_breakout,"setup=ny_orb30,exit_mode=2R,d1=True",0.1347395016514961,23,0.1631890792461431
+2023-04-01,LAB (best of all),"H04_ny_opening_range_breakout|or_len=30,tp_R=1.0,width_filter=narrow",0.13494695375648844,28,-0.05064572359075984
+2023-07-01,H01_asia_range_breakout,FLAT (no positive config),,0,
+2023-07-01,H02_asia_sweep_reverse,FLAT (no positive config),,0,
+2023-07-01,H03_pdhl_sweep_reverse,"tf=5min,tp_R=2.0",0.07814351382834256,38,-0.18539245702933305
+2023-07-01,H04_ny_opening_range_breakout,"or_len=15,tp_R=2.0,width_filter=all",0.045593443371750746,64,-0.18247033146380792
+2023-07-01,H05_trend_pullback,FLAT (no positive config),,0,
+2023-07-01,H06_bollinger_revert_asia,FLAT (no positive config),,0,
+2023-07-01,H07_last_hour_fade,"thr=0.5,sl_atr=1.0",0.05951504095141784,24,-0.10872148499606672
+2023-07-01,H08_ict_sweep_fvg_limit,FLAT (no positive config),,0,
+2023-07-01,H09_asia_sweep_continuation,"tf=15min,tp_R=nan,d1=False",0.16651784580045875,55,0.48666874604719457
+2023-07-01,H10_bb_momentum_asia,FLAT (no positive config),,0,
+2023-07-01,H11_wide_breakout,"setup=ny_orb30,exit_mode=2R,d1=True",0.1536205706700115,30,0.12867827393291187
+2023-07-01,LAB (best of all),"H09_asia_sweep_continuation|tf=15min,tp_R=nan,d1=False",0.16651784580045875,55,0.48666874604719457
+2023-10-01,H01_asia_range_breakout,FLAT (no positive config),,0,
+2023-10-01,H02_asia_sweep_reverse,FLAT (no positive config),,0,
+2023-10-01,H03_pdhl_sweep_reverse,FLAT (no positive config),,0,
+2023-10-01,H04_ny_opening_range_breakout,"or_len=30,tp_R=1.0,width_filter=all",0.032359651947974924,55,-0.08706942219909257
+2023-10-01,H05_trend_pullback,FLAT (no positive config),,0,
+2023-10-01,H06_bollinger_revert_asia,FLAT (no positive config),,0,
+2023-10-01,H07_last_hour_fade,"thr=0.5,sl_atr=1.0",0.047019816991519144,29,-0.07604673931148843
+2023-10-01,H08_ict_sweep_fvg_limit,FLAT (no positive config),,0,
+2023-10-01,H09_asia_sweep_continuation,"tf=15min,tp_R=nan,d1=False",0.24996411828353873,49,-0.06018102695947509
+2023-10-01,H10_bb_momentum_asia,FLAT (no positive config),,0,
+2023-10-01,H11_wide_breakout,"setup=ny_orb30,exit_mode=time,d1=True",0.11585346428547735,23,-0.1285983812091028
+2023-10-01,LAB (best of all),"H09_asia_sweep_continuation|tf=15min,tp_R=nan,d1=False",0.24996411828353873,49,-0.06018102695947509
+2024-01-01,H01_asia_range_breakout,FLAT (no positive config),,0,
+2024-01-01,H02_asia_sweep_reverse,FLAT (no positive config),,0,
+2024-01-01,H03_pdhl_sweep_reverse,"tf=15min,tp_R=2.0",0.10773754301352081,40,-0.01524805608664801
+2024-01-01,H04_ny_opening_range_breakout,"or_len=30,tp_R=1.0,width_filter=all",0.017495390387664414,60,0.040197317292985514
+2024-01-01,H05_trend_pullback,FLAT (no positive config),,0,
+2024-01-01,H06_bollinger_revert_asia,FLAT (no positive config),,0,
+2024-01-01,H07_last_hour_fade,"thr=0.5,sl_atr=1.0",0.0018967278551980796,29,-0.0005620825880024032
+2024-01-01,H08_ict_sweep_fvg_limit,FLAT (no positive config),,0,
+2024-01-01,H09_asia_sweep_continuation,"tf=15min,tp_R=nan,d1=False",0.2017674857178889,48,-0.2132608714609535
+2024-01-01,H10_bb_momentum_asia,FLAT (no positive config),,0,
+2024-01-01,H11_wide_breakout,"setup=ny_orb30,exit_mode=time,d1=True",0.1285453715406275,34,0.08040873867664197
+2024-01-01,LAB (best of all),"H09_asia_sweep_continuation|tf=15min,tp_R=nan,d1=False",0.2017674857178889,48,-0.2132608714609535
+2024-04-01,H01_asia_range_breakout,FLAT (no positive config),,0,
+2024-04-01,H02_asia_sweep_reverse,FLAT (no positive config),,0,
+2024-04-01,H03_pdhl_sweep_reverse,"tf=15min,tp_R=2.0",0.0016228806184418322,44,-0.0712089218402098
+2024-04-01,H04_ny_opening_range_breakout,"or_len=30,tp_R=1.0,width_filter=all",0.012552193932330799,64,0.12483243536171776
+2024-04-01,H05_trend_pullback,"tp_R=2.0,bias=h1h4",0.039136329092331994,48,-0.2945557689155825
+2024-04-01,H06_bollinger_revert_asia,FLAT (no positive config),,0,
+2024-04-01,H07_last_hour_fade,FLAT (no positive config),,0,
+2024-04-01,H08_ict_sweep_fvg_limit,FLAT (no positive config),,0,
+2024-04-01,H09_asia_sweep_continuation,"tf=15min,tp_R=nan,d1=True",0.06443471898237532,20,-0.5092893544160704
+2024-04-01,H10_bb_momentum_asia,FLAT (no positive config),,0,
+2024-04-01,H11_wide_breakout,"setup=ny_orb30,exit_mode=time,d1=True",0.07767073876261343,30,0.01096220657855831
+2024-04-01,LAB (best of all),"H11_wide_breakout|setup=ny_orb30,exit_mode=time,d1=True",0.07767073876261343,30,0.01096220657855831
+2024-07-01,H01_asia_range_breakout,"sl_mode=mid,tp_R=2.0,width_filter=all",0.07626489946779919,64,0.1118786214807718
+2024-07-01,H02_asia_sweep_reverse,FLAT (no positive config),,0,
+2024-07-01,H03_pdhl_sweep_reverse,"tf=15min,tp_R=2.0",0.04188608783841106,37,-0.26292941601252995
+2024-07-01,H04_ny_opening_range_breakout,"or_len=30,tp_R=1.0,width_filter=all",0.03506913601624689,64,-0.019415543496712373
+2024-07-01,H05_trend_pullback,"tp_R=2.0,bias=h1",0.008273888414369105,63,0.17405554911792348
+2024-07-01,H06_bollinger_revert_asia,FLAT (no positive config),,0,
+2024-07-01,H07_last_hour_fade,FLAT (no positive config),,0,
+2024-07-01,H08_ict_sweep_fvg_limit,FLAT (no positive config),,0,
+2024-07-01,H09_asia_sweep_continuation,"tf=15min,tp_R=nan,d1=False",0.15270989698108342,48,-0.265222593373787
+2024-07-01,H10_bb_momentum_asia,FLAT (no positive config),,0,
+2024-07-01,H11_wide_breakout,"setup=ny_orb30,exit_mode=time,d1=True",0.04575674170900442,35,-0.04059603190807301
+2024-07-01,LAB (best of all),"H09_asia_sweep_continuation|tf=15min,tp_R=nan,d1=False",0.15270989698108342,48,-0.265222593373787
+2024-10-01,H01_asia_range_breakout,"sl_mode=mid,tp_R=2.0,width_filter=narrow",0.14970958808353693,18,0.055381305604927725
+2024-10-01,H02_asia_sweep_reverse,FLAT (no positive config),,0,
+2024-10-01,H03_pdhl_sweep_reverse,"tf=15min,tp_R=2.0",0.017984132923287897,32,0.6056537479349752
+2024-10-01,H04_ny_opening_range_breakout,"or_len=30,tp_R=1.0,width_filter=all",0.017982312329174424,63,0.12932513713065952
+2024-10-01,H05_trend_pullback,"tp_R=2.0,bias=h1h4",0.04563851207117609,44,0.1479085534336476
+2024-10-01,H06_bollinger_revert_asia,"k=2.5,sl_atr=1.5",0.03925114260761669,64,-0.14254681124325083
+2024-10-01,H07_last_hour_fade,FLAT (no positive config),,0,
+2024-10-01,H08_ict_sweep_fvg_limit,FLAT (no positive config),,0,
+2024-10-01,H09_asia_sweep_continuation,"tf=15min,tp_R=1.5,d1=False",0.012300055435270987,51,-0.2294668631442088
+2024-10-01,H10_bb_momentum_asia,FLAT (no positive config),,0,
+2024-10-01,H11_wide_breakout,"setup=ny_orb30,exit_mode=2R,d1=False",0.005451486180315154,59,-0.03631390985025266
+2024-10-01,LAB (best of all),"H01_asia_range_breakout|sl_mode=mid,tp_R=2.0,width_filter=narrow",0.14970958808353693,18,0.055381305604927725
+2025-01-01,H01_asia_range_breakout,"sl_mode=mid,tp_R=2.0,width_filter=narrow",0.1937130677348287,21,-0.2499683955517798
+2025-01-01,H02_asia_sweep_reverse,FLAT (no positive config),,0,
+2025-01-01,H03_pdhl_sweep_reverse,"tf=15min,tp_R=2.0",0.03862363880405519,31,0.5724241732450892
+2025-01-01,H04_ny_opening_range_breakout,"or_len=30,tp_R=1.0,width_filter=all",0.06894822213613955,61,-0.003921428514281435
+2025-01-01,H05_trend_pullback,"tp_R=2.0,bias=h1",0.02703948746203611,60,0.2025196292301024
+2025-01-01,H06_bollinger_revert_asia,FLAT (no positive config),,0,
+2025-01-01,H07_last_hour_fade,"thr=0.5,sl_atr=1.0",0.038363377950001123,29,0.010720317990273637
+2025-01-01,H08_ict_sweep_fvg_limit,FLAT (no positive config),,0,
+2025-01-01,H09_asia_sweep_continuation,FLAT (no positive config),,0,
+2025-01-01,H10_bb_momentum_asia,FLAT (no positive config),,0,
+2025-01-01,H11_wide_breakout,"setup=ny_orb30,exit_mode=2R,d1=True",0.025431301550212976,32,-0.02858437361763938
+2025-01-01,LAB (best of all),"H01_asia_range_breakout|sl_mode=mid,tp_R=2.0,width_filter=narrow",0.1937130677348287,21,-0.2499683955517798
+2025-04-01,H01_asia_range_breakout,"sl_mode=mid,tp_R=2.0,width_filter=narrow",0.18548617485432253,9,-0.40635032138988386
+2025-04-01,H02_asia_sweep_reverse,FLAT (no positive config),,0,
+2025-04-01,H03_pdhl_sweep_reverse,"tf=15min,tp_R=2.0",0.1685033913269731,21,0.0878522832504133
+2025-04-01,H04_ny_opening_range_breakout,"or_len=30,tp_R=1.0,width_filter=all",0.058154593568336216,58,0.04185506934193781
+2025-04-01,H05_trend_pullback,"tp_R=2.0,bias=h1",0.08239624088550478,61,0.1974618547668433
+2025-04-01,H06_bollinger_revert_asia,FLAT (no positive config),,0,
+2025-04-01,H07_last_hour_fade,"thr=0.5,sl_atr=1.0",0.040919546831016784,46,-0.10578091676786439
+2025-04-01,H08_ict_sweep_fvg_limit,FLAT (no positive config),,0,
+2025-04-01,H09_asia_sweep_continuation,"tf=15min,tp_R=2.0,d1=True",0.03319300711390695,15,-0.009369176418991938
+2025-04-01,H10_bb_momentum_asia,FLAT (no positive config),,0,
+2025-04-01,H11_wide_breakout,"setup=asia_accept,exit_mode=2R,d1=False",0.03154744561762176,48,0.3582432284535177
+2025-04-01,LAB (best of all),"H01_asia_range_breakout|sl_mode=mid,tp_R=2.0,width_filter=narrow",0.18548617485432253,9,-0.40635032138988386

@@ -365,3 +365,116 @@ def grid(params: dict):
     keys = list(params)
     for vals in itertools.product(*[params[k] for k in keys]):
         yield dict(zip(keys, vals))
+
+
+# ============================================================================= Phase 3b (registered in reports/03, §6)
+def _ensure_h1(mkt, ctx):
+    if "atr_h1" not in ctx:
+        b = resample(mkt.m, "1h")
+        b["atr_h1"] = atr(b, 14)
+        ctx["atr_h1"] = pd.merge_asof(mkt.m[["ts"]], b[["avail", "atr_h1"]].dropna().rename(columns={"avail": "ts"}),
+                                      on="ts", direction="backward").atr_h1.values
+    if "d1_trend" not in ctx:
+        m = mkt.m
+        dd = m.groupby(m.ts.dt.normalize()).close.last()
+        ema = dd.ewm(span=20, adjust=False).mean()
+        tr = np.where(dd > ema, 1, -1)
+        ctx["d1_trend"] = pd.Series(tr, index=dd.index).shift()      # known at the start of the next day
+    return ctx
+
+
+def flip(mkt, orders):
+    """Exact geometric mirror: opposite side; SL and TP swap sides around the expected entry."""
+    out = []
+    for o in orders:
+        if isinstance(o, list):
+            out.append(flip(mkt, o)); continue
+        ref = mkt.o[o.i0] if o.etype == "market" else o.price
+        if np.isfinite(o.tp):                       # absolute TP: mirror = old TP becomes SL, old SL becomes TP
+            out.append(Order(-o.side, o.etype, o.i0, o.i_exp, sl=o.tp, price=o.price, tp=o.sl, i_exit=o.i_exit, tag="flip"))
+        else:
+            out.append(Order(-o.side, o.etype, o.i0, o.i_exp, sl=2 * ref - o.sl, price=o.price, tp_R=o.tp_R, i_exit=o.i_exit, tag="flip"))
+    return out
+
+
+def d1_filter(mkt, ctx, orders):
+    _ensure_h1(mkt, ctx)
+    out = []
+    for o in orders:
+        g = o if isinstance(o, list) else [o]
+        d = pd.Timestamp(mkt.ts[g[0].i0]).normalize()
+        t = ctx["d1_trend"].get(d, np.nan)
+        keep = [x for x in g if np.isfinite(t) and x.side == t]
+        if keep:
+            out.append(keep if isinstance(o, list) else keep[0])
+    return out
+
+
+def h09_asia_sweep_continue(mkt, ctx, tf, tp_R, d1):
+    """Exact mirror of H02: after the Asian high (low) is taken and a bar closes back inside, trade IN the
+    sweep direction. tp_R = nan → no TP, exit at 19:00 server."""
+    o = flip(mkt, _sweep_reverse(mkt, ctx, lambda d: _asia_lv(mkt, ctx, d), tf, 1.0 if not np.isfinite(tp_R) else tp_R,
+                                 win=(H(10), H(17)), exit_min=H(19)))
+    if not np.isfinite(tp_R):
+        for x in o:
+            x.tp_R = np.nan
+    return d1_filter(mkt, ctx, o) if d1 else o
+
+
+def _asia_lv(mkt, ctx, d):
+    a, b = rng_idx(ctx, d, H(2), H(9))
+    if a is None or (b - a) < 300:
+        return None
+    return mkt.h[a:b + 1].max(), mkt.l[a:b + 1].min()
+
+
+def h10_bb_momentum_asia(mkt, ctx, k, sl_atr, d1):
+    """Exact mirror of H06: M15 close outside Bollinger(20,k) in Asia → trade WITH the move;
+    SL = middle band, TP = sl_atr x ATR15 beyond the close, 60-min time stop."""
+    o = flip(mkt, h06_bb_revert(mkt, ctx, k, sl_atr))
+    return d1_filter(mkt, ctx, o) if d1 else o
+
+
+def h11_wide_breakout(mkt, ctx, setup, exit_mode, d1):
+    """Wider, cost-light versions. setup='asia_accept': first completed M15 close beyond the Asian range
+    between 10:00 and 17:00 server → market in that direction. setup='ny_orb30': first completed M15 close
+    beyond the 16:30-17:00 opening range before 19:00. SL = 1 x ATR(14) of completed H1 bars.
+    exit_mode 'time' = no TP, exit 21:00 server; '2R' = TP 2R or 21:00."""
+    _ensure_h1(mkt, ctx)
+    m15 = resample(mkt.m, "15min")
+    m15["day"] = m15.ts.dt.normalize()
+    sm = m15.ts.dt.hour * 60 + m15.ts.dt.minute
+    out = []
+    for d, g in m15.groupby("day"):
+        if d not in ctx["days"]:
+            continue
+        if setup == "asia_accept":
+            lv = _asia_lv(mkt, ctx, d); w = (H(10), H(17))
+        else:
+            a, b = rng_idx(ctx, d, H(16, 30), H(17))
+            lv = None if a is None or (b - a) < 25 else (mkt.h[a:b + 1].max(), mkt.l[a:b + 1].min()); w = (H(17), H(19))
+        ix = first_at(ctx, d, H(21))
+        if lv is None or ix is None:
+            continue
+        gs = g[(sm[g.index] >= w[0]) & (sm[g.index] < w[1])]
+        for r in gs.itertuples():
+            s = 1 if r.close > lv[0] else (-1 if r.close < lv[1] else 0)
+            if s == 0:
+                continue
+            i_sig = mkt.idx_at(r.avail)
+            if i_sig >= mkt.n or i_sig >= ix:
+                break
+            ah = ctx["atr_h1"][i_sig]
+            if not np.isfinite(ah):
+                break
+            ref = mkt.o[i_sig]
+            out.append(Order(s, "market", i_sig, i_sig, sl=ref - s * ah, tp_R=2.0 if exit_mode == "2R" else np.nan, i_exit=ix, tag=setup))
+            break
+    return d1_filter(mkt, ctx, out) if d1 else out
+
+
+REGISTRY_B = {
+    "H09_asia_sweep_continuation": (h09_asia_sweep_continue, {"tf": ["5min", "15min"], "tp_R": [1.0, 1.5, 2.0, np.nan], "d1": [False, True]}),
+    "H10_bb_momentum_asia": (h10_bb_momentum_asia, {"k": [2.0, 2.5], "sl_atr": [1.0, 1.5], "d1": [False, True]}),
+    "H11_wide_breakout": (h11_wide_breakout, {"setup": ["asia_accept", "ny_orb30"], "exit_mode": ["time", "2R"], "d1": [False, True]}),
+}

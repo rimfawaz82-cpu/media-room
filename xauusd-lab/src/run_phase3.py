@@ -15,7 +15,8 @@ import pandas as pd
 
 from engine import Market, simulate, stats
 from features import load_research
-from hypotheses import REGISTRY, context, grid
+import sys
+from hypotheses import REGISTRY, REGISTRY_B, context, grid
 from load import ROOT
 
 TAB = ROOT / "reports" / "tables"
@@ -56,7 +57,9 @@ def main():
     ndays = split_of_day.value_counts().to_dict()
     rows = []
     n_configs = 0
-    for hname, (fn, params) in REGISTRY.items():
+    phase_b = "--b" in sys.argv
+    reg = REGISTRY_B if phase_b else REGISTRY
+    for hname, (fn, params) in reg.items():
         for p in grid(params):
             n_configs += 1
             cid = hname + "|" + ",".join(f"{k}={v}" for k, v in p.items())
@@ -74,8 +77,9 @@ def main():
                     rows.append({"hypothesis": hname, "config": cid, **p, "cost": cost, "split": sp, **st})
             print(f"{cid}  ({time.time() - t0:.0f}s)", flush=True)
     log = pd.DataFrame(rows)
-    log.to_csv(TAB / "p3_experiment_log.csv", index=False)
-    json.dump({"n_configs": n_configs, "seconds": round(time.time() - t0)}, open(ROOT / "reports" / "p3_meta.json", "w"))
+    sfx = "b" if phase_b else ""
+    log.to_csv(TAB / f"p3{sfx}_experiment_log.csv", index=False)
+    json.dump({"n_configs": n_configs, "seconds": round(time.time() - t0)}, open(ROOT / "reports" / f"p3{sfx}_meta.json", "w"))
     print("configs:", n_configs)
 
 
