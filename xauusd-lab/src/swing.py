@@ -119,12 +119,13 @@ def simulate_daily(d: pd.DataFrame, target: pd.Series, stop_atr: float, swap_rat
                 fill = o - pos * COST_SIDE
                 day_pnl += pos * (fill - pc)
                 trades.append({"entry_day": entry_day, "exit_day": d.day.iat[t], "side": pos, "entry": entry, "exit": fill, "reason": "signal",
-                               "risk": stop_atr * d.atr20.iat[t - 1] if np.isfinite(stop_atr) else 2 * d.atr20.iat[t - 1]})
+                               "risk": init_risk})
                 pos = 0
             if want != 0:
                 pos, entry, entry_day = want, o + want * COST_SIDE, d.day.iat[t]
                 a = d.atr20.iat[t - 1]
                 stop = entry - pos * stop_atr * a if np.isfinite(stop_atr) else np.nan
+                init_risk = stop_atr * a if np.isfinite(stop_atr) else 2 * a
                 peak = entry
                 day_ref = entry
             else:
@@ -136,7 +137,7 @@ def simulate_daily(d: pd.DataFrame, target: pd.Series, stop_atr: float, swap_rat
             fill = (min(stop, o) if pos > 0 else max(stop, o)) - pos * STOP_SLIP
             day_pnl += pos * (fill - day_ref)
             trades.append({"entry_day": entry_day, "exit_day": d.day.iat[t], "side": pos, "entry": entry, "exit": fill, "reason": "stop",
-                           "risk": abs(entry - stop)})
+                           "risk": init_risk})
             blocked, pos = pos, 0
         elif pos != 0:
             day_pnl += pos * (c - day_ref)
@@ -153,7 +154,7 @@ def simulate_daily(d: pd.DataFrame, target: pd.Series, stop_atr: float, swap_rat
         pnl[t] = day_pnl
     if pos != 0:
         trades.append({"entry_day": entry_day, "exit_day": d.day.iat[-1], "side": pos, "entry": entry, "exit": d.close.iat[-1], "reason": "open_at_end",
-                       "risk": abs(entry - stop) if np.isfinite(stop) else 2 * d.atr20.iat[-1]})
+                       "risk": init_risk})
     ser = pd.Series(pnl, index=d.day)
     return ser[ser.index >= pd.Timestamp(start)], pd.DataFrame(trades)
 
