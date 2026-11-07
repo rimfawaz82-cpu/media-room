@@ -16,7 +16,7 @@ import pandas as pd
 from engine import Market, simulate, stats
 from features import load_research
 import sys
-from hypotheses import REGISTRY, REGISTRY_B, REGISTRY_C, context, grid
+from hypotheses import REGISTRY, REGISTRY_B, REGISTRY_C, REGISTRY_D, context, grid
 from load import ROOT
 
 TAB = ROOT / "reports" / "tables"
@@ -59,13 +59,14 @@ def main():
     n_configs = 0
     phase_b = "--b" in sys.argv
     phase_c = "--c" in sys.argv
-    reg = REGISTRY_C if phase_c else (REGISTRY_B if phase_b else REGISTRY)
+    phase_d = "--d" in sys.argv
+    reg = REGISTRY_D if phase_d else (REGISTRY_C if phase_c else (REGISTRY_B if phase_b else REGISTRY))
     for hname, (fn, params) in reg.items():
         for p in grid(params):
             n_configs += 1
             cid = hname + "|" + ",".join(f"{k}={v}" for k, v in p.items())
             orders = fn(mkt, ctx, **p)
-            for cost in ["C0", "C1", "C2"]:
+            for cost in (["C0", "C1", "C1_CFI", "C2"] if phase_d else ["C0", "C1", "C2"]):
                 tr = run_orders(mkt, orders, cost)
                 if len(tr):
                     tr["split"] = pd.to_datetime(tr.t_entry).dt.normalize().map(split_of_day).values
@@ -78,7 +79,7 @@ def main():
                     rows.append({"hypothesis": hname, "config": cid, **p, "cost": cost, "split": sp, **st})
             print(f"{cid}  ({time.time() - t0:.0f}s)", flush=True)
     log = pd.DataFrame(rows)
-    sfx = "c" if phase_c else ("b" if phase_b else "")
+    sfx = "d" if phase_d else ("c" if phase_c else ("b" if phase_b else ""))
     log.to_csv(TAB / f"p3{sfx}_experiment_log.csv", index=False)
     json.dump({"n_configs": n_configs, "seconds": round(time.time() - t0)}, open(ROOT / "reports" / f"p3{sfx}_meta.json", "w"))
     print("configs:", n_configs)

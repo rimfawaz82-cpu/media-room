@@ -559,3 +559,40 @@ REGISTRY_C = {
     "V3_swing_aligned": (v3_swing_aligned, {"base": ["orb30", "pullback"], "tp_R": [1.0, 2.0]}),
     "V3b_swing_aligned_wide": (v3_swing_aligned, {"base": ["ny_orb30_wide"], "tp_R": [np.nan]}),
 }
+
+
+# ============================================================================= Phase 5 — fade M1 displacement with LIMIT orders (atlas A4 lead)
+def h13_displacement_limit_fade(mkt, ctx, k, over, sl_atr15):
+    """Active hours 10:00-22:00 server. A completed M1 bar with |body| >= k x ATR14(M1) and body >= 60% of range
+    is a 'displacement'. Place a LIMIT order AGAINST it, `over` x ATR(M1) beyond its close (sell above a bullish
+    bar / buy below a bearish one), valid 3 minutes. TP (limit) = the bar's midpoint; SL = entry -/+ sl_atr15 x ATR15;
+    time stop 15 minutes. Signals are skipped while a previous order/trade could still be live (engine enforces one position)."""
+    m = mkt.m
+    o, h, l, c = mkt.o, mkt.h, mkt.l, mkt.c
+    pc = np.r_[c[0], c[:-1]]
+    tr = np.maximum(h - l, np.maximum(np.abs(h - pc), np.abs(l - pc)))
+    a1 = pd.Series(tr).ewm(alpha=1 / 14, adjust=False, min_periods=14).mean().shift().values   # known before bar opens
+    body = c - o
+    rngb = h - l
+    sm = ctx["smin"]
+    same_next = np.r_[mkt.day_end[:-1] > np.arange(len(m) - 1), False]
+    sig = (np.abs(body) >= k * a1) & (np.abs(body) >= 0.6 * np.where(rngb > 0, rngb, np.inf)) & (sm >= H(10)) & (sm < H(22)) & same_next
+    out = []
+    last = -10 ** 9
+    for i in np.nonzero(sig)[0]:
+        if i < last + 15:
+            continue
+        a15 = ctx["atr15"][i + 1] if i + 1 < len(m) else np.nan
+        if not np.isfinite(a15) or not np.isfinite(a1[i]):
+            continue
+        s = -1 if body[i] > 0 else 1                     # fade
+        px = c[i] - s * over * a1[i]                     # sell above / buy below the close
+        mid = (o[i] + c[i]) / 2
+        out.append(Order(s, "limit", i + 1, i + 3, sl=px - s * sl_atr15 * a15, price=px, tp=mid, i_exit=i + 16, tag="fade"))
+        last = i
+    return out
+
+
+REGISTRY_D = {
+    "H13_displacement_limit_fade": (h13_displacement_limit_fade, {"k": [2.0, 3.0], "over": [0.25, 0.5], "sl_atr15": [0.5, 1.0]}),
+}
