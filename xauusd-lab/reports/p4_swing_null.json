@@ -1,0 +1,42 @@
+{
+ "S1_donchian20_LO": {
+  "actual_total_%": 37.69,
+  "random_median_%": 14.94,
+  "random_p95_%": 39.71,
+  "p_value": 0.0644,
+  "trades": 21,
+  "exposure_days": 346
+ },
+ "S1_donchian55_LO": {
+  "actual_total_%": 18.71,
+  "random_median_%": 7.14,
+  "random_p95_%": 26.67,
+  "p_value": 0.158,
+  "trades": 7,
+  "exposure_days": 173
+ },
+ "S3_tsmom60_LO": {
+  "actual_total_%": 37.51,
+  "random_median_%": 34.22,
+  "random_p95_%": 62.55,
+  "p_value": 0.425,
+  "trades": 14,
+  "exposure_days": 760
+ },
+ "S3_tsmom20_LO": {
+  "actual_total_%": 15.89,
+  "random_median_%": 31.28,
+  "random_p95_%": 57.86,
+  "p_value": 0.8196,
+  "trades": 26,
+  "exposure_days": 696
+ },
+ "S2_ema20_50_LO": {
+  "actual_total_%": 3.4,
+  "random_median_%": 9.75,
+  "random_p95_%": 31.62,
+  "p_value": 0.6956,
+  "trades": 11,
+  "exposure_days": 235
+ }
+}

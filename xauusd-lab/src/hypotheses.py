@@ -478,3 +478,84 @@ REGISTRY_B = {
     "H10_bb_momentum_asia": (h10_bb_momentum_asia, {"k": [2.0, 2.5], "sl_atr": [1.0, 1.5], "d1": [False, True]}),
     "H11_wide_breakout": (h11_wide_breakout, {"setup": ["asia_accept", "ny_orb30"], "exit_mode": ["time", "2R"], "d1": [False, True]}),
 }
+
+
+# ============================================================================= Phase 4B — volatility regime & swing-aligned intraday (registered in chat before running)
+def _swing_state(name):
+    from load import ROOT
+    s = pd.read_csv(ROOT / "reports" / "tables" / "p4_swing_state_by_day.csv", parse_dates=["day"]).set_index("day")[name]
+    return s
+
+
+def swing_filter(mkt, orders, name="S1_donchian20_LS"):
+    st = _swing_state(name)
+    out = []
+    for o in orders:
+        g = o if isinstance(o, list) else [o]
+        d = pd.Timestamp(mkt.ts[g[0].i0]).normalize()
+        t = st.get(d, np.nan)
+        keep = [x for x in g if np.isfinite(t) and t != 0 and x.side == t]
+        if keep:
+            out.append(keep if isinstance(o, list) else keep[0])
+    return out
+
+
+def v1_orb_vol_regime(mkt, ctx, regime):
+    """H04 (30-min NY OR, 1R, all widths) only on days whose previous-day ATR(14) is above ('high')
+    or below ('low') its own median over the previous 60 trading days."""
+    a = ctx["atr_d_prev"]
+    med = a.rolling(60, min_periods=40).median()
+    keep_days = set(a.index[(a > med) if regime == "high" else (a <= med)])
+    out = []
+    for g in h04_ny_orb(mkt, ctx, 30, 1.0, "all"):
+        d = pd.Timestamp(mkt.ts[g[0].i0]).normalize()
+        if d in keep_days:
+            out.append(g)
+    return out
+
+
+def v2_compression_breakout(mkt, ctx, k, tp_R):
+    """15:00-19:00 server: after a completed M15 bar, if the last k M15 bars span <= (k/4) x ATR(14,H1),
+    place OCO stops 1 point beyond the box, valid 60 min; SL = other side of the box; TP = tp_R; exit 21:00.
+    One setup per day."""
+    _ensure_h1(mkt, ctx)
+    m15 = resample(mkt.m, "15min")
+    m15["day"] = m15.ts.dt.normalize()
+    m15["bh"] = m15.high.rolling(k).max()
+    m15["bl"] = m15.low.rolling(k).min()
+    m15["same"] = m15.day.eq(m15.day.shift(k - 1))
+    sm = m15.avail.dt.hour * 60 + m15.avail.dt.minute
+    out, used = [], set()
+    for r in m15[(sm >= H(15)) & (sm < H(19)) & m15.same].itertuples():
+        if r.day in used or r.day not in ctx["days"]:
+            continue
+        i_sig = mkt.idx_at(r.avail)
+        if i_sig >= mkt.n:
+            continue
+        ah = ctx["atr_h1"][i_sig]
+        ix = first_at(ctx, r.day, H(21))
+        if not np.isfinite(ah) or ix is None or (r.bh - r.bl) > (k / 4) * ah:
+            continue
+        out.append([Order(+1, "stop", i_sig, i_sig + 60, sl=r.bl, price=r.bh + 0.01, tp_R=tp_R, i_exit=ix, tag="long"),
+                    Order(-1, "stop", i_sig, i_sig + 60, sl=r.bh, price=r.bl - 0.01, tp_R=tp_R, i_exit=ix, tag="short")])
+        used.add(r.day)
+    return out
+
+
+def v3_swing_aligned(mkt, ctx, base, tp_R):
+    """Only take the intraday setup in the direction of the daily Donchian-20 state (decided at the previous close)."""
+    if base == "orb30":
+        o = h04_ny_orb(mkt, ctx, 30, tp_R, "all")
+    elif base == "pullback":
+        o = h05_trend_pullback(mkt, ctx, tp_R, "h1")
+    else:
+        o = h11_wide_breakout(mkt, ctx, "ny_orb30", "time", False)
+    return swing_filter(mkt, o)
+
+
+REGISTRY_C = {
+    "V1_orb_vol_regime": (v1_orb_vol_regime, {"regime": ["high", "low"]}),
+    "V2_compression_breakout": (v2_compression_breakout, {"k": [4, 8], "tp_R": [1.5, 2.0]}),
+    "V3_swing_aligned": (v3_swing_aligned, {"base": ["orb30", "pullback"], "tp_R": [1.0, 2.0]}),
+    "V3b_swing_aligned_wide": (v3_swing_aligned, {"base": ["ny_orb30_wide"], "tp_R": [np.nan]}),
+}

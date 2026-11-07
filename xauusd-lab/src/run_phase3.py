@@ -16,7 +16,7 @@ import pandas as pd
 from engine import Market, simulate, stats
 from features import load_research
 import sys
-from hypotheses import REGISTRY, REGISTRY_B, context, grid
+from hypotheses import REGISTRY, REGISTRY_B, REGISTRY_C, context, grid
 from load import ROOT
 
 TAB = ROOT / "reports" / "tables"
@@ -58,7 +58,8 @@ def main():
     rows = []
     n_configs = 0
     phase_b = "--b" in sys.argv
-    reg = REGISTRY_B if phase_b else REGISTRY
+    phase_c = "--c" in sys.argv
+    reg = REGISTRY_C if phase_c else (REGISTRY_B if phase_b else REGISTRY)
     for hname, (fn, params) in reg.items():
         for p in grid(params):
             n_configs += 1
@@ -77,7 +78,7 @@ def main():
                     rows.append({"hypothesis": hname, "config": cid, **p, "cost": cost, "split": sp, **st})
             print(f"{cid}  ({time.time() - t0:.0f}s)", flush=True)
     log = pd.DataFrame(rows)
-    sfx = "b" if phase_b else ""
+    sfx = "c" if phase_c else ("b" if phase_b else "")
     log.to_csv(TAB / f"p3{sfx}_experiment_log.csv", index=False)
     json.dump({"n_configs": n_configs, "seconds": round(time.time() - t0)}, open(ROOT / "reports" / f"p3{sfx}_meta.json", "w"))
     print("configs:", n_configs)
