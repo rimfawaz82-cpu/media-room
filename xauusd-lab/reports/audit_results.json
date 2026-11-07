@@ -1,0 +1,213 @@
+{
+  "segments": [
+    {
+      "resolution": "D1",
+      "first": "2020-01-02 00:00:00",
+      "last": "2021-11-15 00:00:00",
+      "rows": "484"
+    },
+    {
+      "resolution": "H1",
+      "first": "2021-11-16 00:00:00",
+      "last": "2022-03-15 15:00:00",
+      "rows": "1954"
+    },
+    {
+      "resolution": "M1",
+      "first": "2022-03-15 15:06:00",
+      "last": "2026-11-06 23:54:00",
+      "rows": "1648003"
+    }
+  ],
+  "m1_rows": 1648003,
+  "m1_days": 1201,
+  "m1_first": "2022-03-15 15:06:00",
+  "m1_last": "2026-11-06 23:54:00",
+  "m1_years": 4.65,
+  "integrity": {
+    "duplicate_timestamps": 0,
+    "non_monotonic": 0,
+    "nan_any": 0,
+    "nonpositive_price": 0,
+    "high_lt_max_oc": 0,
+    "low_gt_min_oc": 0,
+    "high_lt_low": 0,
+    "zero_range_bars": 450,
+    "flat_ohlc_bars": 450,
+    "price_decimals_max": 2,
+    "real_volume_nonzero_rows": 1,
+    "spread_zero_rows": 8338,
+    "tick_volume_le_1": 451,
+    "seconds_nonzero": 0
+  },
+  "session_clock": {
+    "first_bar_mode_by_dow": {
+      "0": "01:00",
+      "1": "01:00",
+      "2": "01:00",
+      "3": "01:00",
+      "4": "01:00"
+    },
+    "last_bar_mode_by_dow": {
+      "0": "23:58",
+      "1": "23:58",
+      "2": "23:58",
+      "3": "23:58",
+      "4": "23:54"
+    },
+    "hours_with_zero_bars": [
+      0
+    ],
+    "weekend_bars": 0
+  },
+  "tz_check": {
+    "first_friday_count": 57,
+    "largest_range_minute_top5": {
+      "15:30": 38,
+      "01:00": 2,
+      "16:24": 1,
+      "16:02": 1,
+      "15:31": 1
+    },
+    "share_at_15_30": 0.667
+  },
+  "top_range_minutes": {
+    "15:30": 4.244,
+    "01:00": 3.808,
+    "17:00": 3.32,
+    "16:30": 2.606,
+    "16:45": 2.537,
+    "16:00": 2.525,
+    "16:31": 2.501,
+    "17:01": 2.46
+  },
+  "gaps": [
+    {
+      "type": "daily break (~23:59-01:00)",
+      "count": 926,
+      "total_missing_min": 56530.0,
+      "max_min": 71.0
+    },
+    {
+      "type": "early close / long intraday halt (>60m)",
+      "count": 28,
+      "total_missing_min": 5903.0,
+      "max_min": 236.0
+    },
+    {
+      "type": "intraday gap 2-5m",
+      "count": 102,
+      "total_missing_min": 133.0,
+      "max_min": 5.0
+    },
+    {
+      "type": "intraday gap 6-60m",
+      "count": 11,
+      "total_missing_min": 120.0,
+      "max_min": 29.0
+    },
+    {
+      "type": "weekend/holiday (>=1 day)",
+      "count": 246,
+      "total_missing_min": 733520.0,
+      "max_min": 4386.0
+    }
+  ],
+  "missing_weekdays": [
+    "2022-04-15",
+    "2022-12-26",
+    "2023-01-02",
+    "2023-04-07",
+    "2023-12-25",
+    "2024-01-01",
+    "2024-03-29",
+    "2024-12-25",
+    "2025-01-01",
+    "2025-04-18",
+    "2025-12-25",
+    "2026-01-01",
+    "2026-04-03"
+  ],
+  "short_days_count": 36,
+  "full_day_bars_median": 1379,
+  "coverage_vs_nominal_23h_session": 0.9951,
+  "jumps": {
+    "bars_absret_gt_25x_median": 456,
+    "bars_range_gt_10usd": 6020,
+    "bars_range_gt_20usd": 788,
+    "max_bar_range": {
+      "ts": "2026-01-29 17:27:00",
+      "range": 128.82999999999993
+    }
+  },
+  "open_vs_prev_close_contiguous": {
+    "share_exact_equal": 0.5776,
+    "p50": 0.0,
+    "p99": 0.15999999999985448,
+    "max": 20.350000000000364
+  },
+  "opening_gaps": [
+    {
+      "gap_type": "daily break (~23:59-01:00)",
+      "n": 926,
+      "mean_abs": 1.0555183585313215,
+      "p95_abs": 3.8900000000003274,
+      "max_abs": 24.66000000000031
+    },
+    {
+      "gap_type": "early close / long intraday halt (>60m)",
+      "n": 28,
+      "mean_abs": 0.844285714285726,
+      "p95_abs": 2.0759999999999983,
+      "max_abs": 2.350000000000364
+    },
+    {
+      "gap_type": "intraday gap 2-5m",
+      "n": 102,
+      "mean_abs": 0.5303921568627531,
+      "p95_abs": 2.074999999999917,
+      "max_abs": 6.420000000000073
+    },
+    {
+      "gap_type": "intraday gap 6-60m",
+      "n": 11,
+      "mean_abs": 0.8981818181818281,
+      "p95_abs": 2.089999999999918,
+      "max_abs": 2.1799999999998363
+    },
+    {
+      "gap_type": "weekend/holiday (>=1 day)",
+      "n": 246,
+      "mean_abs": 5.4811788617886075,
+      "p95_abs": 21.82000000000005,
+      "max_abs": 74.59000000000015
+    }
+  ],
+  "spread_points": {
+    "count": 1648003.0,
+    "mean": 9.870610672432027,
+    "std": 4.687830496091175,
+    "min": 0.0,
+    "1%": 5.0,
+    "5%": 5.0,
+    "25%": 10.0,
+    "50%": 10.0,
+    "75%": 10.0,
+    "95%": 10.0,
+    "99%": 16.0,
+    "99.9%": 31.0,
+    "max": 501.0
+  },
+  "spread_value_counts_top": {
+    "10": 1465474,
+    "5": 79149,
+    "11": 13380,
+    "12": 12896,
+    "0": 8338,
+    "6": 8188,
+    "7": 7734,
+    "13": 7423,
+    "8": 7360,
+    "9": 6705
+  }
+}
