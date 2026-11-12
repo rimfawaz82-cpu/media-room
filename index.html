@@ -2004,8 +2004,9 @@ SECS.settings.r=function(root){_setR(root);const k=$("#sK");if(!k)return;const c
     <div class="row" style="margin-top:6px"><button class="btn l sm" type="button" id="sKTest">جرّبي الاتصال</button><span id="sKRes" class="hint" style="margin:0"></span></div>
     <p class="hint">إذا حفظتيه، أي حدا بيفتح التطبيق على هالتلفون بيقدر يستعمله. الاستعمال بينحسب على حسابك بـ Claude Platform.</p>`;
   card.querySelector(".hint").after(box);
-  const sync=()=>{try{if($("#sKRem").checked&&S.ai.key.trim())localStorage.setItem(MH_KEY_LS,S.ai.key.trim());else localStorage.removeItem(MH_KEY_LS);}catch(e){}};
-  $("#sKRem").onchange=sync;k.addEventListener("input",()=>setTimeout(sync,0));
+  const hint=card.querySelector(".hint");const say=()=>{hint.textContent=$("#sKRem").checked?"المفتاح محفوظ على هالتلفون بس، وما بيطلع بالنسخة الاحتياطية. الطلب بيروح مباشرة لـ Claude.":"المفتاح بيضل لحتى تسكّري التطبيق، وما بيطلع بالنسخة الاحتياطية. علّمي الخانة تحت إذا بدك يضل محفوظ.";};
+  const sync=()=>{try{if($("#sKRem").checked&&S.ai.key.trim())localStorage.setItem(MH_KEY_LS,S.ai.key.trim());else localStorage.removeItem(MH_KEY_LS);}catch(e){}say();};
+  $("#sKRem").onchange=sync;say();k.addEventListener("input",()=>setTimeout(sync,0));
   $("#sKTest").onclick=async()=>{const o=$("#sKRes");if(!S.ai.key.trim()){o.textContent="حطّي المفتاح أول.";return;}o.textContent="عم جرّب…";
     try{const t=await callClaude("ردّ بكلمة وحدة: جاهز",{max:50});o.textContent="✓ متصل: "+t.slice(0,30);}catch(e){o.textContent="✗ "+e.message;}};
 };
