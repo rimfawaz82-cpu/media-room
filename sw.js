@@ -1,6 +1,6 @@
 // عمل بلا إنترنت لغرفة الإعلام. غيّر VERSION عند تعديل أي ملف.
 // يخدم فقط ملفات المجلد الرئيسي؛ تطبيقا «نصيب» و«الشكاوى» في مجلداتهما لا يتأثران.
-const VERSION = 'media-room-v2';
+const VERSION = 'media-room-v4';
 const CORE = ['./', 'index.html', 'manifest.webmanifest', 'icons/icon-192.png', 'icons/icon-512.png', 'icons/maskable-512.png', 'icons/apple-touch-icon.png'];
 const FONT_HOSTS = ['fonts.googleapis.com', 'fonts.gstatic.com'];
 
