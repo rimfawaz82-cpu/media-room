@@ -2182,7 +2182,8 @@ function occAIView(a){const L=(t,v)=>v?`<div class="lbl" style="margin-top:12px"
    ${L("فيسبوك",[fb.title,fb.body].filter(Boolean).join("\n\n"))}
    ${v.shots&&v.shots.length?`<div class="lbl" style="margin-top:12px">سيناريو الفيديو · ${esc(v.duration||"")}</div><div class="out" style="max-height:none;white-space:pre-wrap">${esc(["الافتتاحية: "+(v.hook||""),...v.shots.map((s,i)=>`${mhDigits(i+1)}) ${s.time||""} — ${s.shot||""}\n   يُقال: ${s.say||"—"}\n   على الشاشة: ${s.onscreen||"—"}`),"النهاية: "+(v.ending||""),"الغلاف: "+(v.cover||""),"بلا ظهور أمام الكاميرا: "+(v.no_face||""),"على أكثر من منصة: "+(v.cross_platform||"")].join("\n"))}</div>`:""}
    <div class="row" style="margin-top:10px"><button class="btn l sm" data-act="occCopy">نسخ الكل</button></div>`;}
-const OCC_SCHEMA={type:"object",additionalProperties:false,required:["angle","goal","format","why_format","ready","needed","quick","prepared","instagram","tiktok","facebook","video"],properties:{
+const OCC_SCHEMA={type:"object",additionalProperties:false,required:["angle","goal","format","why_format","ready","needed","quick","prepared","instagram","tiktok","facebook","video","design"],properties:{
+  design:{type:"object",additionalProperties:false,required:["title","body","points","small"],properties:{title:{type:"string"},body:{type:"string"},points:{type:"array",items:{type:"string"}},small:{type:"string"}}},
   angle:{type:"string"},goal:{type:"string"},format:{type:"string"},why_format:{type:"string"},ready:{type:"array",items:{type:"string"}},needed:{type:"array",items:{type:"string"}},quick:{type:"string"},prepared:{type:"string"},
   instagram:{type:"object",additionalProperties:false,required:["type","cover","slides","caption"],properties:{type:{type:"string"},cover:{type:"string"},slides:{type:"array",items:{type:"string"}},caption:{type:"string"}}},
   tiktok:{type:"object",additionalProperties:false,required:["hook","script","onscreen","caption"],properties:{hook:{type:"string"},script:{type:"string"},onscreen:{type:"array",items:{type:"string"}},caption:{type:"string"}}},
@@ -2199,6 +2200,7 @@ function occPrompt(o,ctx){return `المناسبة: ${o.n} (${OCC_T[o.t]}) — $
 - تيك توك: افتتاحية بتنقال وبتنكتب بأول ثانيتين (أقل من ١٠ كلمات)، كلام طبيعي للتصوير، نصوص قصيرة عالشاشة، كابشن.
 - فيسبوك: عنوان واضح ونص كامل فيه المكان والتاريخ والأثر أو طريقة الاستفادة.
 - سيناريو فيديو قابل للتصوير من شخص واحد بالتلفون: المدة، الافتتاحية، اللقطات بالترتيب (الوقت، اللقطة ووين التلفون، شو بينقال، شو عالشاشة)، النهاية، الغلاف، خيار بلا ظهور أمام الكاميرا، وكيف تتغيّر الافتتاحية والمونتاج بين المنصات.
+- نص التصميم (صورة بهوية البلدية): عنوان ٢–٥ كلمات، جملة تهنئة أقل من ١٤ كلمة، أو ٣ نقاط توعية قصيرة كل وحدة أقل من ٩ كلمات، وسطر صغير (توقيع أو شارة). فصحى رسمية بلا إيموجي.
 إنستغرام وتيك توك بلهجة لبنانية خفيفة، فيسبوك بفصحى بسيطة. أي رقم أو اسم أو مكان أو وقت مش موجود فوق: حطّ مكانه [..] مع وصف قصير، متل [عدد الأعمال بعد التحقق].`;}
 
 /* ===== الأحداث ===== */
@@ -2252,6 +2254,66 @@ document.addEventListener("click",e=>{const b=e.target.closest("[data-go2]");if(
 /* الإعدادات: بطاقة التثبيت */
 const _setR3=SECS.settings.r;SECS.settings.r=function(root){_setR3(root);const c=$("#appStoreCard");if(c)mhInstallBox(c);};
 if(["today","calendar","settings"].includes(CUR))route();
+</script>
+<script>
+/* ===== «صمّمي الصورة»: تصاميم جاهزة للنشر من المناسبة، بهوية البلدية ===== */
+const DS={key:null,fmt:"wa",t:"",b:"",s:"",photo:null,kind:"greet"};
+const DS_FMT=[["wa","بوست 4:5"],["st","ستوري 9:16"],["sq","مربّع 1:1"]];
+function dsKindOf(o){const nat=/استقلال|تحرير|العمّال|الجيش/.test(o.n);
+  if(o.dec==="notice"||(!o.dec&&(o.t==="world"||o.t==="season")))return "notice";
+  if(o.dec==="cover"&&(o.t==="world"||o.t==="season"||o.t==="own"))return "notice";
+  return nat?"national":"greet";}
+function dsDefaults(o){const ai=o.plan&&o.plan.ai,d=ai&&ai.design,k=dsKindOf(o),date=mhFmtDate(o.date).split(" ").slice(1,3).join(" ");
+  if(k==="notice"){const pts=(d&&d.points&&d.points.length?d.points:[]).filter(Boolean).slice(0,3);
+    return {kind:k,t:(d&&d.title)||o.n,b:pts.join("\n"),s:(d&&d.small)||(o.t==="world"?"يوم عالمي":"تنويه")};}
+  const rel=o.t==="rel"||/رمضان|فطر|أضحى|مولد|هجرية|عاشوراء|ميلاد|فصح|بشارة|مار مارون|السيدة/.test(o.n);
+  const line=(d&&d.body)||(k==="national"?"كل عام ولبنان بألف خير، ووطننا يبقى أقوى بأهله.":/عاشوراء/.test(o.n)?"عظّم الله أجوركم.":rel?"أعاده الله على الجميع بالخير والأمان.":"كل عام وأنتم بخير.");
+  return {kind:k,t:(d&&d.title)||o.n.replace(/^ذكرى /,""),b:line,s:k==="national"?date:"رئيس وأعضاء المجلس البلدي"};}
+function dsVariants(){const k=DS.kind,v=[];
+  if(k==="national")v.push(["national",null,"علم ورسمي"],["greet","edit","تحريري"],["greet","royal","قوس ذهبي"]);
+  else if(k==="notice")v.push(["notice",null,"تنويه"]);
+  else v.push(["greet","edit","تحريري"],["greet","royal","قوس ذهبي"],["greet","light","عاجي"]);
+  if(DS.photo&&k!=="notice")v.unshift(["greet","photo","صورة كاملة"]);return v;}
+function dsDraw(cv,kind,style,fmt){const [W,H]=OSZ[fmt];cv.width=W;cv.height=H;mhOverflow=false;
+  const b=kind==="greet"&&style==="edit"&&DS.kind==="notice"?DS.b.split("\n")[0]:DS.b;
+  drawOccasion(cv.getContext("2d"),W,H,{kind,style,t:mhDigits(DS.t),b:mhDigits(b),s:mhDigits(DS.s),photo:style==="photo"||style==="light"?DS.photo:null,phone:S.accounts.phone},ORG());
+  const issues=[];if(mhOverflow)issues.push("النص أطول من مساحة هالتصميم");if(/\[[^\]]*\]/.test(DS.t+DS.b+DS.s))issues.push("في معلومة ناقصة بين [..]");return issues;}
+function dsSheet(key){const o=occFind(key);if(DS.key!==key){Object.assign(DS,dsDefaults(o),{key,photo:null});}
+  const vs=dsVariants();
+  sheet(`<div class="ph"><b>صمّمي الصورة · ${esc(o.n)}</b><button class="btn l sm" data-act="occOpen" data-key="${esc(key)}">رجوع</button></div>
+  <p class="hint" style="margin-top:0">تصاميم بهوية ${esc(ORG())}: الشعار والألوان والخط المعتمد. عدّلي النص، اختاري التصميم والمقاس، ونزّلي.</p>
+  <div class="seg" style="margin-bottom:10px">${DS_FMT.map(([k,l])=>`<button data-act="dsFmt" data-k="${k}" aria-pressed="${DS.fmt===k}">${l}</button>`).join("")}</div>
+  <div class="fld"><label for="dsT">العنوان</label><input class="in" id="dsT" data-ds="t" value="${esc(DS.t)}"></div>
+  <div class="fld"><label for="dsB">${DS.kind==="notice"?"النقاط (كل سطر نقطة، ٣ كحد أقصى)":"النص"}</label><textarea class="in" id="dsB" data-ds="b" rows="${DS.kind==="notice"?3:2}">${esc(DS.b)}</textarea>${DS.kind==="notice"&&!DS.b.trim()?`<p class="hint">اكتبي ٢–٣ نقاط بيحتاجها الناس (موعد، مكان، نصيحة)، أو اكبسي «✦ اقترحي نص».</p>`:""}</div>
+  <div class="fld"><label for="dsS">${DS.kind==="notice"?"الشارة":DS.kind==="national"?"التاريخ فوق":"التوقيع"}</label><input class="in" id="dsS" data-ds="s" value="${esc(DS.s)}"></div>
+  <div class="row" style="margin-bottom:12px"><label class="btn l sm" for="dsPh">${DS.photo?"غيّري الصورة":"+ صورة من الحارة (اختياري)"}</label>${DS.photo?`<button class="btn d sm" data-act="dsNoPh">شيلي الصورة</button>`:""}<input type="file" id="dsPh" accept="image/*" hidden>
+    ${S.ai.key&&S.ai.key.trim()?`<button class="btn o sm" data-act="dsAI" data-key="${esc(key)}">✦ اقترحي نص</button>`:""}</div>
+  <div class="grid g2" id="dsGal">${vs.map(([k,s,l],i)=>`<div class="card" style="padding:10px"><canvas data-dsi="${i}" style="width:100%;display:block;border-radius:10px"></canvas>
+    <div class="row" style="justify-content:space-between;margin-top:8px"><b style="font-size:14px">${l}</b><span class="hint" data-dsw="${i}" style="margin:0"></span></div>
+    <div class="row" style="margin-top:6px"><button class="btn g sm" data-act="dsDl" data-i="${i}">نزّلي هالمقاس</button><button class="btn l sm" data-act="dsDlAll" data-i="${i}">كل المقاسات</button></div></div>`).join("")}</div>
+  <p class="hint">قبل النشر: الأسماء والتواريخ مراجعة، والتصميم ما فيه [..]. التنزيل بيتسكّر إذا النص ما وسع أو في معلومة ناقصة.</p>`);
+  const f=$("#dsPh");f.onchange=e=>{const file=e.target.files[0];if(!file)return;const r=new FileReader();r.onload=()=>{const im=new Image();im.onload=()=>{DS.photo=im;dsSheet(key);};im.src=r.result;};r.readAsDataURL(file);};
+  dsPaint();}
+function dsPaint(){const vs=dsVariants();document.querySelectorAll("canvas[data-dsi]").forEach(cv=>{const i=+cv.dataset.dsi,[k,s]=vs[i];const iss=dsDraw(cv,k,s,DS.fmt);
+  const w=document.querySelector(`[data-dsw="${i}"]`);w.textContent=iss.length?"⚠ "+iss.join("، "):"✓ جاهز";w.style.color=iss.length?"#FF9C84":"#9fe0b0";
+  document.querySelectorAll(`[data-act^="dsDl"][data-i="${i}"]`).forEach(b=>b.disabled=!!iss.length);});}
+document.addEventListener("input",e=>{const k=e.target.dataset&&e.target.dataset.ds;if(!k)return;DS[k]=e.target.value;clearTimeout(dsPaint.t);dsPaint.t=setTimeout(dsPaint,150);});
+const dsName=(l,fmt)=>`${(DS.t||"تصميم").replace(/[\\/:*?"<>|\s]+/g,"-")}_${l}_${fmt==="wa"?"4x5":fmt==="st"?"9x16":"1x1"}.png`;
+Object.assign(ACT,{
+  occDesign:el=>dsSheet(el.dataset.key),
+  dsFmt:el=>{DS.fmt=el.dataset.k;document.querySelectorAll('[data-act="dsFmt"]').forEach(b=>b.setAttribute("aria-pressed",b===el));dsPaint();},
+  dsNoPh:()=>{DS.photo=null;dsSheet(DS.key);},
+  dsDl:async el=>{const [k,s,l]=dsVariants()[+el.dataset.i];const cv=document.createElement("canvas");if(dsDraw(cv,k,s,DS.fmt).length)return toast("صحّحي النص أولاً");saveBlob(await canvasBlob(cv),dsName(l,DS.fmt));toast("نزلت الصورة ✓");},
+  dsDlAll:async el=>{const [k,s,l]=dsVariants()[+el.dataset.i];for(const [fmt] of DS_FMT){const cv=document.createElement("canvas");if(dsDraw(cv,k,s,fmt).length){toast("مقاس "+fmt+": النص ما وسع — اختصريه");continue;}saveBlob(await canvasBlob(cv),dsName(l,fmt));await new Promise(r=>setTimeout(r,400));}toast("نزلت المقاسات ✓");},
+  dsAI:async el=>{const o=occFind(el.dataset.key);el.disabled=true;el.textContent="عم يكتب…";
+    try{const t=await callClaude(`اكتب نص تصميم منشور لـ${ORG()} بمناسبة «${o.n}» (${DS.kind==="notice"?"تنويه توعوي":"تهنئة"}).\nالقواعد: العنوان ٢–٥ كلمات. ${DS.kind==="notice"?"٣ نقاط قصيرة كل وحدة أقل من ٩ كلمات":"جملة وحدة أقل من ١٤ كلمة"}. فصحى بسيطة رسمية، بلا إيموجي، بلا أرقام أو أسماء مش موجودة. ${o.plan&&o.plan.ctx?"المعلومات المتوفرة: "+o.plan.ctx:""}`,{max:2000,schema:{type:"object",additionalProperties:false,required:["title","lines"],properties:{title:{type:"string"},lines:{type:"array",items:{type:"string"}}}}});
+      const j=JSON.parse(t.slice(t.indexOf("{"),t.lastIndexOf("}")+1));DS.t=j.title||DS.t;DS.b=(j.lines||[]).slice(0,DS.kind==="notice"?3:1).join("\n")||DS.b;dsSheet(DS.key);toast("انكتب ✓ — راجعيه");}
+    catch(e){toast("ما زبط: "+e.message);el.disabled=false;el.textContent="✦ اقترحي نص";}}
+});
+/* الزر بورقة المناسبة وببطاقات «شو ننزّل اليوم؟» */
+const _occSheet=occSheet;occSheet=function(key){_occSheet(key);const r=document.querySelector('#sheetBody [data-act="occDraft"]');if(r&&!document.querySelector('#sheetBody [data-act="occDesign"]')){const b=document.createElement("button");b.className="btn g sm";b.dataset.act="occDesign";b.dataset.key=key;b.textContent="🎨 صمّمي الصورة";r.before(b);}};
+const _sugCard=sugCard;sugCard=function(s,i){let h=_sugCard(s,i);if(s.o)h=h.replace(`<button class="btn g sm" data-act="occDraft"`,`<button class="btn g sm" data-act="occDesign" data-key="${esc(s.o.key)}">🎨 صمّمي الصورة</button><button class="btn l sm" data-act="occDraft"`);return h;};
+if(CUR==="today")route();
 </script>
 </body>
 </html>
