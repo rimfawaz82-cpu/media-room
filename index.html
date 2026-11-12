@@ -946,7 +946,7 @@ function defaults(){const t=TODAY();return {v:1,
   accounts:{fb:"",ig:"",tt:"",yt:"",wa:"",web:"",phone:"",handle:""},
   bios:Object.assign({},DEF_BIOS),check:{},
   lib:{captions:DEF_CAPTIONS.map(x=>Object.assign({id:uid()},x)),tags:DEF_TAGS.map(x=>Object.assign({id:uid()},x)),people:DEF_PEOPLE.map(x=>Object.assign({id:uid()},x))},
-  vlogs:[],daily:{rolls:{},done:{}},ai:{key:"",model:"claude-sonnet-5"},cover:{line:"دائماً في خدمتكم",phone:""}};}
+  vlogs:[],daily:{rolls:{},done:{}},ai:{key:"",model:"claude-opus-5-5"},cover:{line:"دائماً في خدمتكم",phone:""}};}
 function load(){try{const s=JSON.parse(localStorage.getItem(KEY)||"null");if(s&&s.v===1){const d=defaults();for(const k in d)if(s[k]==null)s[k]=d[k];for(const k in d.lib)if(!s.lib[k])s.lib[k]=d.lib[k];return s;}}catch(e){}return defaults();}
 let S=load();
 let _sv=0;function save(now){clearTimeout(_sv);const f=()=>{try{localStorage.setItem(KEY,JSON.stringify(S));}catch(e){toast("ما انحفظ — المساحة مليانة");}};if(now)f();else _sv=setTimeout(f,350);}
@@ -1489,7 +1489,7 @@ function rSettings(m){
   <div class="card">
     <p>بلا مفتاح: مصنع المحتوى بينسخ البرومبت وبيفتحلك Claude. مع مفتاح Claude API: بيكتب هون مباشرة.</p>
     <div class="fld" style="margin-top:10px"><label for="sK">مفتاح Claude API</label><input class="in" id="sK" type="password" data-bind="ai.key" value="${esc(S.ai.key)}" placeholder="sk-ant-…" dir="ltr" autocomplete="off"></div>
-    <div class="fld"><label for="sM">النموذج</label><select class="in" id="sM" data-bind="ai.model">${[["claude-sonnet-5","Claude Sonnet 5 (متوازن)"],["claude-opus-5-5","Claude Opus 5.5 (الأقوى)"],["claude-haiku-4-5-20251001","Claude Haiku 4.5 (الأسرع والأرخص)"]].map(([v,l])=>`<option value="${v}" ${S.ai.model===v?"selected":""}>${l}</option>`).join("")}</select></div>
+    <div class="fld"><label for="sM">النموذج</label><select class="in" id="sM" data-bind="ai.model">${[["claude-opus-5-5","Claude Opus 5.5 (الأقوى — مقترح)"],["claude-sonnet-5-5","Claude Sonnet 5.5 (أسرع وأرخص)"],["claude-haiku-5-5","Claude Haiku 5.5 (الأرخص)"]].map(([v,l])=>`<option value="${v}" ${S.ai.model===v?"selected":""}>${l}</option>`).join("")}</select></div>
     <p class="hint">المفتاح بينحفظ على هالجهاز بس، وما بيطلع بالنسخة الاحتياطية. الاستعمال بينحسب على حسابك بـ Anthropic.</p>
   </div>
   <h2 class="s">النسخة الاحتياطية</h2>
@@ -1502,7 +1502,7 @@ function rSettings(m){
   <div class="card"><button class="btn d sm" data-act="wipe">امسح كل البيانات</button></div>`;
   $$(".logoImg").forEach(i=>i.src=logoSrc());
   $("#sLogo").onchange=async e=>{const f=e.target.files[0];if(!f)return;const url=await fileToLogo(f);S.settings.logo=url;save(true);await applyBrand();resetFrames();toast("تغيّر الشعار ✓");rerender();};
-  $("#sImp").onchange=async e=>{const f=e.target.files[0];if(!f)return;try{const d=JSON.parse(await f.text());if(!d||d.v!==1)throw 0;const key=S.ai.key;S=Object.assign(defaults(),d);S.ai=Object.assign({key,model:"claude-sonnet-5"},d.ai||{},{key});save(true);await applyBrand();resetFrames();toast("رجعت النسخة ✓");rerender();}catch(err){toast("الملف مش نسخة صالحة");}};
+  $("#sImp").onchange=async e=>{const f=e.target.files[0];if(!f)return;try{const d=JSON.parse(await f.text());if(!d||d.v!==1)throw 0;const key=S.ai.key;S=Object.assign(defaults(),d);S.ai=Object.assign({key,model:"claude-opus-5-5"},d.ai||{},{key});save(true);await applyBrand();resetFrames();toast("رجعت النسخة ✓");rerender();}catch(err){toast("الملف مش نسخة صالحة");}};
 }
 function fileToLogo(f){return new Promise(res=>{const r=new FileReader();r.onload=()=>{const im=new Image();im.onload=()=>{const s=Math.min(1,700/Math.max(im.width,im.height)),c=document.createElement("canvas");c.width=Math.round(im.width*s);c.height=Math.round(im.height*s);c.getContext("2d").drawImage(im,0,0,c.width,c.height);res(c.toDataURL("image/png"));};im.src=r.result;};r.readAsDataURL(f);});}
 function hex(r,g,b){return "#"+[r,g,b].map(v=>p2(Math.round(v).toString(16))).join("").toUpperCase();}
@@ -1982,6 +1982,275 @@ function mhPlatCard(){
 const _matR2=SECS.materials.r;SECS.materials.r=function(root){_matR2(root);mhPlatCard();};
 const _mhRender2=mhRender;mhRender=function(root){_mhRender2(root);mhPlatCard();};
 if(CUR==="materials"&&MH.id)mhRender($("#main"));
+</script>
+<script>
+/* ===== Claude: موديلات حالية، حفظ المفتاح على الجهاز (اختياري)، ورد احتياطي عند الرفض ===== */
+const MH_KEY_LS="mh-ai-key";
+(function(){try{const k=localStorage.getItem(MH_KEY_LS);if(k&&!S.ai.key)S.ai.key=k;}catch(e){}
+  if(!S.ai.model||/haiku-4-5|^claude-sonnet-5$/.test(S.ai.model))S.ai.model="claude-opus-5-5";})();
+callClaude=async function(user,opt={}){
+  const body={model:S.ai.model||"claude-opus-5-5",max_tokens:opt.max||8000,system:sysPrompt(),messages:[{role:"user",content:user}]};
+  const fb=/^claude-(opus-5-5|sonnet-5-5|fable-5-2|fable-5-1|opus-5)$/.test(body.model);if(fb)body.fallbacks="default";
+  if(opt.schema)body.output_config={format:{type:"json_schema",schema:opt.schema}};
+  const r=await fetch("https://api.anthropic.com/v1/messages",{method:"POST",headers:{"content-type":"application/json","x-api-key":S.ai.key.trim(),"anthropic-version":"2023-06-01",...(fb?{"anthropic-beta":"server-side-fallback-2026-07-01"}:{}),"anthropic-dangerous-direct-browser-access":"true"},body:JSON.stringify(body)});
+  let j=null;try{j=await r.json();}catch(e){}
+  if(!r.ok){const m=(j&&j.error&&j.error.message)||("خطأ "+r.status);throw new Error(r.status===401?"المفتاح مش صحيح أو انتهى. راجعيه بالإعدادات.":r.status===429?"كتير طلبات ورا بعض؛ استني دقيقة وجرّبي.":m);}
+  if(j.stop_reason==="refusal")throw new Error("Claude ما قبل يكتب هالطلب. عدّلي الصياغة وجرّبي.");
+  return (j.content||[]).filter(c=>c.type==="text").map(c=>c.text).join("\n").trim();
+};
+const _setR=SECS.settings.r;
+SECS.settings.r=function(root){_setR(root);const k=$("#sK");if(!k)return;const card=k.closest(".card");let rem=false;try{rem=!!localStorage.getItem(MH_KEY_LS);}catch(e){}
+  const box=document.createElement("div");box.innerHTML=`<label class="ck" style="border:none;padding:6px 0"><input type="checkbox" id="sKRem" ${rem?"checked":""}> احفظ المفتاح على هالتلفون (ما بيطلع بالنسخة الاحتياطية)</label>
+    <div class="row" style="margin-top:6px"><button class="btn l sm" type="button" id="sKTest">جرّبي الاتصال</button><span id="sKRes" class="hint" style="margin:0"></span></div>
+    <p class="hint">إذا حفظتيه، أي حدا بيفتح التطبيق على هالتلفون بيقدر يستعمله. الاستعمال بينحسب على حسابك بـ Claude Platform.</p>`;
+  card.querySelector(".hint").after(box);
+  const sync=()=>{try{if($("#sKRem").checked&&S.ai.key.trim())localStorage.setItem(MH_KEY_LS,S.ai.key.trim());else localStorage.removeItem(MH_KEY_LS);}catch(e){}};
+  $("#sKRem").onchange=sync;k.addEventListener("input",()=>setTimeout(sync,0));
+  $("#sKTest").onclick=async()=>{const o=$("#sKRes");if(!S.ai.key.trim()){o.textContent="حطّي المفتاح أول.";return;}o.textContent="عم جرّب…";
+    try{const t=await callClaude("ردّ بكلمة وحدة: جاهز",{max:50});o.textContent="✓ متصل: "+t.slice(0,30);}catch(e){o.textContent="✗ "+e.message;}};
+};
+
+/* ===== تثبيت كتطبيق حقيقي (مش اختصار) ===== */
+let MH_INSTALL=null;
+window.addEventListener("beforeinstallprompt",e=>{e.preventDefault();MH_INSTALL=e;document.querySelectorAll(".mh-install").forEach(b=>b.hidden=false);});
+window.addEventListener("appinstalled",()=>{MH_INSTALL=null;document.querySelectorAll(".mh-install-box").forEach(b=>b.remove());toast("✓ انثبّت التطبيق — بتلاقيه بين تطبيقات التلفون");});
+function mhInstallBox(root){if(appInstalled()||!root)return;const d=document.createElement("div");d.className="mh-note mh-install-box";d.style.margin="0 0 16px";
+  d.innerHTML=`<b>ثبّتي غرفة الإعلام كتطبيق</b> — بيطلع بين تطبيقات التلفون، بيفتح بلا شريط المتصفح، وبيشتغل بلا إنترنت.
+  <div class="row" style="margin-top:8px"><button class="btn g sm mh-install" type="button" ${MH_INSTALL?"":"hidden"}>ثبّت التطبيق</button></div>
+  <p class="hint" style="margin:6px 0 0">إذا ما بيّن الزر: من Chrome ⋮ ← «تثبيت التطبيق». إذا طلعت الأيقونة وعليها شعار Chrome صغير، فهيدا اختصار مش تطبيق: احذفيه وثبّتي من «تثبيت التطبيق».</p>`;
+  root.prepend(d);d.querySelector(".mh-install").onclick=async()=>{if(!MH_INSTALL)return;MH_INSTALL.prompt();await MH_INSTALL.userChoice;MH_INSTALL=null;};}
+
+/* ===== المناسبات: الأعياد الرسمية، الدينية، الأيام العالمية، المواسم، ومناسبات الجهة ===== */
+const OCC_T={off:"عيد رسمي",rel:"مناسبة دينية",world:"يوم عالمي",season:"موسم",own:"مناسبة الجهة"};
+const OCC_C={off:"#C8401F",rel:"#7A4FB5",world:"#1B4F9C",season:"#C9A227",own:"#2E9144"};
+const OCC_ST={ok:"مؤكد",est:"تقديري",wait:"بانتظار التثبيت"};
+const DEC={cover:"تغطية",notice:"تنويه",greet:"تهنئة",later:"تأجيل",skip:"تخطٍّ"};
+const SRC_GOV="قرار رئاسة مجلس الوزراء بالأعياد والعطل الرسمية — يُثبَّت سنوياً";
+const SRC_UN="الأمم المتحدة / المنظمة المعنية";
+// [شهر, يوم, الاسم, النوع, الدوائر الأقرب, القرار المقترح, أيام التحضير, الزاوية]
+const OCC_FIXED=[
+ [1,1,"رأس السنة","off","news","greet",2,"تهنئة قصيرة ودوام البلدية"],
+ [1,6,"عيد الميلاد عند الأرمن","off","news","greet",1,"تهنئة"],
+ [2,9,"عيد مار مارون","off","news","greet",1,"تهنئة وتنويه بالدوام"],
+ [2,14,"ذكرى ١٤ شباط","off","news","notice",1,"تنويه بالدوام إذا ثُبّتت العطلة","wait"],
+ [3,8,"اليوم العالمي للمرأة","world","act","cover",5,"نساء بيشتغلوا بخدمة الحارة"],
+ [3,9,"عيد المعلّم","world","act","greet",2,"شكر المعلّمين بالحارة"],
+ [3,21,"عيد الأم","world","act","greet",3,"تهنئة دافية، صور من الأرشيف"],
+ [3,22,"اليوم العالمي للمياه","world","health","notice",4,"ترشيد المي ونظافة الخزانات"],
+ [3,25,"عيد البشارة","off","news","greet",1,"تهنئة"],
+ [4,7,"يوم الصحة العالمي","world","health","cover",5,"شغل المفرزة الصحية"],
+ [4,22,"يوم الأرض","world","works","cover",5,"زراعة شجر وتنظيف"],
+ [4,23,"اليوم العالمي للكتاب","world","act","cover",7,"مركز المطالعة وتبادل الكتب"],
+ [5,1,"عيد العمّال","off","works","greet",3,"شكر عمّال البلدية بصورهم وأسمائهم بإذنهم"],
+ [5,25,"عيد المقاومة والتحرير","off","news","greet",2,"تهنئة رسمية"],
+ [5,31,"اليوم العالمي للامتناع عن التدخين","world","health","notice",3,"معلومة صحية قصيرة"],
+ [6,5,"اليوم العالمي للبيئة","world","works","cover",5,"النظافة والفرز"],
+ [8,12,"اليوم الدولي للشباب","world","act","cover",5,"متطوّعين من الحارة"],
+ [8,15,"عيد انتقال السيدة","off","news","greet",1,"تهنئة"],
+ [10,1,"اليوم الدولي للمسنّين","world","act","cover",5,"ختيارية الحارة وحكاياتهم"],
+ [10,10,"اليوم العالمي للصحة النفسية","world","health","notice",3,"معلومة وأرقام مساعدة"],
+ [10,16,"يوم الأغذية العالمي","world","health","cover",4,"رقابة المفرزة على المحلات"],
+ [10,31,"اليوم العالمي للمدن","world","works","cover",5,"شو تغيّر بالحارة هالسنة"],
+ [11,14,"اليوم العالمي للسكري","world","health","notice",3,"تنويه صحي قصير"],
+ [11,20,"اليوم العالمي للطفل","world","act","cover",5,"نشاط لمركز المطالعة"],
+ [11,22,"عيد الاستقلال","off","news","greet",7,"الحارة بألوان العلم"],
+ [12,3,"اليوم الدولي للأشخاص ذوي الإعاقة","world","news","cover",5,"خدمة أو تسهيل موجود فعلاً"],
+ [12,5,"اليوم الدولي للمتطوّعين","world","act","cover",4,"شكر متطوّعي حملات البلدية"],
+ [12,18,"اليوم العالمي للغة العربية","world","act","cover",4,"مركز المطالعة"],
+ [12,25,"عيد الميلاد","off","news","greet",2,"تهنئة ودوام البلدية"]
+];
+const OCC_SEASONS=[[9,1,9,20,"العودة للمدارس","police","سير المدارس وسلامة الولاد"],[10,1,11,30,"جهوزية الشتاء","works","تنظيف المجاري والتبليغ عن الريغارات"],[12,15,1,6,"موسم الأعياد","works","الزينة والدوام والسلامة"],[7,1,8,31,"صيف الولاد","act","نشاطات الصيف والمي"]];
+// الهجري: حساب أم القرى بالمتصفح — تقديري لحتى يتثبّت بإعلان رسمي
+const OCC_HIJRI=[[9,1,"بداية شهر رمضان","rel","news","greet",3,"تهنئة ودوام رمضان"],[10,1,"عيد الفطر","off","news","greet",4,"تهنئة وأجواء العيد"],[12,10,"عيد الأضحى","off","news","greet",4,"تهنئة"],[1,1,"رأس السنة الهجرية","off","news","greet",2,"تهنئة"],[1,10,"ذكرى عاشوراء","off","news","notice",5,"تنويه بالدوام والتنظيم والسير"],[3,12,"المولد النبوي الشريف","off","news","greet",2,"تهنئة"]];
+const _hijriCache={};
+function hijriOf(d){try{const k=iso(d);if(_hijriCache[k])return _hijriCache[k];const p=new Intl.DateTimeFormat("en-u-ca-islamic-umalqura-nu-latn",{day:"numeric",month:"numeric"}).formatToParts(d);
+  const r={m:+p.find(x=>x.type==="month").value,d:+p.find(x=>x.type==="day").value};_hijriCache[k]=r;return r;}catch(e){return null;}}
+function easter(y,julian){let a=y%4,b=y%7,c=y%19,d=(19*c+15)%30,e=(2*a+4*b-d+34)%7;if(julian){const m=Math.floor((d+e+114)/31),dd=((d+e+114)%31)+1;const g=new Date(y,m-1,dd);return addDays(g,13);}
+  const A=y%19,B=Math.floor(y/100),C=y%100,D=Math.floor(B/4),E=B%4,F=Math.floor((B+8)/25),G=Math.floor((B-F+1)/3),H=(19*A+B-D-G+15)%30,I=Math.floor(C/4),K=C%4,L=(32+2*E+2*I-H-K)%7,M=Math.floor((A+11*H+22*L)/451),mo=Math.floor((H+L-7*M+114)/31),da=((H+L-7*M+114)%31)+1;return new Date(y,mo-1,da);}
+const _occYear={};
+function occYear(y){if(_occYear[y])return _occYear[y];const out=[];
+  const add=(dt,n,t,dept,dec,prep,angle,st,src,id)=>out.push({id:id||("g:"+n),date:iso(dt),n,t,dept,dec,prep,angle,st:st||"ok",src});
+  OCC_FIXED.forEach(([m,d,n,t,dept,dec,prep,angle,st])=>add(new Date(y,m-1,d),n,t,dept,dec,prep,angle,st,t==="world"?SRC_UN:SRC_GOV));
+  const ew=easter(y,false),eo=easter(y,true);
+  add(addDays(ew,-2),"الجمعة العظيمة (الطوائف الغربية)","off","news","notice",2,"تنويه بالدوام","ok",SRC_GOV+" · تاريخ محسوب");
+  add(ew,"عيد الفصح (الطوائف الغربية)","off","news","greet",2,"تهنئة","ok",SRC_GOV+" · تاريخ محسوب");
+  add(addDays(eo,-2),"الجمعة العظيمة (الطوائف الشرقية)","off","news","notice",2,"تنويه بالدوام","ok",SRC_GOV+" · تاريخ محسوب");
+  add(eo,"عيد الفصح (الطوائف الشرقية)","off","news","greet",2,"تهنئة","ok",SRC_GOV+" · تاريخ محسوب");
+  for(let d=new Date(y,0,1);d.getFullYear()===y;d=addDays(d,1)){const h=hijriOf(d);if(!h)break;
+    OCC_HIJRI.forEach(([hm,hd,n,t,dept,dec,prep,angle])=>{if(h.m===hm&&h.d===hd&&!out.some(o=>o.n===n&&Math.abs(pIso(o.date)-d)<20*864e5))add(d,n,t,dept,dec,prep,angle,"est","حساب أم القرى الفلكي — يُثبَّت بإعلان المرجعيات الدينية");});}
+  OCC_SEASONS.forEach(([m1,d1,m2,d2,n,dept,angle])=>{const s=new Date(y,m1-1,d1);add(s,n,"season",dept,"cover",3,angle,"ok","موسم سنوي",`s:${n}`);const o=out[out.length-1];o.end=iso(m2<m1?new Date(y+1,m2-1,d2):new Date(y,m2-1,d2));});
+  return _occYear[y]=out;}
+/* مناسبات الجهة + تعديلات المستخدم (تاريخ مثبّت، قرار، تخطٍّ) */
+const OS=()=>{if(!S.occ||!S.occ.over)S.occ={own:[],over:{}};return S.occ;};
+function occAll(y){const base=occYear(y).map(o=>{const ov=OS().over[o.id+"|"+y]||{};return {...o,key:o.id+"|"+y,date:ov.date||o.date,st:ov.date?"ok":o.st,dec:ov.dec||null,reason:ov.reason||"",plan:ov};});
+  const own=(OS().own||[]).filter(o=>o.repeat||+o.date.slice(0,4)===y).map(o=>{const date=o.repeat?`${y}${o.date.slice(4)}`:o.date;const ov=OS().over[o.id+"|"+y]||{};return {...o,key:o.id+"|"+y,date:ov.date||date,t:"own",st:"ok",src:"مناسبة الجهة",dec:ov.dec||null,reason:ov.reason||"",plan:ov,prep:+o.prep||3};});
+  return base.concat(own).sort((a,b)=>a.date.localeCompare(b.date));}
+function occOn(ds){const y=+ds.slice(0,4);return occAll(y).filter(o=>o.date===ds||(o.end&&ds>=o.date&&ds<=o.end&&o.t==="season"&&ds===o.date));}
+function occRange(a,b){const ys=new Set([+a.slice(0,4),+b.slice(0,4)]);let all=[];ys.forEach(y=>all=all.concat(occAll(y)));return all.filter(o=>o.date>=a&&o.date<=b);}
+function occSeasonsActive(ds){const y=+ds.slice(0,4);return occAll(y).concat(occAll(y-1)).filter(o=>o.t==="season"&&ds>=o.date&&ds<=o.end);}
+const occDays=ds=>Math.round((pIso(ds)-pIso(TODAY()))/864e5);
+const occN=n=>n===1?"يوم":n===2?"يومين":n<=10?`${mhDigits(n)} أيام`:`${mhDigits(n)} يوم`;
+const occWhen=n=>n===0?"اليوم":n===1?"بكرا":n===-1?"مبارح":n>1?`بعد ${occN(n)}`:`من ${occN(-n)}`;
+const OCC_FILTER={off:true,rel:true,world:true,season:true,own:true};
+
+/* ===== «شو ننزّل اليوم؟» ===== */
+function todaySuggestions(){const ds=TODAY(),out=[],skip=o=>o.dec==="skip";
+  // ١) مواد عندها صور جديدة وما نزلت (آخر ٤٨ ساعة)
+  (S.materials||[]).filter(m=>m.status!=="published"&&Date.now()-Date.parse(m.updatedAt||0)<2*864e5).slice(0,2).forEach(m=>out.push({k:"mat",score:90,m,tag:"مادة جاهزة تقريباً",title:m.title||"مادة بلا عنوان",why:`فيها معلومات من ${m.place||"الدائرة"}، وما نزلت بعد. أي خبر جديد بيوصل أحسن بنفس النهار.`}));
+  // ٢) مناسبة اليوم
+  occRange(ds,ds).filter(o=>o.t!=="season"&&!skip(o)).forEach(o=>out.push({k:"occ",score:100,o,tag:`${OCC_T[o.t]} · اليوم`,title:o.n,why:`المناسبة اليوم. الزاوية المقترحة: ${o.angle||"تهنئة"}.`}));
+  // ٣) مناسبات قريبة وبدها تحضير هلّق
+  occRange(iso(addDays(new Date(),1)),iso(addDays(new Date(),21))).filter(o=>o.t!=="season"&&!skip(o)).forEach(o=>{const n=occDays(o.date);if(n<=o.prep+3)out.push({k:"prep",score:80-n,o,tag:`${OCC_T[o.t]} · ${occWhen(n)}`,title:o.n,why:`بدها ${occN(o.prep)} تحضير — ${o.dec==="greet"||!o.dec?"صور أو فيديو قصير لازم ينصوّروا هلّق":"جهّزي المعلومات والتصميم"}.`});});
+  // ٤) موسم شغّال
+  occSeasonsActive(ds).filter(o=>!skip(o)).forEach(o=>out.push({k:"season",score:60,o,tag:`موسم · لحد ${mhFmtDate(o.end).split(" ").slice(1,3).join(" ")}`,title:o.n,why:`الناس بتتابع هالموضوع هالفترة: ${o.angle}.`}));
+  return out.sort((a,b)=>b.score-a.score).slice(0,4);}
+function sugCard(s,i){const o=s.o;const st=o?`<span class="chip" style="color:${o.st==="ok"?"#9fe0b0":o.st==="est"?"#FFE08A":"#FF9C84"}">${OCC_ST[o.st]}</span>`:"";
+  const acts=s.k==="mat"?`<button class="btn g sm" data-mh="open" data-id="${esc(s.m.id)}" data-go2="materials">افتحي المادة</button>`
+    :`<button class="btn g sm" data-act="occDraft" data-key="${esc(o.key)}">حوّلي إلى مسودة</button><button class="btn l sm" data-act="occTpl" data-key="${esc(o.key)}">اختاري قالب</button>${s.k==="prep"||o.dec==="cover"?`<button class="btn l sm" data-act="occShoot" data-key="${esc(o.key)}">أضيفي مهمة تصوير</button>`:""}<button class="btn o sm" data-act="occOpen" data-key="${esc(o.key)}">${o.plan&&o.plan.ai?"النصوص ✓":"✦ النصوص والفيديو"}</button>`;
+  return `<div class="card${i===0?" gold":""}" style="margin-bottom:10px"><div class="row" style="justify-content:space-between;gap:6px"><span style="color:var(--gold);font-weight:800;font-size:12.5px">${esc(s.tag)}</span>${st}</div>
+    <h3 style="margin:6px 0 4px">${esc(s.title)}</h3><p style="font-size:13.5px;margin:0 0 8px">${esc(s.why)}</p>${o&&o.dec?`<p class="hint" style="margin:0 0 8px">القرار: ${DEC[o.dec]}${o.reason?" — "+esc(o.reason):""}</p>`:""}<div class="row">${acts}</div></div>`;}
+const _todayR3=SECS.today.r;
+SECS.today.r=function(root){_todayR3(root);const sug=todaySuggestions();const sec=document.createElement("section");
+  sec.innerHTML=`<h2 class="s" style="margin-top:0">شو ننزّل اليوم؟ <small><button class="btn o sm" data-go="calendar">التقويم السنوي</button></small></h2>${sug.length?sug.map(sugCard).join(""):`<div class="empty">ما في مناسبة ولا مادة جديدة اليوم. شوفي الأفكار تحت، أو زيدي مناسبة للجهة من التقويم.</div>`}`;
+  root.prepend(sec);const ib=document.createElement("div");sec.after(ib);mhInstallBox(ib);};
+
+/* ===== التقويم: سنة / شهر / أسبوع + طبقة المناسبات ===== */
+let CALV=(()=>{try{return localStorage.getItem("mh-calv")||"month";}catch(e){return "month";}})();
+const _rCal=rCalendar;
+rCalendar=function(m){_rCal(m);calExtra(m);};SECS.calendar.r=rCalendar;
+function calExtra(m){
+  const bar=document.createElement("div");bar.innerHTML=`<div class="seg" style="margin-bottom:10px">${[["year","سنة"],["month","شهر"],["week","أسبوع"]].map(([k,l])=>`<button data-act="calView" data-k="${k}" aria-pressed="${CALV===k}">${l}</button>`).join("")}</div>
+    <div class="tog" style="margin-bottom:12px">${Object.keys(OCC_T).map(k=>`<button type="button" data-act="occFilt" data-k="${k}" aria-pressed="${OCC_FILTER[k]}"><i style="display:inline-block;width:9px;height:9px;border-radius:50%;background:${OCC_C[k]};margin-inline-end:5px"></i>${OCC_T[k]}</button>`).join("")}</div>`;
+  const lede=m.querySelector(".lede");lede.textContent="الأعياد الرسمية والدينية والأيام العالمية والمواسم ومناسبات الجهة، مع منشوراتك. كل مناسبة إلها مصدر وحالة للتاريخ، وقرار: تغطية، تنويه، تهنئة، تأجيل أو تخطٍّ.";lede.after(bar);
+  const card=m.querySelector(".card");
+  if(CALV==="year"){card.innerHTML=calYear();}
+  else if(CALV==="week"){card.innerHTML=calWeek();}
+  else{// شهر: نقاط ملوّنة للمناسبات فوق كل يوم
+    card.querySelectorAll(".cal button[data-date]").forEach(b=>{const os=occAll(+b.dataset.date.slice(0,4)).filter(o=>OCC_FILTER[o.t]&&o.date===b.dataset.date);if(!os.length)return;
+      const tag=document.createElement("span");tag.style.cssText="display:block;font-size:9.5px;line-height:1.2;font-weight:800;color:"+OCC_C[os[0].t]+";overflow:hidden;white-space:nowrap;text-overflow:ellipsis;max-width:100%";tag.textContent=os[0].n.replace(/^(اليوم|يوم) (العالمي|الدولي) (لل|ل)?/,"");b.appendChild(tag);});}
+  // مناسبات اليوم المختار
+  const sel=CAL.sel||TODAY(),list=occAll(+sel.slice(0,4)).filter(o=>OCC_FILTER[o.t]&&(o.date===sel||(o.t==="season"&&sel>=o.date&&sel<=o.end)));
+  const h=[...m.querySelectorAll("h2.s")][0];const box=document.createElement("div");
+  box.innerHTML=(list.length?`<div class="list" style="margin-bottom:12px">${list.map(occItem).join("")}</div>`:"")+`<button class="btn o sm" data-act="occNew" data-date="${sel}" style="margin-bottom:12px">+ مناسبة للجهة بهاليوم</button>`;
+  if(h)h.after(box);
+  // القادم خلال ٦٠ يوم
+  const up=occRange(TODAY(),iso(addDays(new Date(),60))).filter(o=>OCC_FILTER[o.t]&&o.t!=="season");
+  const sec=document.createElement("div");sec.innerHTML=`<h2 class="s">المناسبات الجاية <small>٦٠ يوم</small></h2><div class="list">${up.map(occItem).join("")||'<div class="empty">ما في مناسبات بالفلتر المختار.</div>'}</div>`;
+  const rec=[...m.querySelectorAll("h2.s")].find(x=>x.textContent.includes("للفريق"));if(rec)rec.before(sec);else m.append(sec);
+};
+function occItem(o){const n=occDays(o.date);return `<button class="item" data-act="occOpen" data-key="${esc(o.key)}"><span class="tm" style="font-size:13px">${mhDigits(pIso(o.date).getDate())}<br><small>${MON[pIso(o.date).getMonth()].split(" ")[0]}</small></span>
+  <span><b>${esc(o.n)}</b><span class="meta"><span class="chip"><i style="background:${OCC_C[o.t]}"></i>${OCC_T[o.t]}</span><span class="chip">${OCC_ST[o.st]}</span><span class="chip">${occWhen(n)}</span>${o.dec?`<span class="chip">${DEC[o.dec]}</span>`:""}${o.plan&&o.plan.materialId?`<span class="chip">✓ مسودة</span>`:""}</span></span><span class="bar4" style="background:${OCC_C[o.t]}"></span></button>`;}
+function calYear(){const y=(CAL.m||new Date()).getFullYear(),all=occAll(y).filter(o=>OCC_FILTER[o.t]);
+  return `<div class="row" style="justify-content:space-between;margin-bottom:10px"><button class="btn l sm" data-act="calYear" data-d="-1">‹ ${mhDigits(y-1)}</button><b style="font-size:17px;font-weight:900">${mhDigits(y)}</b><button class="btn l sm" data-act="calYear" data-d="1">${mhDigits(y+1)} ›</button></div>
+  <div class="grid g3">${MON.map((mn,i)=>{const os=all.filter(o=>+o.date.slice(5,7)===i+1&&o.t!=="season");const ss=all.filter(o=>o.t==="season"&&+o.date.slice(5,7)===i+1);
+    return `<button class="tile" style="text-align:start;align-content:start" data-act="calGoMonth" data-y="${y}" data-m="${i}"><b>${mn}</b>${ss.map(s=>`<span style="color:${OCC_C.season};font-size:12px">◆ ${esc(s.n)}</span>`).join("")}<span style="font-size:12.5px;line-height:1.7">${os.slice(0,6).map(o=>`<i style="display:inline-block;width:7px;height:7px;border-radius:50%;background:${OCC_C[o.t]};margin-inline-end:4px"></i>${mhDigits(+o.date.slice(8))} ${esc(o.n)}`).join("<br>")}${os.length>6?`<br>+${mhDigits(os.length-6)}`:""}</span></button>`;}).join("")}</div>`;}
+function calWeek(){const s=pIso(CAL.sel||TODAY()),st=addDays(s,-((s.getDay()+6)%7)),days=[...Array(7)].map((_,i)=>addDays(st,i));
+  return `<div class="row" style="justify-content:space-between;margin-bottom:10px"><button class="btn l sm" data-act="calWeek" data-d="-7">‹ قبل</button><b>${arDate(days[0])} – ${arDate(days[6])}</b><button class="btn l sm" data-act="calWeek" data-d="7">بعد ›</button></div>
+  <div class="list">${days.map(d=>{const ds=iso(d),ps=postsOn(ds),os=occAll(d.getFullYear()).filter(o=>OCC_FILTER[o.t]&&o.date===ds&&o.t!=="season");
+    const prep=occRange(ds,iso(addDays(d,14))).filter(o=>o.t!=="season"&&o.dec!=="skip"&&iso(addDays(pIso(o.date),-o.prep))===ds);
+    return `<div class="card" style="padding:10px 12px;${ds===TODAY()?"border-color:var(--gold)":""}"><b>${arDate(d)}</b>
+      ${os.map(o=>`<div style="margin-top:6px"><button class="btn l sm" data-act="occOpen" data-key="${esc(o.key)}" style="border-color:${OCC_C[o.t]}">◆ ${esc(o.n)}</button></div>`).join("")}
+      ${prep.map(o=>`<div class="hint" style="margin:6px 0 0;color:#FFB59E">تحضير: «${esc(o.n)}» ${occWhen(occDays(o.date))} — ${occN(o.prep)}</div>`).join("")}
+      ${ps.map(p=>postItem(p)).join("")||(os.length||prep.length?"":'<div class="hint" style="margin:4px 0 0">فاضي</div>')}</div>`;}).join("")}</div>`;}
+
+/* ===== ورقة المناسبة: القرار، التاريخ، والنصوص لكل منصة ===== */
+function occFind(key){const [id,y]=key.split("|");return occAll(+y).find(o=>o.key===key);}
+function occSet(key,patch){OS().over[key]=Object.assign({},OS().over[key]||{},patch);delete _occYear[+key.split("|")[1]];save();}
+function occSheet(key){const o=occFind(key);if(!o)return;const ai=o.plan&&o.plan.ai,n=occDays(o.date);
+  const last=(()=>{const y=+key.split("|")[1]-1,pk=o.id+"|"+y,p=OS().over[pk];const mm=p&&p.materialId&&S.materials.find(x=>x.id===p.materialId);return mm?`<p class="hint">السنة الماضية: <a href="#materials" data-mh="open" data-id="${esc(mm.id)}" style="color:var(--gold)">${esc(mm.title)}</a>${mm.publishedUrl?` · <a href="${esc(mm.publishedUrl)}" target="_blank" rel="noopener" style="color:var(--gold)">المنشور</a>`:""}</p>`:"";})();
+  sheet(`<div class="ph"><b>${esc(o.n)}</b><button class="btn l sm" data-act="closeSheet">إغلاق</button></div>
+  <div class="row" style="gap:6px;margin-bottom:8px"><span class="chip"><i style="background:${OCC_C[o.t]}"></i>${OCC_T[o.t]}</span><span class="chip">${OCC_ST[o.st]}</span><span class="chip">${occWhen(n)}</span></div>
+  <p style="margin:0">${mhFmtDate(o.date)}${o.end?` ← ${mhFmtDate(o.end)}`:""}</p><p class="hint">المصدر: ${esc(o.src||"—")}</p>${last}
+  ${o.t!=="season"?`<div class="fld"><label for="occD">${o.st==="ok"?"تعديل التاريخ":"ثبّتي التاريخ عند الإعلان الرسمي"}</label><div class="row" style="flex-wrap:nowrap"><input class="in" type="date" id="occD" value="${o.date}"><button class="btn l sm" data-act="occDate" data-key="${esc(key)}">ثبّت</button></div><p class="hint">مهام التحضير بتتحرّك مع التاريخ.</p></div>`:""}
+  <div class="fld"><span class="lbl">القرار</span><div class="tog">${Object.keys(DEC).map(k=>`<button type="button" data-act="occDec" data-key="${esc(key)}" data-v="${k}" aria-pressed="${o.dec===k}">${DEC[k]}</button>`).join("")}</div>
+    <input class="in" id="occWhy" placeholder="السبب (اختياري) — مثلاً: ما إلها صلة بجمهورنا" value="${esc(o.reason||"")}" style="margin-top:6px"></div>
+  <p><b>الزاوية المقترحة:</b> ${esc(o.angle||"—")} · <b>التحضير:</b> ${occN(o.prep)} قبل</p>
+  <div class="row"><button class="btn g sm" data-act="occDraft" data-key="${esc(key)}">حوّلي إلى مسودة</button><button class="btn l sm" data-act="occTpl" data-key="${esc(key)}">اختاري قالب</button><button class="btn l sm" data-act="occShoot" data-key="${esc(key)}">أضيفي مهمة تصوير</button>${o.t==="own"?`<button class="btn d sm" data-act="occDel" data-key="${esc(key)}">احذفي المناسبة</button>`:""}</div>
+  <h3 style="margin-top:16px">النصوص والفيديو</h3>
+  <div class="fld"><label for="occCtx">شو عندك؟ (صور، أرقام مثبّتة، نشاط مخطّط…) — Claude بيكتب من هيدا بس</label><textarea class="in" id="occCtx" rows="3" placeholder="مثلاً: عنا صور تعليق الأعلام من السنة الماضية، وبدنا نصوّر الشارع الرئيسي">${esc((o.plan&&o.plan.ctx)||"")}</textarea></div>
+  <div class="row"><button class="btn o" data-act="occAI" data-key="${esc(key)}">${ai?"✦ اكتبيهم من جديد":"✦ اكتبي نصوص إنستغرام وتيك توك وفيسبوك والسيناريو"}</button></div>
+  <div id="occAIOut">${ai?occAIView(ai):`<p class="hint">${S.ai.key&&S.ai.key.trim()?"بيكتب بموديل "+esc(S.ai.model)+". كل معلومة ناقصة بتطلع [..] لحتى تثبّتيها.":"بدّو مفتاح Claude من الإعدادات. بلا مفتاح، الزر بينسخ الطلب وبيفتح Claude."}</p>`}</div>`);}
+function occAIView(a){const L=(t,v)=>v?`<div class="lbl" style="margin-top:12px">${t}</div><div class="out" style="max-height:none;white-space:pre-wrap">${esc(v)}</div>`:"";
+  const ig=a.instagram||{},tt=a.tiktok||{},fb=a.facebook||{},v=a.video||{};
+  return `<div class="card gold" style="margin-top:10px"><b>${esc(a.angle||"")}</b><p style="margin:6px 0 0">${esc(a.goal||"")}</p>
+   <p class="hint" style="margin:6px 0 0">الشكل: ${esc(a.format||"")} — ${esc(a.why_format||"")}</p>
+   ${a.ready&&a.ready.length?`<p style="margin:6px 0 0"><b>جاهز:</b> ${a.ready.map(esc).join("، ")}</p>`:""}${a.needed&&a.needed.length?`<p style="margin:4px 0 0;color:#FFE08A"><b>ناقص:</b> ${a.needed.map(esc).join("، ")}</p>`:""}
+   <p style="margin:6px 0 0"><b>سريع اليوم:</b> ${esc(a.quick||"")}</p><p style="margin:4px 0 0"><b>بتحضير:</b> ${esc(a.prepared||"")}</p></div>
+   ${L("إنستغرام — "+(ig.type||""),[ig.cover&&("الغلاف: "+ig.cover),(ig.slides||[]).map((s,i)=>`شريحة ${mhDigits(i+1)}: ${s}`).join("\n"),ig.caption&&("— الكابشن —\n"+ig.caption)].filter(Boolean).join("\n\n"))}
+   ${L("تيك توك",[tt.hook&&("الهوك (أول ثانيتين): "+tt.hook),tt.script&&("الكلام:\n"+tt.script),(tt.onscreen||[]).length&&("على الشاشة: "+tt.onscreen.join(" · ")),tt.caption&&("— الكابشن —\n"+tt.caption)].filter(Boolean).join("\n\n"))}
+   ${L("فيسبوك",[fb.title,fb.body].filter(Boolean).join("\n\n"))}
+   ${v.shots&&v.shots.length?`<div class="lbl" style="margin-top:12px">سيناريو الفيديو · ${esc(v.duration||"")}</div><div class="out" style="max-height:none;white-space:pre-wrap">${esc(["الافتتاحية: "+(v.hook||""),...v.shots.map((s,i)=>`${mhDigits(i+1)}) ${s.time||""} — ${s.shot||""}\n   يُقال: ${s.say||"—"}\n   على الشاشة: ${s.onscreen||"—"}`),"النهاية: "+(v.ending||""),"الغلاف: "+(v.cover||""),"بلا ظهور أمام الكاميرا: "+(v.no_face||""),"على أكثر من منصة: "+(v.cross_platform||"")].join("\n"))}</div>`:""}
+   <div class="row" style="margin-top:10px"><button class="btn l sm" data-act="occCopy">نسخ الكل</button></div>`;}
+const OCC_SCHEMA={type:"object",additionalProperties:false,required:["angle","goal","format","why_format","ready","needed","quick","prepared","instagram","tiktok","facebook","video"],properties:{
+  angle:{type:"string"},goal:{type:"string"},format:{type:"string"},why_format:{type:"string"},ready:{type:"array",items:{type:"string"}},needed:{type:"array",items:{type:"string"}},quick:{type:"string"},prepared:{type:"string"},
+  instagram:{type:"object",additionalProperties:false,required:["type","cover","slides","caption"],properties:{type:{type:"string"},cover:{type:"string"},slides:{type:"array",items:{type:"string"}},caption:{type:"string"}}},
+  tiktok:{type:"object",additionalProperties:false,required:["hook","script","onscreen","caption"],properties:{hook:{type:"string"},script:{type:"string"},onscreen:{type:"array",items:{type:"string"}},caption:{type:"string"}}},
+  facebook:{type:"object",additionalProperties:false,required:["title","body"],properties:{title:{type:"string"},body:{type:"string"}}},
+  video:{type:"object",additionalProperties:false,required:["duration","hook","shots","ending","cover","no_face","cross_platform"],properties:{duration:{type:"string"},hook:{type:"string"},ending:{type:"string"},cover:{type:"string"},no_face:{type:"string"},cross_platform:{type:"string"},
+    shots:{type:"array",items:{type:"object",additionalProperties:false,required:["time","shot","say","onscreen"],properties:{time:{type:"string"},shot:{type:"string"},say:{type:"string"},onscreen:{type:"string"}}}}}}}};
+function occPrompt(o,ctx){return `المناسبة: ${o.n} (${OCC_T[o.t]}) — ${mhFmtDate(o.date)}${o.end?" لحد "+mhFmtDate(o.end):""}. حالة التاريخ: ${OCC_ST[o.st]}.
+القرار التحريري: ${o.dec?DEC[o.dec]:"غير محدد — اقترح الأنسب"}. الزاوية المبدئية: ${o.angle||"-"}. الدائرة الأقرب: ${(DEPTS[o.dept]||DEPTS.general).n}.
+شو متوفر عندنا: ${ctx||"ما في معلومات إضافية"}.
+اكتب خطة نشر كاملة لصفحات ${ORG()}:
+- الزاوية والهدف وشو لازم يعرف أو يعمل الجمهور، والشكل الأنسب وليش.
+- المتوفر والناقص، وخيار سريع اليوم بالتلفون أو الأرشيف، وخيار بتحضير.
+- إنستغرام: Reel أو كاروسيل أو ستوري، نص الغلاف، الشرائح، كابشن أول سطر فيه معلومة مفيدة (أقل من ١٢٥ حرف)، ٥ هاشتاغات كحد أقصى.
+- تيك توك: افتتاحية بتنقال وبتنكتب بأول ثانيتين (أقل من ١٠ كلمات)، كلام طبيعي للتصوير، نصوص قصيرة عالشاشة، كابشن.
+- فيسبوك: عنوان واضح ونص كامل فيه المكان والتاريخ والأثر أو طريقة الاستفادة.
+- سيناريو فيديو قابل للتصوير من شخص واحد بالتلفون: المدة، الافتتاحية، اللقطات بالترتيب (الوقت، اللقطة ووين التلفون، شو بينقال، شو عالشاشة)، النهاية، الغلاف، خيار بلا ظهور أمام الكاميرا، وكيف تتغيّر الافتتاحية والمونتاج بين المنصات.
+إنستغرام وتيك توك بلهجة لبنانية خفيفة، فيسبوك بفصحى بسيطة. أي رقم أو اسم أو مكان أو وقت مش موجود فوق: حطّ مكانه [..] مع وصف قصير، متل [عدد الأعمال بعد التحقق].`;}
+
+/* ===== الأحداث ===== */
+Object.assign(ACT,{
+  calView:el=>{CALV=el.dataset.k;try{localStorage.setItem("mh-calv",CALV);}catch(e){}rerender();},
+  occFilt:el=>{OCC_FILTER[el.dataset.k]=!OCC_FILTER[el.dataset.k];rerender();},
+  calYear:el=>{const y=(CAL.m||new Date()).getFullYear()+(+el.dataset.d);CAL.m=new Date(y,0,1);rerender();},
+  calGoMonth:el=>{CAL.m=new Date(+el.dataset.y,+el.dataset.m,1);CAL.sel=iso(CAL.m);CALV="month";rerender();},
+  calWeek:el=>{CAL.sel=iso(addDays(pIso(CAL.sel||TODAY()),+el.dataset.d));CAL.m=new Date(pIso(CAL.sel).getFullYear(),pIso(CAL.sel).getMonth(),1);rerender();},
+  occOpen:el=>occSheet(el.dataset.key),
+  occDec:el=>{const k=el.dataset.key;occSet(k,{dec:el.dataset.v,reason:($("#occWhy")||{}).value||""});occSheet(k);toast("انحفظ القرار ✓");if(CUR!=="materials")rerender();},
+  occDate:el=>{const k=el.dataset.key,v=$("#occD").value;if(!mhValidDate(v))return toast("اختاري تاريخ صحيح");occSet(k,{date:v});toast("تثبّت التاريخ ✓ — التحضير تحرّك معه");occSheet(k);rerender();},
+  occNew:el=>{const d=el.dataset.date||TODAY();sheet(`<div class="ph"><b>مناسبة للجهة</b><button class="btn l sm" data-act="closeSheet">إغلاق</button></div>
+    <div class="fld"><label for="onN">الاسم</label><input class="in" id="onN" placeholder="مثلاً: حملة تنظيف الربيع، معرض الكتاب بمركز المطالعة"></div>
+    <div class="grid g2"><div class="fld"><label for="onD">التاريخ</label><input class="in" type="date" id="onD" value="${d}"></div><div class="fld"><label for="onP">أيام التحضير</label><input class="in" type="number" id="onP" value="5" min="0" max="60"></div></div>
+    <div class="fld"><label for="onA">الزاوية أو الملاحظات</label><input class="in" id="onA"></div>
+    <div class="fld"><label for="onDp">الدائرة</label><select class="in" id="onDp">${Object.keys(DEPTS).map(k=>`<option value="${k}">${DEPTS[k].n}</option>`).join("")}</select></div>
+    <label class="ck" style="border:none"><input type="checkbox" id="onR"> بتتكرّر كل سنة</label>
+    <button class="btn g w" data-act="occSaveNew">حفظ</button>`);},
+  occSaveNew:()=>{const n=$("#onN").value.trim(),d=$("#onD").value;if(!n||!mhValidDate(d))return toast("الاسم والتاريخ لازمين");
+    OS().own.push({id:"o:"+uid(),n,date:d,prep:+$("#onP").value||0,angle:$("#onA").value.trim(),dept:$("#onDp").value,repeat:$("#onR").checked,dec:"cover"});save();closeSheet();rerender();toast("انزادت المناسبة ✓");},
+  occDel:el=>{const id=el.dataset.key.split("|")[0];OS().own=OS().own.filter(o=>o.id!==id);save();closeSheet();rerender();},
+  occShoot:el=>{const o=occFind(el.dataset.key);const d=iso(addDays(pIso(o.date),-Math.max(1,o.prep||3)));const day=d<TODAY()?TODAY():d;
+    S.posts.push({id:uid(),date:day,time:"10:00",title:"تصوير: "+o.n,dept:o.dept||"news",type:"reel",plat:["ig","tt","fb"],status:"idea",caption:"",notes:`مهمة تحضير لـ«${o.n}» (${mhFmtDate(o.date)}).${o.angle?" الزاوية: "+o.angle:""}`});save();toast(`انزادت مهمة تصوير ${occWhen(occDays(day))} ✓`);if(CUR!=="materials")rerender();},
+  occDraft:el=>{const key=el.dataset.key,o=occFind(key);const p=o.plan||{};
+    if(p.materialId&&S.materials.find(m=>m.id===p.materialId)){closeSheet();MH.id=p.materialId;go("materials");return;}
+    const ai=p.ai,now=mhNow();const m={id:uid(),title:(ai&&ai.facebook&&ai.facebook.title)||o.n,dept:o.dept||"news",source:"التقويم: "+o.n+" — "+(o.src||""),sourceText:[o.n,mhFmtDate(o.date),o.angle,p.ctx].filter(Boolean).join("\n"),
+      body:(ai&&ai.facebook&&ai.facebook.body)||"",date:o.date,place:"",people:"",executor:"",limit:7,status:"inbox",checked:{},pack:null,stale:false,createdAt:now,updatedAt:now,history:[]};
+    S.materials.unshift(m);if(m.body){mhGenerate(m);if(ai){const ig=ai.instagram||{},tt=ai.tiktok||{};
+      m.pack.ig=[ig.caption,ig.cover&&("الغلاف: "+ig.cover),(ig.slides||[]).map((s,i)=>`شريحة ${i+1}: ${s}`).join("\n")].filter(Boolean).join("\n\n");
+      m.pack.tt=[`الهوك (أول ثانيتين — بينقال وبينكتب): ${tt.hook||""}`,(tt.onscreen||[]).length?"على الشاشة: "+tt.onscreen.join(" · "):"",`الكلام:\n${tt.script||""}`,`الكابشن: ${tt.caption||""}`].filter(Boolean).join("\n\n");
+      if(ai.video&&ai.video.shots)m.pack.script=[`المدة: ${ai.video.duration}`,`الافتتاحية: ${ai.video.hook}`,...ai.video.shots.map((s,i)=>`${i+1}) ${s.time} — ${s.shot} | يُقال: ${s.say} | عالشاشة: ${s.onscreen}`),`النهاية: ${ai.video.ending}`,`الغلاف: ${ai.video.cover}`,`بلا ظهور: ${ai.video.no_face}`].join("\n");
+      m.revStamp=mhNormStamp(m)+mhPackStamp(m);}}
+    occSet(key,{materialId:m.id,dec:o.dec||o.dec||null});mhSave();closeSheet();MH.id=m.id;go("materials");toast(m.body?"انعملت المسودة مع النصوص ✓":"انعملت المسودة — كمّلي التفاصيل وجهّزي الحزمة");},
+  occTpl:el=>{const o=occFind(el.dataset.key);closeSheet();
+    if(o.dec==="greet"||(!o.dec&&o.t!=="world"&&o.t!=="season"&&o.t!=="own")){const kind=/استقلال|تحرير|عمّال/.test(o.n)?"national":"greet";OC=Object.assign({},OC,{kind,t:o.n,s:kind==="national"?mhFmtDate(o.date).split(" ").slice(1).join(" "):OC.s});go("posts#occ");return;}
+    MH.designFor=null;go("app/templates/studio");
+    const tpl=o.t==="own"||o.dec==="cover"?(o.dept==="act"?"events":(DEPTS[o.dept]?(["works","police","health","news"].includes(o.dept)?o.dept:"news"):"news")):"statement";
+    const tryFill=()=>{const f=frames.templates;if(!f||!f.contentWindow.mhTemplateRestore)return setTimeout(tryFill,300);f.contentWindow.mhTemplateRestore({tpl,title:o.n,sub:o.angle||"",date:o.date,place:"",time:""});};setTimeout(tryFill,600);},
+  occAI:async el=>{const key=el.dataset.key,o=occFind(key),ctx=($("#occCtx")||{}).value||"";occSet(key,{ctx});const prompt=occPrompt(o,ctx);
+    if(!S.ai.key||!S.ai.key.trim()){openClaude(prompt+"\n\nرتّب الجواب بعناوين واضحة لكل منصة.");return;}
+    el.disabled=true;el.textContent="عم يكتب… (دقيقة تقريباً)";
+    try{const t=await callClaude(prompt,{schema:OCC_SCHEMA,max:12000});let a;try{a=JSON.parse(t.slice(t.indexOf("{"),t.lastIndexOf("}")+1));}catch(_){throw new Error("الجواب ما وصل كامل. جرّبي مرة تانية.");}occSet(key,{ai:a,aiAt:mhNow()});
+      $("#occAIOut").innerHTML=occAIView(a);el.textContent="✦ اكتبيهم من جديد";toast("جاهزين ✓ — راجعي كل [..] قبل النشر");}
+    catch(e){$("#occAIOut").innerHTML=`<div class="note" style="border-color:rgba(229,84,43,.5)">ما زبط: ${esc(e.message)}</div>`;el.textContent="✦ جرّبي مرة تانية";}
+    finally{el.disabled=false;}},
+  occCopy:()=>copy($("#occAIOut").innerText,"انتسخت النصوص ✓")
+});
+/* «افتحي المادة» من بطاقة اليوم */
+document.addEventListener("click",e=>{const b=e.target.closest("[data-go2]");if(b){setTimeout(()=>go(b.dataset.go2),0);}},true);
+/* الإعدادات: بطاقة التثبيت */
+const _setR3=SECS.settings.r;SECS.settings.r=function(root){_setR3(root);const c=$("#appStoreCard");if(c)mhInstallBox(c);};
+if(["today","calendar","settings"].includes(CUR))route();
 </script>
 </body>
 </html>
