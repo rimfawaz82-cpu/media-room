@@ -2315,5 +2315,140 @@ const _occSheet=occSheet;occSheet=function(key){_occSheet(key);const r=document.
 const _sugCard=sugCard;sugCard=function(s,i){let h=_sugCard(s,i);if(s.o)h=h.replace(`<button class="btn g sm" data-act="occDraft"`,`<button class="btn g sm" data-act="occDesign" data-key="${esc(s.o.key)}">🎨 صمّمي الصورة</button><button class="btn l sm" data-act="occDraft"`);return h;};
 if(CUR==="today")route();
 </script>
+<script>
+/* ===== المصمّم: Claude بيصمّم المنشور كامل بهوية البلدية، والتطبيق بيفحص وبيصدّر PNG ===== */
+const DZ_TYPES={aware:"بوست توعوي",greet:"تهنئة بمناسبة",news:"خبر أو تغطية",service:"إعلان خدمة",urgent:"تنويه عاجل",numbers:"أرقام وإنجازات",invite:"دعوة لنشاط",condole:"تعزية"};
+const DZ_SIZES={wa:[1080,1350,"بوست 4:5"],ig34:[1080,1440,"إنستغرام 3:4"],st:[1080,1920,"ستوري 9:16"],sq:[1080,1080,"مربّع 1:1"]};
+const DZ={type:"aware",topic:"",facts:"",style:"",size:"wa",photo:null,busy:false,results:[],err:""};
+const DZ_FONTS={"Cairo":"Cairo:wght@400;500;600;700;800;900","Reem Kufi":"Reem+Kufi:wght@400;500;600;700","Aref Ruqaa":"Aref+Ruqaa:wght@400;700","Amiri":"Amiri:wght@400;700","El Messiri":"El+Messiri:wght@400;500;600;700","Noto Naskh Arabic":"Noto+Naskh+Arabic:wght@400;500;600;700"};
+
+/* ---- تعليمات التصميم لـ Claude: الهوية، الشبكة، والممنوعات ---- */
+function dzBrief(){const pal=S.settings.palette;const C=pal?{dark:pal.dark,deep:pal.deep,primary:pal.primary,accent:pal.accent}:{dark:"#0C3A1B",deep:"#1D6B32",primary:"#2E9144",accent:"#F5CE3A"};
+return `أنت مدير فني أول لصفحات ${ORG()} (لبنان)، خبير بالطباعة العربية وتصميم منشورات المؤسسات الرسمية. صمّم منشورات احترافية تُنشر كما هي — بمستوى استوديو تصميم، وليس قالباً عاماً ولا شكلاً مولَّداً.
+
+الهوية (إلزامية):
+- الألوان: أخضر غامق ${C.dark}، أخضر ${C.deep}، أخضر فاتح ${C.primary}، ذهبي ${C.accent} (لمسة فقط، لا مساحات كبيرة)، عاجي #FBF8EC، فحمي #262521، برتقالي #E5542B (نادراً). ألوان الدوائر: الأشغال #E5542B، الشرطة #1B4F9C، المفرزة الصحية #0E8A7E، الأخبار #13233F، النشاطات #2E9144. لون من خارج هذه القائمة مسموح فقط إذا كان رمزاً معروفاً للموضوع (مثل أزرق اليوم العالمي للسكري #1E73BE) وبمساحة محدودة.
+- الخطوط (إلا إذا المستخدمة طلبت خطوطاً أخرى من Google Fonts فاستعملها بالاسم الدقيق): Cairo (العناوين والنص)، Reem Kufi (عناوين وطنية/هندسية)، Aref Ruqaa أو Amiri (التهاني والمناسبات الدينية فقط)، El Messiri، Noto Naskh Arabic (فقرات رسمية). خطّان كحد أقصى في التصميم الواحد.
+- الشعار: <img src="{{LOGO}}"> دائماً، عرضه لا يقل عن 110px، على خلفية فاتحة أو داخل دائرة بيضاء إذا كانت الخلفية غامقة. لا تقصّه ولا تغيّر ألوانه. ومعه اسم «${ORG()}».
+
+التكوين:
+- اللوحة بالحجم المطلوب بالضبط بالبكسل. هوامش أمان 72px من كل الجهات؛ وفي الستوري 9:16 لا نص ولا شعار في أعلى 250px وأسفل 260px.
+- نقطة دخول واحدة واضحة للعين، ثم تسلسل: العنوان ← المعلومة الأهم ← التفاصيل ← التوقيع.
+- العنوان ٨ كلمات كحد أقصى وحجمه بين 72 و140px. لا نص أصغر من 26px.
+- الرسومات: أشكال هندسية ورموز مرسومة بـ <svg> داخلي بسيط ومتقن مرتبط بالموضوع (أيقونة مخصّصة، زخرفة، رقم كبير، خطوط). ممنوع: الإيموجي، الصور الوهمية، التدرّجات الصارخة، الظلال الثقيلة، الزخرفة العشوائية، الكليشيهات (لمبة، علامة تعجب ضخمة، أيادٍ متصافحة).
+- الأرقام بالعربية (١٢) إلا داخل نص إنكليزي. التواريخ: «السبت ١٤ تشرين الثاني».
+- اتجاه RTL: dir="rtl" على العنصر الأساسي.
+
+المحتوى:
+- استعمل فقط المعلومات المعطاة. ممنوع اختراع رقم أو اسم أو تاريخ أو مكان أو وقت أو رقم هاتف. إذا معلومة ضرورية ناقصة، اكتب [..] مكانها مع وصف قصير (التطبيق يمنع النشر حتى تُعبّأ).
+- لغة: فصحى بسيطة واضحة للرسمي، ويمكن لهجة لبنانية خفيفة للتوعية والتفاعل.
+
+التقنية (صارمة):
+- كل تصميم = عنصر <div> واحد فيه <style> داخلي خاص به (استعمل class مسبوقة باسم فريد لكل تصميم)، والعنصر الجذر بالعرض والارتفاع المطلوبين، position:relative; overflow:hidden.
+- ممنوع: <script>، أي رابط خارجي، @import، صور من الإنترنت. الصورة الوحيدة المسموحة {{LOGO}} و{{PHOTO}} (فقط إذا قيل إن هناك صورة)، وimg للصورة: object-fit:cover.
+- النص بعناصر HTML عادية (يلتفّ تلقائياً)، لا تكتب النص داخل SVG.
+- أي عنصر زخرفي بيطلع عن حدود اللوحة عن قصد (رقم ضخم، شكل): حطّ عليه aria-hidden="true". كل النصوص المقروءة لازم تبقى كاملة داخل هوامش الأمان.
+
+أعطِ ٣ تصاميم باتجاهات فنية مختلفة فعلاً:
+١) طباعي جريء: الكلمات هي التصميم، شبكة قوية، مساحة بيضاء.
+٢) غرافيكي: رمز أو رسم SVG مخصّص للموضوع يحمل الفكرة.
+٣) ${DZ.photo?"قائم على الصورة المرفقة بمعالجة تحريرية":"معلوماتي: خطوات أو نقاط مرقّمة بأيقونات صغيرة مرسومة"}.
+لكل تصميم: اسم قصير، وجملة تشرح الفكرة الفنية.`;}
+const DZ_SCHEMA={type:"object",additionalProperties:false,required:["designs"],properties:{designs:{type:"array",items:{type:"object",additionalProperties:false,required:["name","concept","html"],properties:{name:{type:"string"},concept:{type:"string"},html:{type:"string"}}}}}};
+
+/* ---- تنظيف الكود: ما بيدخل غير HTML وCSS وصور data: ---- */
+function dzClean(html){const doc=new DOMParser().parseFromString(`<body>${html}</body>`,"text/html");
+  doc.querySelectorAll("script,iframe,object,embed,link,meta,base,form,input,button").forEach(e=>e.remove());
+  doc.querySelectorAll("*").forEach(e=>{[...e.attributes].forEach(a=>{const n=a.name.toLowerCase(),v=a.value;if(n.startsWith("on"))e.removeAttribute(a.name);
+    if((n==="src"||n==="href"||n==="xlink:href")&&!/^(\{\{(LOGO|PHOTO)\}\}|data:image\/|#)/.test(v.trim()))e.removeAttribute(a.name);});});
+  let out=doc.body.innerHTML.replace(/@import[^;]+;/g,"").replace(/url\(\s*['"]?(?!data:|#)[^)]*\)/g,"none");
+  return out;}
+const dzFill=html=>html.split("{{LOGO}}").join(logoSrc()).split("{{PHOTO}}").join(DZ.photo||"");
+
+/* ---- الخطوط مضمّنة جوّا التصميم حتى الصورة تطلع بنفس الخط ---- */
+const _dzFontCache={};
+const DZ_GENERIC=/^(sans-serif|serif|monospace|system-ui|inherit|initial|cursive|fantasy|-apple-system|arial|helvetica|tahoma|segoe ui)$/i;
+function dzFamilies(html){const set=new Set(["Cairo"]);(html.match(/font-family\s*:\s*[^;}"<]+(?:"[^"]*"[^;}<]*)*/gi)||[]).forEach(d=>d.replace(/font-family\s*:/i,"").split(",").forEach(f=>{f=f.replace(/&quot;|["']/g,"").replace(/!important/,"").trim();if(f&&!DZ_GENERIC.test(f)&&/^[A-Za-z0-9 ]+$/.test(f))set.add(f);}));return [...set];}
+async function dzFontCSS(html){const used=dzFamilies(html).sort(),key=used.join("|");if(_dzFontCache[key])return _dzFontCache[key];
+  const parts=await Promise.all(used.map(async f=>{const q=DZ_FONTS[f]||f.replace(/ /g,"+")+":wght@400;700";
+    let css="";try{let r=await fetch("https://fonts.googleapis.com/css2?family="+q+"&display=block");if(!r.ok)r=await fetch("https://fonts.googleapis.com/css2?family="+f.replace(/ /g,"+")+"&display=block");if(r.ok)css=await r.text();}catch(e){}
+    const blocks=css.split("@font-face").slice(1).map(b=>"@font-face"+b.slice(0,b.indexOf("}")+1)).filter(b=>/U\+06|U\+0000-00FF|U\+0000-00ff/.test(b)||!/unicode-range/.test(b));
+    return (await Promise.all(blocks.map(async b=>{const m=b.match(/url\((https:[^)]+)\)/);if(!m)return "";try{const r=await fetch(m[1]+"?dz=1");const u=new Uint8Array(await r.arrayBuffer());let s="";for(let i=0;i<u.length;i+=32768)s+=String.fromCharCode.apply(null,u.subarray(i,i+32768));return b.replace(m[0],`url(data:font/woff2;base64,${btoa(s)})`);}catch(e){return "";}}))).join("\n");}));
+  return _dzFontCache[key]=parts.join("\n");}
+
+/* ---- العرض والفحص ---- */
+function dzDoc(html,W,H,fontCSS){return `<!doctype html><html dir="rtl"><head><meta charset="utf-8"><style>${fontCSS||""}html,body{margin:0;padding:0;background:transparent}body{width:${W}px;height:${H}px;overflow:hidden;font-family:Cairo,sans-serif}</style></head><body>${html}</body></html>`;}
+function dzFrame(html,W,H,fontCSS){const f=document.createElement("iframe");f.setAttribute("sandbox","allow-same-origin");f.style.cssText=`width:${W}px;height:${H}px;border:0;transform-origin:top right;position:absolute;top:0;right:0`;f.srcdoc=dzDoc(dzFill(html),W,H,fontCSS);return f;}
+function dzCheck(doc,W,H,story){const iss=[],root=doc.body.firstElementChild;if(!root)return ["التصميم فاضي"];
+  const R={l:0,t:0,r:W,b:H};let out=0,small=0,zone=0;
+  doc.body.querySelectorAll("*").forEach(e=>{if(e.closest("[aria-hidden='true']")||parseFloat(doc.defaultView.getComputedStyle(e).opacity)<.5)return;const own=[...e.childNodes].some(n=>n.nodeType===3&&n.nodeValue.trim());if(!own&&e.tagName!=="IMG")return;const r=e.getBoundingClientRect();if(!r.width)return;
+    if(r.left<R.l-1||r.top<R.t-1||r.right>R.r+1||r.bottom>R.b+1)out++;
+    if(own){const fs=parseFloat(doc.defaultView.getComputedStyle(e).fontSize);if(fs<22)small++;if(e.scrollWidth>e.clientWidth+2&&doc.defaultView.getComputedStyle(e).overflow!=="visible")out++;}
+    if(story&&own&&(r.top<250||r.bottom>H-260))zone++;});
+  if(out)iss.push("في نص أو عنصر طالع برّا الصورة أو مقصوص");if(small)iss.push("في نص صغير كتير على التلفون");if(zone)iss.push("في نص تحت أزرار الستوري");
+  if(/\[[^\]]*\]/.test(doc.body.innerText))iss.push("في معلومة ناقصة بين [..]");if(!doc.querySelector("img"))iss.push("الشعار مش موجود");return iss;}
+async function dzPNG(doc,W,H,fontCSS){const clone=doc.body.cloneNode(true);const xhtml=new XMLSerializer().serializeToString(clone).replace(/^<body/,"<div").replace(/<\/body>$/,"</div>");
+  const svg=`<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}"><foreignObject width="100%" height="100%"><style xmlns="http://www.w3.org/1999/xhtml">${fontCSS}div{direction:rtl}</style>${xhtml.replace("<div",`<div style="width:${W}px;height:${H}px;overflow:hidden;font-family:Cairo,sans-serif" dir="rtl"`)}</foreignObject></svg>`;
+  const img=new Image();img.src="data:image/svg+xml;charset=utf-8,"+encodeURIComponent(svg);await img.decode();await new Promise(r=>setTimeout(r,120));
+  const c=document.createElement("canvas");c.width=W;c.height=H;c.getContext("2d").drawImage(img,0,0);return await new Promise(r=>c.toBlob(r,"image/png"));}
+
+/* ---- الشاشة ---- */
+function rDesign(m){const [W,H]=DZ_SIZES[DZ.size];const hasKey=!!(S.ai.key&&S.ai.key.trim());
+  m.innerHTML=`<h1 class="h">المصمّم <em>✦</em></h1>
+  <p class="lede">اكتبي شو بدك تنشري، وClaude بيصمّم ٣ منشورات كاملة بهوية ${esc(ORG())}. بتعدّلي بالكلام أو مباشرة على التصميم، وبتنزّلي الصورة.</p>
+  ${hasKey?"":`<div class="note" style="margin-bottom:14px">المصمّم بيحتاج مفتاح Claude. حطّيه من <a href="#settings" style="color:var(--gold)">الإعدادات</a>.</div>`}
+  <div class="card gold">
+    <div class="fld"><span class="lbl">نوع المنشور</span><div class="tog">${Object.entries(DZ_TYPES).map(([k,v])=>`<button type="button" data-act="dzType" data-k="${k}" aria-pressed="${DZ.type===k}">${v}</button>`).join("")}</div></div>
+    <div class="fld"><label for="dzTopic">الموضوع (شو بدك توصلي؟)</label><textarea class="in" id="dzTopic" rows="2" placeholder="مثلاً: ما ترموا النفايات قبل الساعة ٨ المسا — الحارة أنضف">${esc(DZ.topic)}</textarea></div>
+    <div class="fld"><label for="dzFacts">المعلومات المثبّتة (مواعيد، أرقام، مكان، رقم تواصل) — بس هيدي بتنكتب</label><textarea class="in" id="dzFacts" rows="3" placeholder="مثلاً: الشاحنة بتمرق كل يوم الساعة ٩ المسا. الشكاوى على الرقم [..]">${esc(DZ.facts)}</textarea></div>
+    <div class="fld"><label for="dzStyle">تعليماتك للمصمّم (اختياري) — الأسلوب، الألوان، الخطوط، شو بدك يبيّن</label><textarea class="in" id="dzStyle" rows="2" placeholder="مثلاً: خط Tajawal للعنوان وAmiri للنص، خلفية بيضا، رسمة شاحنة نفايات بسيطة، العنوان كبير بالنص">${esc(DZ.style)}</textarea></div>
+    <div class="fld"><span class="lbl">المقاس</span><div class="seg">${Object.entries(DZ_SIZES).map(([k,v])=>`<button data-act="dzSize" data-k="${k}" aria-pressed="${DZ.size===k}">${v[2]}</button>`).join("")}</div></div>
+    <div class="row"><label class="btn l sm" for="dzPh">${DZ.photo?"غيّري الصورة":"+ صورة (اختياري)"}</label>${DZ.photo?`<button class="btn d sm" data-act="dzNoPh">شيلي الصورة</button>`:""}<input type="file" id="dzPh" accept="image/*" hidden></div>
+    <div class="row" style="margin-top:12px"><button class="btn g" data-act="dzGo" ${DZ.busy||!hasKey?"disabled":""}>${DZ.busy?"عم يصمّم… (دقيقة أو دقيقتين)":"✦ صمّمي ٣ منشورات"}</button></div>
+    ${DZ.err?`<div class="note" style="margin-top:10px;border-color:rgba(229,84,43,.5)">ما زبط: ${esc(DZ.err)}</div>`:""}
+  </div>
+  <div id="dzOut" class="grid g3" style="margin-top:16px">${DZ.results.map((r,i)=>`<div class="card" style="padding:10px"><div class="dzv" data-i="${i}" style="position:relative;width:100%;aspect-ratio:${W}/${H};overflow:hidden;border-radius:10px;background:#0003"></div>
+    <b style="display:block;margin-top:8px">${esc(r.name)}</b><p class="hint" style="margin:2px 0 6px">${esc(r.concept)}</p><div class="hint" data-dzw="${i}" style="margin:0 0 8px">عم يفحص…</div>
+    <div class="row"><button class="btn g sm" data-act="dzDl" data-i="${i}">نزّلي PNG</button><button class="btn l sm" data-act="dzEdit" data-i="${i}">عدّلي النص</button></div>
+    <div class="row" style="margin-top:6px;flex-wrap:nowrap"><input class="in" data-dzfix="${i}" placeholder="شو بدك يتغيّر؟ كبّري العنوان، خط Tajawal، خلفية بيضا…" style="font-size:14px"><button class="btn o sm" data-act="dzFix" data-i="${i}" style="flex:0 0 auto">✦</button></div></div>`).join("")}</div>
+  <h2 class="s">تصاميمي</h2><div class="list" id="dzMine">${(S.dz||[]).slice(0,30).map(d=>`<button class="item" data-act="dzOpen" data-id="${esc(d.id)}" style="grid-template-columns:1fr"><span><b>${esc(d.name)} — ${esc(d.topic.slice(0,40))}</b><span class="meta"><span class="chip">${esc(DZ_TYPES[d.type]||"")}</span><span class="chip">${esc(DZ_SIZES[d.size][2])}</span><span class="chip">${mhFmtDate(d.at.slice(0,10))}</span></span></span></button>`).join("")||'<div class="empty">التصاميم يلي بتعجبك بتنحفظ هون تلقائياً.</div>'}</div>`;
+  $("#dzTopic").oninput=e=>DZ.topic=e.target.value;$("#dzFacts").oninput=e=>DZ.facts=e.target.value;$("#dzStyle").oninput=e=>DZ.style=e.target.value;
+  $("#dzPh").onchange=e=>{const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=()=>{const im=new Image();im.onload=()=>{const s=Math.min(1,1600/Math.max(im.width,im.height)),c=document.createElement("canvas");c.width=im.width*s;c.height=im.height*s;c.getContext("2d").drawImage(im,0,0,c.width,c.height);DZ.photo=c.toDataURL("image/jpeg",.86);rerender();};im.src=r.result;};r.readAsDataURL(f);};
+  dzPaint();}
+async function dzPaint(){const [W,H]=DZ_SIZES[DZ.size];for(const box of document.querySelectorAll(".dzv")){const i=+box.dataset.i,r=DZ.results[i];if(!r)continue;
+  let css="";try{css=await dzFontCSS(r.html);}catch(e){}r.css=css;const f=dzFrame(r.html,W,H,css);box.innerHTML="";box.append(f);
+  const sc=()=>{f.style.transform=`scale(${box.clientWidth/W})`;};sc();
+  f.onload=async()=>{try{await f.contentDocument.fonts.ready;}catch(e){}setTimeout(()=>{const iss=dzCheck(f.contentDocument,W,H,DZ.size==="st");r.issues=iss;const w=document.querySelector(`[data-dzw="${i}"]`);
+    if(w){w.textContent=iss.length?"⚠ "+iss.join("، "):"✓ جاهز للنشر";w.style.color=iss.length?"#FF9C84":"#9fe0b0";}r.frame=f;},250);};}}
+async function dzAsk(prompt){const t=await callClaude(prompt,{schema:DZ_SCHEMA,max:16000});const j=JSON.parse(t.slice(t.indexOf("{"),t.lastIndexOf("}")+1));
+  return (j.designs||[]).map(d=>({name:d.name,concept:d.concept,html:dzClean(d.html)}));}
+function dzSave(r){S.dz=S.dz||[];const id=r.id||uid();r.id=id;const meta={id,name:r.name,topic:DZ.topic,type:DZ.type,size:DZ.size,at:new Date().toISOString()};S.dz=[meta].concat(S.dz.filter(x=>x.id!==id)).slice(0,200);save();
+  mhPut("dz:"+id,{...meta,concept:r.concept,html:r.html,photo:DZ.photo,facts:DZ.facts}).catch(()=>{});}
+Object.assign(ACT,{
+  dzType:el=>{DZ.type=el.dataset.k;rerender();},dzSize:el=>{DZ.size=el.dataset.k;rerender();},dzNoPh:()=>{DZ.photo=null;rerender();},
+  dzGo:async()=>{if(!DZ.topic.trim())return toast("اكتبي الموضوع أول");const [W,H]=DZ_SIZES[DZ.size];DZ.busy=true;DZ.err="";rerender();
+    try{DZ.results=await dzAsk(`${dzBrief()}\n\n———\nالمطلوب: ${DZ_TYPES[DZ.type]}\nالمقاس: ${W}×${H}px (${DZ_SIZES[DZ.size][2]})\nالموضوع: ${DZ.topic}\nالمعلومات المثبّتة: ${DZ.facts||"لا شيء — لا تضع أي تفاصيل محددة"}\n${DZ.photo?"في صورة مرفقة: استعمل {{PHOTO}}.":"ما في صورة."}\nاليوم: ${mhFmtDate(TODAY())}${DZ.style.trim()?"\n\nتعليمات المستخدمة (أولوية فوق قواعد الأسلوب والخطوط والألوان، ما عدا الشعار وعدم اختراع المعلومات والقواعد التقنية): "+DZ.style:""}`);
+      DZ.results.forEach(dzSave);}catch(e){DZ.err=e.message;}DZ.busy=false;rerender();},
+  dzFix:async el=>{const i=+el.dataset.i,r=DZ.results[i],q=(document.querySelector(`[data-dzfix="${i}"]`)||{}).value||"";if(!q.trim())return toast("اكتبي شو بدك يتغيّر");const [W,H]=DZ_SIZES[DZ.size];
+    el.disabled=true;el.textContent="…";try{const [d]=await dzAsk(`${dzBrief()}\n\n———\nعدّل هذا التصميم (${W}×${H}px) حسب طلب المستخدمة بالضبط — طلبها أولوية فوق قواعد الأسلوب والخطوط والألوان (يمكن استعمال أي خط من Google Fonts تسمّيه)، مع الحفاظ على الشعار والمعلومات والقواعد التقنية. أعطِ تصميماً واحداً فقط في المصفوفة.\nالطلب: ${q}\n${r.issues&&r.issues.length?"وصلّح هالمشاكل: "+r.issues.join("، "):""}\nالتصميم الحالي:\n${r.html}`);
+      if(d){d.id=r.id;DZ.results[i]=d;dzSave(d);}rerender();toast("تعدّل ✓");}catch(e){toast("ما زبط: "+e.message);el.disabled=false;el.textContent="✦";}},
+  dzEdit:el=>{const r=DZ.results[+el.dataset.i];if(!r||!r.frame)return;const d=r.frame.contentDocument;const on=d.designMode!=="on";d.designMode=on?"on":"off";el.textContent=on?"خلّصت ✓":"عدّلي النص";
+    if(on){toast("اكبسي على أي كلمة بالتصميم وعدّليها");}else{const root=d.body.firstElementChild;r.html=root.outerHTML.split(logoSrc()).join("{{LOGO}}").split(DZ.photo||"\u0000").join("{{PHOTO}}");dzSave(r);dzPaint();}},
+  dzDl:async el=>{const i=+el.dataset.i,r=DZ.results[i];if(!r||!r.frame)return toast("استني يخلص العرض");const [W,H]=DZ_SIZES[DZ.size];
+    const iss=dzCheck(r.frame.contentDocument,W,H,DZ.size==="st");if(iss.length)return toast("قبل التنزيل: "+iss[0]);
+    try{const b=await dzPNG(r.frame.contentDocument,W,H,r.css||"");saveBlob(b,`${(DZ.topic||"تصميم").slice(0,30).replace(/[\\/:*?"<>|\s]+/g,"-")}_${DZ_SIZES[DZ.size][2].split(" ")[1].replace(":","x")}.png`);toast("نزلت الصورة ✓");}catch(e){toast("ما قدرت صدّر الصورة: "+e.message);}},
+  dzOpen:async el=>{try{const d=await mhGet("dz:"+el.dataset.id);if(!d)return toast("ما لقيت التصميم");Object.assign(DZ,{type:d.type,size:d.size,topic:d.topic,facts:d.facts||"",photo:d.photo||null,results:[{id:d.id,name:d.name,concept:d.concept,html:d.html}]});rerender();window.scrollTo(0,0);}catch(e){toast("ما قدرت افتح التصميم");}}
+});
+SECS.design={t:"المصمّم",r:rDesign};
+/* مداخل المصمّم: القائمة، اليوم، المناسبة، والمادة */
+const _menuR5=SECS.menu.r;SECS.menu.r=function(root){_menuR5(root);root.querySelector(".grid").insertAdjacentHTML("afterbegin",tile("posts","المصمّم ✦","Claude بيصمّم المنشور كامل بالهوية","design"));};
+const _todayR5=SECS.today.r;SECS.today.r=function(root){_todayR5(root);const r=root.querySelector(".hero .row");if(r)r.insertAdjacentHTML("afterbegin",`<button class="btn g" data-go="design">🎨 صمّمي منشور</button>`);};
+function dzFromOcc(o){const d=dsKindOf(o);DZ.type=d==="notice"?"aware":"greet";DZ.topic=`${o.n} — ${mhFmtDate(o.date)}${o.angle?" · "+o.angle:""}`;DZ.facts=(o.plan&&o.plan.ctx)||"";DZ.results=[];go("design");}
+ACT.occDesign=el=>{const o=occFind(el.dataset.key);closeSheet();dzFromOcc(o);};
+const _mhRender5=mhRender;mhRender=function(root){_mhRender5(root);const m=mhCurrent();if(!m)return;const bar=[...root.querySelectorAll(".mh-toolbar")].find(t=>t.querySelector('[data-mh="studio"]'));
+  if(bar&&!bar.querySelector('[data-act="dzMat"]'))bar.insertAdjacentHTML("afterbegin",`<button class="btn g" data-act="dzMat">🎨 صمّمي من المادة</button>`);};
+ACT.dzMat=()=>{const m=mhCurrent();DZ.type=m.dept==="official"?"urgent":"news";DZ.topic=m.title;DZ.facts=[m.body,m.place&&"المكان: "+m.place,mhValidDate(m.date)&&"التاريخ: "+mhFmtDate(m.date),m.executor&&"الجهة: "+m.executor].filter(Boolean).join("\n");DZ.results=[];go("design");};
+if(location.hash==="#design"||CUR==="today"||CUR==="menu")route();
+</script>
 </body>
 </html>
