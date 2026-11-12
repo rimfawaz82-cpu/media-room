@@ -2450,5 +2450,149 @@ const _mhRender5=mhRender;mhRender=function(root){_mhRender5(root);const m=mhCur
 ACT.dzMat=()=>{const m=mhCurrent();DZ.type=m.dept==="official"?"urgent":"news";DZ.topic=m.title;DZ.facts=[m.body,m.place&&"المكان: "+m.place,mhValidDate(m.date)&&"التاريخ: "+mhFmtDate(m.date),m.executor&&"الجهة: "+m.executor].filter(Boolean).join("\n");DZ.results=[];go("design");};
 if(location.hash==="#design"||CUR==="today"||CUR==="menu")route();
 </script>
+<script>
+/* ===== مجلة «حارتنا» السنوية: فلترة أعمال السنة ← تصميم مجلة جاهز للطباعة (PDF A4 مع زيادة قص) ===== */
+const MAG={year:new Date().getFullYear(),dept:"all",status:"pub",q:"",busy:false};
+const MAGS=()=>{S.mag=S.mag||{};const y=String(MAG.year);S.mag[y]=S.mag[y]||{inc:{},feat:{},cover:null,editorial:"",editorialBy:"رئيس بلدية حارة حريك",ai:null};return S.mag[y];};
+const magYearOf=m=>mhValidDate(m.date)?+m.date.slice(0,4):+(m.createdAt||"").slice(0,4);
+function magItems(){const st=MAGS();return (S.materials||[]).filter(m=>magYearOf(m)===MAG.year).map(m=>({m,inc:st.inc[m.id]!==undefined?st.inc[m.id]:["published","ready"].includes(m.status),feat:!!st.feat[m.id]}));}
+async function magPhotos(){const rows=await mhEntries(MH_DB),by={};for(const [k,v] of rows)if(String(k).startsWith("asset:")&&v&&v.type&&v.type.startsWith("image/")){(by[v.materialId]=by[v.materialId]||[]).push({key:k,blob:v.blob,name:v.name});}return by;}
+let MAG_PH={},MAG_URLS=[];
+async function magLoadPhotos(){MAG_URLS.forEach(URL.revokeObjectURL);MAG_URLS=[];const by=await magPhotos();MAG_PH={};for(const id in by)MAG_PH[id]=by[id].map(p=>{const u=URL.createObjectURL(p.blob);MAG_URLS.push(u);return {...p,url:u};});}
+function rMag(m){const st=MAGS(),all=magItems();const years=[...new Set((S.materials||[]).map(magYearOf).filter(Boolean).concat([new Date().getFullYear()]))].sort((a,b)=>b-a);
+  const vis=all.filter(x=>(MAG.dept==="all"||x.m.dept===MAG.dept)&&(MAG.status==="all"||(MAG.status==="pub"?["published","ready"].includes(x.m.status):x.m.status===MAG.status))&&(!MAG.q||mhNorm([x.m.title,x.m.body,x.m.place].join(" ")).includes(mhNorm(MAG.q))));
+  const inc=all.filter(x=>x.inc),photos=inc.reduce((a,x)=>a+((MAG_PH[x.m.id]||[]).length),0);
+  const byMonth={};vis.forEach(x=>{const k=(x.m.date||x.m.createdAt||"").slice(0,7);(byMonth[k]=byMonth[k]||[]).push(x);});
+  m.innerHTML=`<h1 class="h">مجلة <em>حارتنا</em></h1>
+  <p class="lede">كل الأعمال يلي بتسجّليها طول السنة بتتجمّع هون. فلتري، علّمي المميّز، اختاري الغلاف — وبيطلع تصميم مجلة كامل جاهز للمطبعة (PDF، A4 مع زيادة قص ٣ ملم).</p>
+  <div class="card gold"><div class="row" style="justify-content:space-between"><div class="seg">${years.map(y=>`<button data-act="magYear" data-y="${y}" aria-pressed="${MAG.year===y}">${mhDigits(y)}</button>`).join("")}</div></div>
+    <div class="grid g4" style="margin-top:12px"><div class="stat"><b>${mhDigits(all.length)}</b><span>مادة بالسنة</span></div><div class="stat"><b>${mhDigits(inc.length)}</b><span>داخلة بالمجلة</span></div><div class="stat"><b>${mhDigits(Object.values(st.feat).filter(Boolean).length)}</b><span>مميّزة</span></div><div class="stat"><b>${mhDigits(photos)}</b><span>صورة</span></div></div></div>
+  <h2 class="s">الفلترة</h2>
+  <div class="tog" style="margin-bottom:8px"><button type="button" data-act="magDept" data-k="all" aria-pressed="${MAG.dept==="all"}">كل الدوائر</button>${Object.keys(DEPTS).map(k=>`<button type="button" data-act="magDept" data-k="${k}" aria-pressed="${MAG.dept===k}">${DEPTS[k].n}</button>`).join("")}</div>
+  <div class="seg" style="margin-bottom:8px">${[["pub","منشورة وجاهزة"],["all","كل الحالات"]].map(([k,l])=>`<button data-act="magSt" data-k="${k}" aria-pressed="${MAG.status===k}">${l}</button>`).join("")}</div>
+  <input class="in" id="magQ" placeholder="ابحثي بالعنوان أو المكان…" value="${esc(MAG.q)}" style="margin-bottom:10px">
+  <div class="row" style="margin-bottom:10px"><button class="btn l sm" data-act="magAll" data-v="1">ضمّي كل يلي ظاهر</button><button class="btn l sm" data-act="magAll" data-v="0">شيلي كل يلي ظاهر</button></div>
+  ${Object.keys(byMonth).sort().map(k=>`<div class="lbl" style="margin:14px 0 6px">${k?MON[+k.slice(5,7)-1]:"بلا تاريخ"}</div><div class="list">${byMonth[k].map(x=>`<div class="item" style="grid-template-columns:auto 1fr auto;cursor:default">
+     <input type="checkbox" data-mag-inc="${esc(x.m.id)}" ${x.inc?"checked":""} aria-label="ضمّ للمجلة" style="width:22px;height:22px">
+     <span><b>${esc(x.m.title||"بلا عنوان")}</b><span class="meta"><span class="chip"><i style="background:${deptDot(x.m.dept)}"></i>${(DEPTS[x.m.dept]||DEPTS.general).n}</span><span class="chip">${MH_STATUS[x.m.status]||""}</span><span class="chip">${mhDigits((MAG_PH[x.m.id]||[]).length)} صورة</span></span></span>
+     <button class="btn ${x.feat?"g":"l"} sm" data-act="magFeat" data-id="${esc(x.m.id)}">${x.feat?"★ مميّزة":"☆ مميّزة"}</button></div>`).join("")}</div>`).join("")||`<div class="empty">ما في مواد بسنة ${mhDigits(MAG.year)}${MAG.status==="pub"?" منشورة أو جاهزة":""}. كل مادة بتعمليها من «المواد» بتطلع هون.</div>`}
+  <h2 class="s">الغلاف</h2>
+  <div class="grid" style="grid-template-columns:repeat(auto-fill,minmax(96px,1fr));gap:8px">${inc.flatMap(x=>(MAG_PH[x.m.id]||[]).map(p=>`<button data-act="magCover" data-k="${esc(p.key)}" style="padding:0;border-radius:10px;overflow:hidden;border:3px solid ${st.cover===p.key?"var(--gold)":"transparent"};aspect-ratio:3/4;background:#0003"><img src="${p.url}" alt="" style="width:100%;height:100%;object-fit:cover;display:block"></button>`)).join("")||'<p class="hint">زيدي صور للمواد (من ملف المادة ← المرفقات) لتختاري منها صورة الغلاف.</p>'}</div>
+  <h2 class="s">كلمة العدد</h2>
+  <div class="card"><div class="fld"><label for="magEd">النص (اختياري — إذا فاضي ما بتطلع الصفحة)</label><textarea class="in" id="magEd" rows="5" placeholder="كلمة رئيس البلدية للسنة…">${esc(st.editorial)}</textarea></div>
+    <div class="fld"><label for="magBy">التوقيع</label><input class="in" id="magBy" value="${esc(st.editorialBy)}"></div></div>
+  <div class="row" style="margin-top:14px">${S.ai.key&&S.ai.key.trim()?`<button class="btn o" data-act="magAI" ${MAG.busy?"disabled":""}>${MAG.busy?"عم يحرّر…":st.ai?"✦ حرّري من جديد":"✦ حرّري العناوين والمقدّمات"}</button>`:""}<button class="btn g" data-act="magBuild">📖 صمّمي المجلة</button></div>
+  ${st.ai?`<p class="hint">✓ في تحرير من Claude: عناوين ومقدّمات أقسام (النصوص الأصلية للأخبار ما تغيّرت).</p>`:""}`;
+  $("#magQ").oninput=e=>{MAG.q=e.target.value;clearTimeout(rMag.t);rMag.t=setTimeout(()=>{rerender();const q=$("#magQ");if(q){q.focus();q.setSelectionRange(q.value.length,q.value.length);}},300);};
+  $("#magEd").oninput=e=>{MAGS().editorial=e.target.value;save();};$("#magBy").oninput=e=>{MAGS().editorialBy=e.target.value;save();};
+  m.querySelectorAll("[data-mag-inc]").forEach(c=>c.onchange=()=>{MAGS().inc[c.dataset.magInc]=c.checked;save();rerender();});}
+
+/* ---- بناء المجلة للطباعة ---- */
+const magE=s=>esc(mhDigits(s||""));
+function magHTML(){const st=MAGS(),Y=MAG.year,ai=st.ai||{};const items=magItems().filter(x=>x.inc).map(x=>x.m).sort((a,b)=>(a.date||"").localeCompare(b.date||""));
+  const depts=Object.keys(DEPTS).filter(k=>items.some(m=>m.dept===k));const cov=(()=>{for(const id in MAG_PH){const p=MAG_PH[id].find(p=>p.key===st.cover);if(p)return p.url;}const f=items.find(m=>(MAG_PH[m.id]||[]).length);return f?MAG_PH[f.id][0].url:null;})();
+  const feats=items.filter(m=>st.feat[m.id]).slice(0,3);const coverLines=(feats.length?feats:items.slice(0,3)).map(m=>(ai.titles&&ai.titles[m.id])||m.title);
+  const T=m=>(ai.titles&&ai.titles[m.id])||m.title,SF=m=>(ai.stand&&ai.stand[m.id])||"";
+  const A=S.accounts||{};const byDept=k=>items.filter(m=>m.dept===k);
+  const art=m=>{const ph=MAG_PH[m.id]||[],f=!!st.feat[m.id];return `<article class="art${f?" feat":""}"${f?"":""}>
+    ${f&&ph[0]?`<figure class="hero"><img src="${ph[0].url}"></figure>`:""}
+    <div class="kick">${magE(mhValidDate(m.date)?mhFmtDate(m.date):"")}${m.place?" · "+magE(m.place):""}</div><h3>${magE(T(m))}</h3>${SF(m)?`<p class="sf">${magE(SF(m))}</p>`:""}
+    <div class="body">${String(m.body||"").split(/\n+/).filter(Boolean).map(p=>`<p>${magE(p)}</p>`).join("")}</div>
+    ${(f?ph.slice(1,3):ph.slice(0,2)).length?`<div class="pics n${Math.min(2,(f?ph.slice(1,3):ph.slice(0,2)).length)}">${(f?ph.slice(1,3):ph.slice(0,2)).map(p=>`<img src="${p.url}">`).join("")}</div>`:""}</article>`;};
+  const nums=depts.map(k=>[DEPTS[k].n,byDept(k).length,DEPTS[k].c]);const months=new Set(items.map(m=>(m.date||"").slice(0,7))).size;
+  return `<div class="mag" dir="rtl">
+  <section class="pg cover">${cov?`<img class="cvbg" src="${cov}">`:""}<div class="shade"></div>
+    <div class="mast"><div class="name">حارتنا</div><div class="issue">مجلة ${magE(ORG())} السنوية · العدد ${magE(String(Y))}</div></div>
+    <div class="lines">${coverLines.map(t=>`<div>${magE(t)}</div>`).join("")}</div>
+    <div class="clogo"><img src="${logoSrc()}"><span>${magE(ORG())}</span></div></section>
+  <section class="pg toc"><div class="run">حارتنا · ${magE(String(Y))}</div><h2>في هذا العدد</h2><ol>${st.editorial.trim()?`<li><b>كلمة العدد</b><span>${magE(st.editorialBy)}</span></li>`:""}<li><b>السنة بالأرقام</b><span>من سجلات غرفة الإعلام</span></li>${depts.map(k=>`<li><b>${magE(DEPTS[k].n)}</b><span>${magE(String(byDept(k).length))} ${byDept(k).length>10?"مادة":"مواد"}</span></li>`).join("")}</ol>
+    ${st.editorial.trim()?`<div class="ed"><h2>كلمة العدد</h2>${st.editorial.split(/\n+/).filter(Boolean).map(p=>`<p>${magE(p)}</p>`).join("")}<div class="by">— ${magE(st.editorialBy)}</div></div>`:""}</section>
+  <section class="pg numbers"><div class="run">حارتنا · ${magE(String(Y))}</div><h2>السنة بالأرقام</h2><div class="big"><b>${magE(String(items.length))}</b><span>عملاً وخبراً وثّقته غرفة الإعلام خلال ${magE(String(Y))}</span></div>
+    <div class="grid">${nums.map(([n,c,col])=>`<div style="--c:${col}"><b>${magE(String(c))}</b><span>${magE(n)}</span></div>`).join("")}<div style="--c:#C9A227"><b>${magE(String(months))}</b><span>شهراً من العمل الموثّق</span></div></div>
+    <p class="src">المصدر: سجلات «المواد الإعلامية» في تطبيق غرفة الإعلام — المواد المختارة للعدد فقط.</p></section>
+  ${depts.map(k=>`<section class="pg opener" style="--c:${DEPTS[k].c}"><div class="num">${magE(String(byDept(k).length))}</div><h2>${magE(DEPTS[k].n)}</h2><p>${magE((ai.intros&&ai.intros[k])||`أبرز ما أنجزته ${DEPTS[k].n} خلال ${Y}، كما وثّقته غرفة الإعلام.`)}</p></section>
+   <section class="flow" style="--c:${DEPTS[k].c}">${byDept(k).map(art).join("")}</section>`).join("")}
+  <section class="pg back"><div class="bname">حارتنا</div><img src="${logoSrc()}"><p>${magE(ORG())}</p><div class="contacts">${[A.phone&&"هاتف: "+A.phone,A.web,A.fb&&"فيسبوك: "+A.fb.replace(/^https?:\/\/(www\.)?/,""),A.ig&&"إنستغرام: "+A.ig.replace(/^https?:\/\/(www\.)?/,"")].filter(Boolean).map(x=>`<span dir="auto">${esc(x)}</span>`).join("")}</div><small>العدد السنوي ${magE(String(Y))}</small></section></div>`;}
+const MAG_CSS=`
+@page{size:216mm 303mm;margin:20mm 18mm 22mm 18mm;@bottom-center{content:counter(page);font:600 9pt Cairo;color:#6b6b6b}}
+@page full{margin:0;@bottom-center{content:none}}
+#magView{position:fixed;inset:0;z-index:200;background:#3a3a3a;overflow:auto;padding:70px 0 40px}
+#magBar{position:fixed;top:0;inset-inline:0;z-index:201;display:flex;gap:8px;align-items:center;padding:10px 14px;background:#0C3A1B;border-bottom:1px solid #F5CE3A55}
+#magBar b{flex:1;color:#fff}
+.mag{--ink:#1d1d1b;--g:#0C3A1B;--gold:#C9A227;color:var(--ink);font-family:"Noto Naskh Arabic",Amiri,serif;width:216mm;margin:0 auto;background:#fff;box-shadow:0 10px 40px #0008}
+.mag *{box-sizing:border-box}
+.mag .pg{position:relative;width:216mm;min-height:303mm;break-after:page;overflow:hidden}
+.mag .cover,.mag .opener,.mag .back{page:full;height:303mm;padding:0}
+.mag .cover{background:var(--g);color:#fff}
+.mag .cover .cvbg{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;z-index:0}.mag .cover>*{z-index:1}
+.mag .cover .shade{position:absolute;inset:0;background:linear-gradient(180deg,rgba(6,28,14,.78) 0%,rgba(6,28,14,.05) 34%,rgba(6,28,14,.1) 55%,rgba(6,28,14,.9) 100%)}
+.mag .mast{position:absolute;top:18mm;right:18mm;left:18mm;text-align:right}
+.mag .mast .name{font:700 78mm/0.9 "Reem Kufi",Cairo;letter-spacing:-1mm;color:#FBF8EC}
+.mag .mast .issue{font:700 11pt Cairo;color:#F5CE3A;margin-top:4mm;letter-spacing:.5mm;border-top:.5mm solid #F5CE3A;padding-top:3mm;display:inline-block}
+.mag .cover .lines{position:absolute;right:18mm;left:40mm;bottom:42mm;display:grid;gap:4mm}
+.mag .cover .lines div{font:800 17pt/1.35 Cairo;padding-right:5mm;border-right:1.2mm solid #F5CE3A}
+.mag .clogo{position:absolute;bottom:14mm;right:18mm;left:18mm;display:flex;align-items:center;gap:4mm;font:700 11pt Cairo}
+.mag .clogo img{width:16mm;height:16mm;border-radius:50%;background:#fff;padding:1mm}
+.mag .run{font:700 8pt Cairo;color:#8a8a8a;letter-spacing:.6mm;margin-bottom:10mm;border-bottom:.3mm solid #ddd;padding-bottom:2mm}
+.mag h2{font:900 30pt/1.15 Cairo;color:var(--g);margin:0 0 8mm}
+.mag .toc{padding:20mm 18mm}
+.mag .toc ol{list-style:none;padding:0;margin:0 0 12mm;counter-reset:t}
+.mag .toc li{display:flex;justify-content:space-between;align-items:baseline;border-bottom:.3mm solid #e2e2e2;padding:4mm 0;counter-increment:t;font-family:Cairo}
+.mag .toc li b{font-size:15pt;font-weight:800}.mag .toc li b::before{content:counter(t,arabic-indic) ". ";color:var(--gold)}
+.mag .toc li span{font-size:10pt;color:#777}
+.mag .ed{background:#FBF8EC;padding:9mm 10mm;border-right:2mm solid var(--gold)}
+.mag .ed h2{font-size:18pt;margin-bottom:4mm}.mag .ed p{font-size:11.5pt;line-height:1.85;margin:0 0 3mm;text-align:justify}.mag .ed .by{font:700 10pt Cairo;color:var(--g);margin-top:4mm}
+.mag .numbers{padding:20mm 18mm}
+.mag .numbers .big{display:flex;gap:8mm;align-items:center;margin:4mm 0 12mm}
+.mag .numbers .big b{font:900 80pt/0.9 Cairo;color:var(--g)}.mag .numbers .big span{font:700 15pt/1.5 Cairo;max-width:90mm}
+.mag .numbers .grid{display:grid;grid-template-columns:repeat(3,1fr);gap:6mm}
+.mag .numbers .grid div{border-top:2mm solid var(--c);padding-top:4mm}
+.mag .numbers .grid b{display:block;font:900 36pt/1 Cairo;color:var(--c)}.mag .numbers .grid span{font:700 11pt Cairo}
+.mag .src{font:600 8.5pt Cairo;color:#888;margin-top:14mm}
+.mag .opener{background:var(--c);color:#fff;padding:0 18mm;display:flex;flex-direction:column;justify-content:flex-end;padding-bottom:30mm}
+.mag .opener .num{position:absolute;top:10mm;left:12mm;font:900 120mm/1 Cairo;color:rgba(255,255,255,.12)}
+.mag .opener h2{color:#fff;font-size:44pt;margin-bottom:6mm;border-bottom:1mm solid rgba(255,255,255,.5);padding-bottom:5mm}
+.mag .opener p{font:500 14pt/1.7 Cairo;max-width:140mm;margin:0;opacity:.92}
+.mag .flow{column-count:2;column-gap:9mm;column-rule:.25mm solid #e4e4e4;padding:0;break-after:page}
+.mag .art{break-inside:avoid-column;margin:0 0 9mm;padding-bottom:6mm;border-bottom:.3mm solid #e6e6e6}
+.mag .art.feat{column-span:all;break-inside:avoid;break-before:page}
+.mag .art .hero{margin:0 0 5mm}.mag .art .hero img{width:100%;height:105mm;object-fit:cover;display:block}
+.mag .kick{font:700 8.5pt Cairo;color:var(--c);letter-spacing:.3mm;margin-bottom:1.5mm}
+.mag h3{font:800 15pt/1.35 Cairo;margin:0 0 2.5mm;color:#111}
+.mag .art.feat h3{font-size:24pt}
+.mag .sf{font:600 11pt/1.6 Cairo;color:#444;margin:0 0 3mm}
+.mag .body p{font-size:10.5pt;line-height:1.8;margin:0 0 2.5mm;text-align:justify}
+.mag .art.feat .body{column-count:2;column-gap:9mm}
+.mag .pics{display:grid;gap:2mm;margin-top:3mm}.mag .pics.n2{grid-template-columns:1fr 1fr}
+.mag .pics img{width:100%;height:42mm;object-fit:cover;display:block}.mag .pics.n1 img{height:55mm}
+.mag .back{background:var(--g);color:#FBF8EC;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6mm;text-align:center}
+.mag .back .bname{font:700 46mm/1 "Reem Kufi",Cairo;color:#F5CE3A}
+.mag .back img{width:30mm;height:30mm;border-radius:50%;background:#fff;padding:2mm}
+.mag .back p{font:800 15pt Cairo;margin:0}.mag .back .contacts{display:grid;gap:2mm;font:600 10pt Cairo}.mag .back small{font:600 9pt Cairo;opacity:.7}
+@media screen{.mag .flow{padding:20mm 18mm;width:216mm;background:#fff}.mag .pg,.mag .flow{margin-bottom:6mm}}
+@media print{:root{color-scheme:light!important;background:#fff!important}body>*:not(#magView){display:none!important}.mag .toc,.mag .numbers{min-height:0;padding:0}#magView{position:static;padding:0;background:none;overflow:visible}#magBar{display:none}.mag{box-shadow:none;width:auto}html,body{background:#fff!important;padding:0!important}.mag .flow{padding:0}
+ *{-webkit-print-color-adjust:exact;print-color-adjust:exact}}`;
+async function magOpen(){await magLoadPhotos();const items=magItems().filter(x=>x.inc);if(!items.length)return toast("ما في مواد مختارة للمجلة");
+  let v=$("#magView");if(v)v.remove();v=document.createElement("div");v.id="magView";
+  v.innerHTML=`<style>${MAG_CSS}</style><div id="magBar"><b>حارتنا ${mhDigits(MAG.year)} — معاينة</b><button class="btn g sm" data-act="magPrint">اطبعي / احفظي PDF</button><button class="btn l sm" data-act="magClose">رجوع</button></div>${magHTML()}`;
+  document.body.append(v);try{await Promise.all(['900 20px Cairo','800 20px Cairo','700 20px "Reem Kufi"','400 20px "Noto Naskh Arabic"'].map(f=>document.fonts.load(f,"حارتنا ٠١٢")));}catch(e){}
+  const fit=()=>{const m=v.querySelector(".mag"),k=Math.min(1,(innerWidth-16)/m.offsetWidth);m.style.zoom=k<1?k:"";};fit();}
+Object.assign(ACT,{
+  magYear:el=>{MAG.year=+el.dataset.y;rerender();},magDept:el=>{MAG.dept=el.dataset.k;rerender();},magSt:el=>{MAG.status=el.dataset.k;rerender();},
+  magAll:el=>{const st=MAGS();magItems().filter(x=>(MAG.dept==="all"||x.m.dept===MAG.dept)&&(MAG.status==="all"||["published","ready"].includes(x.m.status))).forEach(x=>st.inc[x.m.id]=el.dataset.v==="1");save();rerender();},
+  magFeat:el=>{const st=MAGS();st.feat[el.dataset.id]=!st.feat[el.dataset.id];if(st.feat[el.dataset.id])st.inc[el.dataset.id]=true;save();rerender();},
+  magCover:el=>{MAGS().cover=el.dataset.k;save();rerender();},
+  magBuild:()=>magOpen(),magClose:()=>{const v=$("#magView");if(v){v.querySelector(".mag").style.zoom="";v.remove();}},
+  magPrint:()=>{const m=$("#magView .mag");m.style.zoom="";setTimeout(()=>{window.print();},200);},
+  magAI:async()=>{const st=MAGS(),items=magItems().filter(x=>x.inc).map(x=>x.m);if(!items.length)return toast("اختاري مواد أول");MAG.busy=true;rerender();
+    try{const t=await callClaude(`أنت محرّر مجلة «حارتنا» السنوية لـ${ORG()}. حرّر لكل خبر عنواناً مجلّياً قصيراً (أقل من ٩ كلمات) وسطراً تمهيدياً واحداً (أقل من ٢٠ كلمة)، واكتب مقدّمة من جملتين لكل قسم دائرة. ممنوع إضافة أي رقم أو اسم أو تاريخ أو معلومة غير موجودة في النص. فصحى سلسة.\nالأقسام: ${[...new Set(items.map(m=>m.dept))].map(k=>k+"="+(DEPTS[k]||{}).n).join("، ")}\nالأخبار:\n${items.map(m=>`[${m.id}] (${m.dept}) ${m.title}\n${String(m.body||"").slice(0,700)}`).join("\n\n")}`,
+      {max:12000,schema:{type:"object",additionalProperties:false,required:["articles","intros"],properties:{articles:{type:"array",items:{type:"object",additionalProperties:false,required:["id","title","standfirst"],properties:{id:{type:"string"},title:{type:"string"},standfirst:{type:"string"}}}},intros:{type:"array",items:{type:"object",additionalProperties:false,required:["dept","text"],properties:{dept:{type:"string"},text:{type:"string"}}}}}}});
+      const j=JSON.parse(t.slice(t.indexOf("{"),t.lastIndexOf("}")+1));st.ai={titles:{},stand:{},intros:{}};(j.articles||[]).forEach(a=>{st.ai.titles[a.id]=a.title;st.ai.stand[a.id]=a.standfirst;});(j.intros||[]).forEach(x=>st.ai.intros[x.dept]=x.text);save();toast("✓ تحرّرت العناوين والمقدّمات — راجعيها بالمعاينة");}
+    catch(e){toast("ما زبط: "+e.message);}MAG.busy=false;rerender();}
+});
+SECS.mag={t:"مجلة حارتنا",r:m=>{rMag(m);magLoadPhotos().then(()=>{if(CUR==="mag"&&!rMag.loaded){rMag.loaded=true;rerender();}});}};
+const _menuR6=SECS.menu.r;SECS.menu.r=function(root){_menuR6(root);root.querySelector(".grid").insertAdjacentHTML("afterbegin",tile("library","مجلة حارتنا","العدد السنوي جاهز للطباعة","mag"));};
+if(location.hash==="#mag"||CUR==="menu")route();
+</script>
 </body>
 </html>
