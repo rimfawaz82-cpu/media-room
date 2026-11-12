@@ -1761,7 +1761,7 @@ const mhEdCommitOld=edCommit;edCommit=function(){const p=ED,prev=S.posts.find(x=
 const mhNav=document.querySelector('.nav button[data-go="ai"]');if(mhNav){mhNav.dataset.go='materials';mhNav.classList.remove('ai');mhNav.innerHTML='<span style="font-size:20px">▤</span>المواد';}
 const mhRouteOld=route;route=function(){mhRouteOld();if(CUR==='materials'){$$('.nav button').forEach(b=>b.setAttribute('aria-current',b.dataset.go==='materials'?'page':'false'));}};
 window.removeEventListener('hashchange',mhRouteOld);window.addEventListener('hashchange',route);
-if(!location.hash)location.hash='materials';else route();
+if(!location.hash)location.hash='today';else route();
 // Block occasion exports when layout cannot fit the full Arabic text.
 let mhOverflow=false;
 const mhFitBlockOld=fitBlock;fitBlock=function(...args){const result=mhFitBlockOld(...args);if(result.lines.length>args[6]||result.lines.some(l=>args[0].measureText(l).width>args[5]))mhOverflow=true;return result;};
