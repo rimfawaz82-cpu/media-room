@@ -2626,8 +2626,7 @@ function rpHTML(){const d=rpData(),orgN=ORG();const dec=o=>DEC[o.dec||RP_DEC_DEF
   ${d.prep.length?`<h2>٣. مهام التحضير</h2><table><thead><tr><th>يبدأ</th><th>المهمة</th><th>لأجل</th></tr></thead><tbody>${d.prep.map(x=>`<tr><td class="nw">${rpD(x.day)}</td><td>تصوير وتجهيز مواد (${mhDigits(x.o.prep)} أيام تحضير)</td><td>${esc(x.o.n)} — ${rpD(x.o.date)}</td></tr>`).join("")}</tbody></table>`:""}
   ${d.pending.length?`<h2>${d.prep.length?"٤":"٣"}. مواد بانتظار الاعتماد</h2><table><thead><tr><th>المادة</th><th>الدائرة</th><th>الحالة</th></tr></thead><tbody>${d.pending.map(m=>`<tr><td><b>${esc(m.title||"بلا عنوان")}</b></td><td>${(DEPTS[m.dept]||DEPTS.general).n}</td><td>${MH_STATUS[m.status]}</td></tr>`).join("")}</tbody></table>`:""}
   ${RP.note.trim()?`<h2>ملاحظات</h2><p class="rp-note">${esc(RP.note).replace(/\n/g,"<br>")}</p>`:""}
-  <div class="rp-sign"><div><span>المكتب الإعلامي</span><b>${esc(RPS().by)}</b></div>
-  <p class="rp-foot">التواريخ «التقديرية» تُثبَّت عند الإعلان الرسمي. «القرار (مقترح)» يعني أنه لم يُحسم بعد ويحتاج موافقتكم.</p></div></div>`;}
+  <div class="rp-sign"><div><span>المكتب الإعلامي</span><b>${esc(RPS().by)}</b></div></div></div>`;}
 const RP_CSS=`#rpView{position:fixed;inset:0;z-index:200;background:#3a3a3a;overflow:auto;padding:64px 0 40px}
 #rpBar{position:fixed;top:0;inset-inline:0;z-index:201;display:flex;gap:8px;align-items:center;padding:10px 14px;background:#0C3A1B}#rpBar b{flex:1;color:#fff}
 .rp{width:210mm;min-height:297mm;margin:0 auto;background:#fff;color:#1d1d1b;padding:12mm 14mm;font-family:Cairo,sans-serif;box-shadow:0 10px 40px #0008;box-sizing:border-box}
