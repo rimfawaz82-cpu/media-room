@@ -2596,7 +2596,8 @@ if(location.hash==="#mag"||CUR==="menu")route();
 </script>
 <script>
 /* ===== تقرير المناسبات وخطة النشر (للاطلاع والاعتماد) ===== */
-const RP={from:null,to:null,note:"",to_name:"نائب رئيس البلدية"};
+const RP={from:null,to:null,note:""};
+const RPS=()=>{S.rp=Object.assign({to_name:"نائب رئيس المجلس البلدي",to_person:"الأستاذ صادق سليم المحترم",by:"محمد علي القماطي"},S.rp||{});return S.rp;};
 const rpEnd=()=>{const d=new Date();return iso(new Date(d.getFullYear(),d.getMonth()+1,0));};
 const RP_FMT={off:"بطاقة تهنئة رسمية + نص فيسبوك",rel:"بطاقة تهنئة",world:"بطاقة توعية أو كاروسيل",season:"كاروسيل توعوي + ريل ميداني",own:"تغطية مصوّرة"};
 const RP_DEC_DEF={off:"greet",rel:"greet",world:"notice",season:"cover",own:"cover"};
@@ -2610,7 +2611,7 @@ const rpD=s=>mhFmtDate(s);
 function rpHTML(){const d=rpData(),orgN=ORG();const dec=o=>DEC[o.dec||RP_DEC_DEF[o.t]]+(o.dec?"":" (مقترح)");
   const hasPost=o=>d.posts.some(p=>p.date===o.date)||!!(o.plan&&o.plan.materialId);
   return `<div class="rp" dir="rtl">
-  <header class="rp-h"><img src="${logoSrc()}" alt=""><div><b>${esc(orgN)}</b><span>المكتب الإعلامي</span></div><div class="rp-m"><span>إلى: ${esc(RP.to_name)}</span><span>للاطلاع والاعتماد</span><span>تاريخ الإعداد: ${rpD(TODAY())}</span></div></header>
+  <header class="rp-h"><img src="${logoSrc()}" alt=""><div><b>${esc(orgN)}</b><span>المكتب الإعلامي${RPS().by?" · "+esc(RPS().by):""}</span></div><div class="rp-m"><span>إلى جانب ${esc(RPS().to_name)}</span>${RPS().to_person?`<b class="rp-to">${esc(RPS().to_person)}</b>`:""}<span>للاطلاع</span><span>تاريخ الإعداد: ${rpD(TODAY())}</span></div></header>
   <h1>المناسبات وخطة النشر</h1><p class="rp-sub">من ${rpD(d.a)} إلى ${rpD(d.b)}</p>
   <div class="rp-k"><div><b>${mhDigits(d.occ.length)}</b><span>مناسبة</span></div><div><b>${mhDigits(d.posts.length)}</b><span>منشور مجدول</span></div><div><b>${mhDigits(d.prep.length)}</b><span>مهمة تحضير</span></div><div><b>${mhDigits(d.pending.length)}</b><span>مادة بانتظار الاعتماد</span></div></div>
   ${d.seasons.length?`<p class="rp-season"><b>الموسم:</b> ${d.seasons.map(s=>`${esc(s.n)} (لحد ${rpD(s.end).split(" ").slice(1,3).join(" ")}) — ${esc(s.angle)}`).join(" · ")}</p>`:""}
@@ -2625,25 +2626,25 @@ function rpHTML(){const d=rpData(),orgN=ORG();const dec=o=>DEC[o.dec||RP_DEC_DEF
   ${d.prep.length?`<h2>٣. مهام التحضير</h2><table><thead><tr><th>يبدأ</th><th>المهمة</th><th>لأجل</th></tr></thead><tbody>${d.prep.map(x=>`<tr><td class="nw">${rpD(x.day)}</td><td>تصوير وتجهيز مواد (${mhDigits(x.o.prep)} أيام تحضير)</td><td>${esc(x.o.n)} — ${rpD(x.o.date)}</td></tr>`).join("")}</tbody></table>`:""}
   ${d.pending.length?`<h2>${d.prep.length?"٤":"٣"}. مواد بانتظار الاعتماد</h2><table><thead><tr><th>المادة</th><th>الدائرة</th><th>الحالة</th></tr></thead><tbody>${d.pending.map(m=>`<tr><td><b>${esc(m.title||"بلا عنوان")}</b></td><td>${(DEPTS[m.dept]||DEPTS.general).n}</td><td>${MH_STATUS[m.status]}</td></tr>`).join("")}</tbody></table>`:""}
   ${RP.note.trim()?`<h2>ملاحظات</h2><p class="rp-note">${esc(RP.note).replace(/\n/g,"<br>")}</p>`:""}
-  <div class="rp-sign"><div><span>أعدّه</span><b>المكتب الإعلامي</b></div><div><span>اطّلع عليه</span><b>${esc(RP.to_name)}</b><i></i><small>الملاحظات:</small><i></i></div></div>
-  <p class="rp-foot">التواريخ «التقديرية» تُثبَّت عند الإعلان الرسمي. «القرار (مقترح)» يعني أنه لم يُحسم بعد ويحتاج موافقتكم.</p></div>`;}
+  <div class="rp-sign"><div><span>المكتب الإعلامي</span><b>${esc(RPS().by)}</b></div>
+  <p class="rp-foot">التواريخ «التقديرية» تُثبَّت عند الإعلان الرسمي. «القرار (مقترح)» يعني أنه لم يُحسم بعد ويحتاج موافقتكم.</p></div></div>`;}
 const RP_CSS=`#rpView{position:fixed;inset:0;z-index:200;background:#3a3a3a;overflow:auto;padding:64px 0 40px}
 #rpBar{position:fixed;top:0;inset-inline:0;z-index:201;display:flex;gap:8px;align-items:center;padding:10px 14px;background:#0C3A1B}#rpBar b{flex:1;color:#fff}
 .rp{width:210mm;min-height:297mm;margin:0 auto;background:#fff;color:#1d1d1b;padding:12mm 14mm;font-family:Cairo,sans-serif;box-shadow:0 10px 40px #0008;box-sizing:border-box}
 .rp-h{display:flex;align-items:center;gap:4mm;border-bottom:.8mm solid #0C3A1B;padding-bottom:4mm}.rp-h img{width:16mm;height:16mm}.rp-h>div:nth-child(2){flex:1;display:grid}.rp-h b{font:800 13pt Cairo;color:#0C3A1B}.rp-h span{font:600 9pt Cairo;color:#666}
 .rp-m{display:grid;text-align:left;font:600 8.5pt Cairo;color:#444}
-.rp h1{font:900 21pt/1.2 Cairo;color:#0C3A1B;margin:5mm 0 0}.rp-sub{font:700 11pt Cairo;color:#B8901E;margin:1mm 0 5mm}
-.rp-k{display:grid;grid-template-columns:repeat(4,1fr);gap:3mm;margin-bottom:5mm}.rp-k div{border-top:1.2mm solid #1D6B32;padding-top:2mm}.rp-k b{display:block;font:900 20pt/1 Cairo;color:#0C3A1B}.rp-k span{font:700 8.5pt Cairo;color:#444}
-.rp-season{background:#F3EDDF;padding:3mm 4mm;font:600 9.5pt/1.6 Cairo;border-right:1.2mm solid #B8901E;margin:0 0 4mm}
-.rp h2{font:800 12.5pt Cairo;color:#0C3A1B;margin:5mm 0 2mm;break-after:avoid}
-.rp table{width:100%;border-collapse:collapse;font:500 9pt/1.5 Cairo}.rp th{background:#0C3A1B;color:#fff;font-weight:700;text-align:right;padding:1.6mm 2mm}.rp td{border-bottom:.3mm solid #ddd;padding:1.4mm 2mm;vertical-align:top}
+.rp h1{font:900 20pt/1.2 Cairo;color:#0C3A1B;margin:3mm 0 0}.rp-sub{font:700 11pt Cairo;color:#B8901E;margin:1mm 0 3mm}
+.rp-k{display:grid;grid-template-columns:repeat(4,1fr);gap:3mm;margin-bottom:3mm}.rp-k div{border-top:1.2mm solid #1D6B32;padding-top:2mm}.rp-k b{display:block;font:900 17pt/1 Cairo;color:#0C3A1B}.rp-k span{font:700 8.5pt Cairo;color:#444}
+.rp-season{background:#F3EDDF;padding:3mm 4mm;font:600 9.5pt/1.6 Cairo;border-right:1.2mm solid #B8901E;margin:0 0 2mm}
+.rp h2{font:800 12.5pt Cairo;color:#0C3A1B;margin:3.5mm 0 1.5mm;break-after:avoid}
+.rp table{width:100%;border-collapse:collapse;font:500 9pt/1.5 Cairo}.rp th{background:#0C3A1B;color:#fff;font-weight:700;text-align:right;padding:1.6mm 2mm}.rp td{border-bottom:.3mm solid #ddd;padding:1.1mm 2mm;vertical-align:top}
 .rp td small{display:block;color:#666;font-size:8pt}.rp td small.warn{color:#B4471F;font-weight:700}.rp .nw{white-space:nowrap}.rp tr{break-inside:avoid}
 .rp-note{font:500 10pt/1.7 Cairo;background:#FBF8F1;padding:3mm 4mm}
-.rp-sign{display:grid;grid-template-columns:1fr 1fr;gap:10mm;margin-top:7mm;break-inside:avoid}.rp-sign div{display:grid;gap:2mm}.rp-sign span{font:600 8.5pt Cairo;color:#666}.rp-sign b{font:800 11pt Cairo}.rp-sign i{display:block;border-bottom:.3mm solid #999;height:8mm}.rp-sign small{font:600 8.5pt Cairo;color:#666}
-.rp-foot{font:500 7.5pt/1.6 Cairo;color:#777;margin-top:8mm;border-top:.3mm solid #ddd;padding-top:2mm}
-@page rpp{size:A4;margin:12mm 0}
-@media print{:root,body{color-scheme:light!important;background:#fff!important}.rp{min-height:0!important;padding:0 14mm!important}body>*:not(#rpView){display:none!important}#rpView{position:static;padding:0;background:none}#rpBar{display:none}.rp{box-shadow:none;page:rpp}*{-webkit-print-color-adjust:exact;print-color-adjust:exact}}`;
-function rpText(){const d=rpData();let t=`*${ORG()} — المكتب الإعلامي*\n*المناسبات وخطة النشر*\nمن ${rpD(d.a)} إلى ${rpD(d.b)}\nإلى: ${RP.to_name} — للاطلاع\n\n*المناسبات:*\n`;
+.rp-sign{display:flex;justify-content:space-between;gap:8mm;margin-top:4mm;break-inside:avoid}.rp-sign div{display:grid;gap:1mm}.rp-sign span{font:600 8.5pt Cairo;color:#666}.rp-sign b{font:800 11pt Cairo}.rp-sign i{display:block;border-bottom:.3mm solid #999;height:8mm}.rp-sign small{font:600 8.5pt Cairo;color:#666}
+.rp-foot{font:500 7.5pt/1.6 Cairo;color:#777;margin:0;max-width:95mm;align-self:end}.rp-m .rp-to{font:800 9.5pt Cairo;color:#0C3A1B}
+@page rpp{size:A4;margin:10mm 0}
+@media print{:root,body{color-scheme:light!important;background:#fff!important;padding:0!important;margin:0!important;min-height:0!important;height:auto!important}.rp{min-height:0!important;padding:0 14mm!important}body>*:not(#rpView){display:none!important}#rpView{position:static;padding:0;background:none}#rpBar{display:none}.rp{box-shadow:none;page:rpp}*{-webkit-print-color-adjust:exact;print-color-adjust:exact}}`;
+function rpText(){const d=rpData();let t=`إلى جانب ${RPS().to_name} ${RPS().to_person}\n\n*${ORG()} — المكتب الإعلامي*\n*المناسبات وخطة النشر*\nمن ${rpD(d.a)} إلى ${rpD(d.b)}\n\n*المناسبات:*\n`;
   d.occ.forEach(o=>t+=`• ${rpD(o.date)}: ${o.n} — ${DEC[o.dec||RP_DEC_DEF[o.t]]}${o.dec?"":" (مقترح)"}${o.st!=="ok"?" · التاريخ "+OCC_ST[o.st]:""}\n`);
   t+=`\n*خطة النشر:*\n`;d.posts.forEach(p=>t+=`• ${rpD(p.date)} ${mhDigits(p.time||"")} — ${p.title} (${(p.plat||[]).map(x=>PLATN[x]).join("/")}) [${STATUS[p.status]}]\n`);
   if(!d.posts.length)t+="ما في منشورات مجدولة بعد.\n";if(d.prep.length){t+=`\n*تحضير:*\n`;d.prep.forEach(x=>t+=`• من ${rpD(x.day)}: تجهيز «${x.o.n}»\n`);}
@@ -2652,12 +2653,12 @@ function rReport(m){RP.from=RP.from||TODAY();RP.to=RP.to||rpEnd();const d=rpData
   m.innerHTML=`<h1 class="h">تقرير <em>المناسبات والنشر</em></h1><p class="lede">تقرير للاطلاع: المناسبات وقراراتها، وخطة النشر، ومهام التحضير، والمواد يلي بتنطر اعتماد. بتطبعيه PDF أو بتبعتيه نص عالواتساب.</p>
   <div class="card gold"><div class="grid g2"><div class="fld"><label for="rpA">من</label><input class="in" type="date" id="rpA" value="${RP.from}"></div><div class="fld"><label for="rpB">لحد</label><input class="in" type="date" id="rpB" value="${RP.to}"></div></div>
    <div class="row" style="margin-bottom:10px"><button class="btn l sm" data-act="rpRange" data-k="rest">من اليوم لآخر الشهر</button><button class="btn l sm" data-act="rpRange" data-k="next">الشهر الجاي</button></div>
-   <div class="fld"><label for="rpTo">مرسل إلى</label><input class="in" id="rpTo" value="${esc(RP.to_name)}"></div>
+   <div class="grid g2"><div class="fld"><label for="rpTo">إلى جانب (المنصب)</label><input class="in" id="rpTo" value="${esc(RPS().to_name)}"></div><div class="fld"><label for="rpTp">الاسم</label><input class="in" id="rpTp" value="${esc(RPS().to_person)}"></div></div><div class="fld"><label for="rpBy">المكتب الإعلامي (المُعِدّ)</label><input class="in" id="rpBy" value="${esc(RPS().by)}"></div>
    <div class="fld"><label for="rpN">ملاحظات (اختياري)</label><textarea class="in" id="rpN" rows="3">${esc(RP.note)}</textarea></div>
    <div class="grid g4"><div class="stat"><b>${mhDigits(d.occ.length)}</b><span>مناسبة</span></div><div class="stat"><b>${mhDigits(d.posts.length)}</b><span>منشور</span></div><div class="stat"><b>${mhDigits(d.prep.length)}</b><span>تحضير</span></div><div class="stat"><b>${mhDigits(d.pending.length)}</b><span>بانتظار اعتماد</span></div></div>
    <div class="row" style="margin-top:12px"><button class="btn g" data-act="rpOpen">📄 اعرضي التقرير / PDF</button><button class="btn l" data-act="rpWa">واتساب</button><button class="btn l" data-act="rpCopy">نسخ النص</button></div></div>
   <p class="hint">قبل ما تبعتيه: حدّدي قرار كل مناسبة من التقويم. يلي ما إلو قرار بيطلع «مقترح».</p>`;
-  $("#rpA").onchange=e=>{RP.from=e.target.value;rerender();};$("#rpB").onchange=e=>{RP.to=e.target.value;rerender();};$("#rpTo").oninput=e=>RP.to_name=e.target.value;$("#rpN").oninput=e=>RP.note=e.target.value;}
+  $("#rpA").onchange=e=>{RP.from=e.target.value;rerender();};$("#rpB").onchange=e=>{RP.to=e.target.value;rerender();};$("#rpTo").oninput=e=>{RPS().to_name=e.target.value;save();};$("#rpTp").oninput=e=>{RPS().to_person=e.target.value;save();};$("#rpBy").oninput=e=>{RPS().by=e.target.value;save();};$("#rpN").oninput=e=>RP.note=e.target.value;}
 Object.assign(ACT,{
   rpRange:el=>{const d=new Date();if(el.dataset.k==="rest"){RP.from=TODAY();RP.to=rpEnd();}else{RP.from=iso(new Date(d.getFullYear(),d.getMonth()+1,1));RP.to=iso(new Date(d.getFullYear(),d.getMonth()+2,0));}rerender();},
   rpOpen:()=>{let v=$("#rpView");if(v)v.remove();v=document.createElement("div");v.id="rpView";v.innerHTML=`<style>${RP_CSS}</style><div id="rpBar"><b>التقرير</b><button class="btn g sm" data-act="rpPrint">اطبعي / احفظي PDF</button><button class="btn l sm" data-act="rpClose">رجوع</button></div>${rpHTML()}`;document.body.append(v);const r=v.querySelector(".rp"),k=Math.min(1,(innerWidth-16)/r.offsetWidth);if(k<1)r.style.zoom=k;},
