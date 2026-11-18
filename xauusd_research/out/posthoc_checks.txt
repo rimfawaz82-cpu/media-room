@@ -1,0 +1,31 @@
+POST-HOC (exploratory) ARB by D1 ATR% of price bucket (cutoffs from dev: [1.22 1.41] )
+          count            mean              
+sp          dev test val    dev   test    val
+volbucket                                    
+low         161    0  29 -0.129    NaN -0.064
+mid         160    0  56 -0.033    NaN  0.041
+high        160  125  91 -0.027  0.189 -0.016
+
+ARB yearly gross/net, cost in R:
+        n  gross    net  cost_R  volpct
+day                                    
+2022   80  0.069  0.024   0.046   1.412
+2023  201 -0.049 -0.158   0.110   1.242
+2024  200  0.087 -0.002   0.089   1.331
+2025  176  0.029 -0.006   0.035   1.426
+2026  125  0.205  0.189   0.015   2.396
+
+ARB exit reasons by split
+reason   stop  target   time
+sp                          
+dev     0.368   0.249  0.383
+test    0.160   0.144  0.696
+val     0.244   0.125  0.631
+
+ARB target study (net exp R)
+                   target    dev    val   test
+0                     1.0 -0.083  0.001  0.183
+1                     1.5 -0.063 -0.006  0.189
+2                     2.0 -0.079 -0.011  0.201
+3                     3.0 -0.082  0.005  0.207
+4  time exit 16:00 London -0.090 -0.016  0.211

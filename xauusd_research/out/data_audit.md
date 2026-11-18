@@ -1,0 +1,293 @@
+# Data audit — XAUUSD (MT5 exports)
+
+
+## M1
+
+- rows: 100021
+- columns: ['ts', 'open', 'high', 'low', 'close', 'tickvol', 'vol', 'spread']
+- first: 2026-08-07 18:33:00
+- last: 2026-11-18 12:40:00
+- sorted: True
+- dup_ts: 0
+- ohlc_invalid: 0
+- nonpositive: 0
+- flat_bars_OHLC_equal: 0
+- identical_consecutive_rows: 1
+- vol_all_zero: True
+- spread_zero_share: 0.0
+- spread_points_median_nonzero: 40.0
+- first_nonzero_spread_ts: 2026-08-07 18:33:00
+- weekday_counts: {0: 20507, 1: 20655, 2: 19978, 3: 19278, 4: 19603}
+- range_gt_15x_median: 19
+- top_outliers: [{'ts': '2026-09-04 15:30:00', 'range': 81.68, 'x_median': 55.6}, {'ts': '2026-08-12 15:30:00', 'range': 49.8, 'x_median': 36.8}, {'ts': '2026-09-11 15:30:00', 'range': 60.03, 'x_median': 32.6}, {'ts': '2026-10-14 15:30:00', 'range': 37.0, 'x_median': 30.3}, {'ts': '2026-11-10 15:30:00', 'range': 40.14, 'x_median': 25.0}]
+- open_gap_gt_1pct: 0
+- gaps_total: 73
+- gaps_weekend: 15
+- gaps_daily_break_00_01_server: 57
+- gaps_holiday_or_long(>=6h,non-weekend): 0
+- gaps_short_unexplained: 1
+- short_gap_minutes_distribution: {'count': 1.0, 'mean': 212.0, 'std': nan, 'min': 212.0, '25%': 212.0, '50%': 212.0, '75%': 212.0, 'max': 212.0}
+- long_nonweekend_gaps:
+
+- bars_by_server_hour: {1: 4307, 2: 4380, 3: 4380, 4: 4380, 5: 4380, 6: 4380, 7: 4380, 8: 4380, 9: 4380, 10: 4380, 11: 4380, 12: 4361, 13: 4320, 14: 4320, 15: 4320, 16: 4320, 17: 4320, 18: 4347, 19: 4380, 20: 4380, 21: 4350, 22: 4320, 23: 4176}
+
+## M5
+
+- rows: 100000
+- columns: ['ts', 'open', 'high', 'low', 'close', 'tickvol', 'vol', 'spread']
+- first: 2025-06-23 15:55:00
+- last: 2026-11-18 12:40:00
+- sorted: True
+- dup_ts: 0
+- ohlc_invalid: 0
+- nonpositive: 0
+- flat_bars_OHLC_equal: 0
+- identical_consecutive_rows: 1
+- vol_all_zero: True
+- spread_zero_share: 0.001
+- spread_points_median_nonzero: 60.0
+- first_nonzero_spread_ts: 2025-06-23 15:55:00
+- weekday_counts: {0: 20090, 1: 20424, 2: 20247, 3: 19566, 4: 19673}
+- range_gt_15x_median: 10
+- top_outliers: [{'ts': '2026-09-04 15:30:00', 'range': 95.57, 'x_median': 25.1}, {'ts': '2025-09-17 21:00:00', 'range': 47.0, 'x_median': 24.6}, {'ts': '2026-01-29 17:25:00', 'range': 213.6, 'x_median': 21.1}, {'ts': '2025-11-28 07:20:00', 'range': 55.45, 'x_median': 20.9}, {'ts': '2026-07-14 15:30:00', 'range': 73.83, 'x_median': 19.5}]
+- open_gap_gt_1pct: 4
+- gaps_total: 368
+- gaps_weekend: 72
+- gaps_daily_break_00_01_server: 283
+- gaps_holiday_or_long(>=6h,non-weekend): 3
+- gaps_short_unexplained: 10
+- short_gap_minutes_distribution: {'count': 10.0, 'mean': 149.0, 'std': 92.8, 'min': 10.0, '25%': 55.0, '50%': 215.0, '75%': 215.0, 'max': 215.0}
+- long_nonweekend_gaps:
+    - 2025-12-24 20:40:00 -> 2025-12-26 01:00:00 (28.3h)
+    - 2025-12-31 23:55:00 -> 2026-01-02 01:00:00 (25.1h)
+    - 2026-04-02 23:55:00 -> 2026-04-06 01:00:00 (73.1h)
+- bars_by_server_hour: {1: 4364, 2: 4368, 3: 4368, 4: 4368, 5: 4368, 6: 4368, 7: 4368, 8: 4368, 9: 4368, 10: 4360, 11: 4356, 12: 4357, 13: 4355, 14: 4353, 15: 4357, 16: 4368, 17: 4368, 18: 4368, 19: 4368, 20: 4329, 21: 4281, 22: 4236, 23: 4236}
+
+## M15
+
+- rows: 100739
+- columns: ['ts', 'open', 'high', 'low', 'close', 'tickvol', 'vol', 'spread']
+- first: 2022-08-16 01:00:00
+- last: 2026-11-18 13:00:00
+- sorted: True
+- dup_ts: 0
+- ohlc_invalid: 0
+- nonpositive: 0
+- flat_bars_OHLC_equal: 0
+- identical_consecutive_rows: 1
+- vol_all_zero: True
+- spread_zero_share: 0.003
+- spread_points_median_nonzero: 60.0
+- first_nonzero_spread_ts: 2022-08-16 01:00:00
+- weekday_counts: {0: 19857, 1: 20487, 2: 20266, 3: 20175, 4: 19954}
+- range_gt_15x_median: 11
+- top_outliers: [{'ts': '2023-12-04 01:15:00', 'range': 66.44, 'x_median': 39.3}, {'ts': '2023-12-04 01:30:00', 'range': 44.55, 'x_median': 26.2}, {'ts': '2026-01-29 17:15:00', 'range': 289.93, 'x_median': 22.7}, {'ts': '2023-05-04 01:00:00', 'range': 34.94, 'x_median': 17.9}, {'ts': '2024-02-13 15:30:00', 'range': 21.13, 'x_median': 17.9}]
+- open_gap_gt_1pct: 8
+- gaps_total: 1102
+- gaps_weekend: 214
+- gaps_daily_break_00_01_server: 847
+- gaps_holiday_or_long(>=6h,non-weekend): 12
+- gaps_short_unexplained: 29
+- short_gap_minutes_distribution: {'count': 29.0, 'mean': 222.9, 'std': 55.9, 'min': 30.0, '25%': 225.0, '50%': 225.0, '75%': 240.0, 'max': 300.0}
+- long_nonweekend_gaps:
+    - 2022-12-23 23:45:00 -> 2022-12-27 01:00:00 (73.2h)
+    - 2022-12-30 23:45:00 -> 2023-01-03 01:00:00 (73.2h)
+    - 2023-04-06 23:45:00 -> 2023-04-10 01:00:00 (73.2h)
+    - 2023-12-22 23:45:00 -> 2023-12-26 01:00:00 (73.2h)
+    - 2023-12-29 23:45:00 -> 2024-01-02 01:00:00 (73.2h)
+    - 2024-03-28 23:45:00 -> 2024-04-01 01:00:00 (73.2h)
+    - 2024-12-24 20:30:00 -> 2024-12-26 01:00:00 (28.5h)
+    - 2024-12-31 23:45:00 -> 2025-01-02 01:00:00 (25.2h)
+    - 2025-04-17 23:45:00 -> 2025-04-21 01:00:00 (73.2h)
+    - 2025-12-24 20:30:00 -> 2025-12-26 01:00:00 (28.5h)
+    - 2025-12-31 23:45:00 -> 2026-01-02 01:00:00 (25.2h)
+    - 2026-04-02 23:45:00 -> 2026-04-06 01:00:00 (73.2h)
+- bars_by_server_hour: {1: 4400, 2: 4400, 3: 4400, 4: 4400, 5: 4400, 6: 4400, 7: 4400, 8: 4400, 9: 4400, 10: 4398, 11: 4396, 12: 4398, 13: 4397, 14: 4393, 15: 4393, 16: 4396, 17: 4396, 18: 4396, 19: 4396, 20: 4367, 21: 4301, 22: 4256, 23: 4256}
+
+## H1
+
+- rows: 46616
+- columns: ['ts', 'open', 'high', 'low', 'close', 'tickvol', 'vol', 'spread']
+- first: 2019-01-02 01:00:00
+- last: 2026-11-18 13:00:00
+- sorted: True
+- dup_ts: 0
+- ohlc_invalid: 0
+- nonpositive: 0
+- flat_bars_OHLC_equal: 3
+- identical_consecutive_rows: 1
+- vol_all_zero: True
+- spread_zero_share: 0.08
+- spread_points_median_nonzero: 50.0
+- first_nonzero_spread_ts: 2019-04-29 15:00:00
+- weekday_counts: {0: 9263, 1: 9444, 2: 9369, 3: 9375, 4: 9165}
+- range_gt_15x_median: 4
+- top_outliers: [{'ts': '2021-08-09 01:00:00', 'range': 93.77, 'x_median': 30.6}, {'ts': '2023-12-04 01:00:00', 'range': 76.49, 'x_median': 24.8}, {'ts': '2026-01-29 17:00:00', 'range': 399.48, 'x_median': 22.6}, {'ts': '2021-08-09 02:00:00', 'range': 47.95, 'x_median': 15.5}, {'ts': '2020-02-28 17:00:00', 'range': 45.71, 'x_median': 14.4}]
+- open_gap_gt_1pct: 12
+- gaps_total: 2035
+- gaps_weekend: 396
+- gaps_daily_break_00_01_server: 1569
+- gaps_holiday_or_long(>=6h,non-weekend): 30
+- gaps_short_unexplained: 40
+- short_gap_minutes_distribution: {'count': 40.0, 'mean': 259.5, 'std': 36.9, 'min': 120.0, '25%': 240.0, '50%': 240.0, '75%': 300.0, 'max': 300.0}
+- long_nonweekend_gaps:
+    - 2019-04-18 23:00:00 -> 2019-04-22 01:00:00 (74.0h)
+    - 2019-12-24 20:00:00 -> 2019-12-26 01:00:00 (29.0h)
+    - 2019-12-31 22:00:00 -> 2020-01-02 01:00:00 (27.0h)
+    - 2020-04-09 23:00:00 -> 2020-04-13 01:00:00 (74.0h)
+    - 2020-05-25 19:00:00 -> 2020-05-26 01:00:00 (6.0h)
+    - 2020-09-07 19:00:00 -> 2020-09-08 01:00:00 (6.0h)
+    - 2020-11-26 19:00:00 -> 2020-11-27 01:00:00 (6.0h)
+    - 2020-12-24 20:00:00 -> 2020-12-28 01:00:00 (77.0h)
+    - 2020-12-31 21:00:00 -> 2021-01-04 01:00:00 (76.0h)
+    - 2021-01-18 19:00:00 -> 2021-01-19 01:00:00 (6.0h)
+    - 2021-02-15 19:00:00 -> 2021-02-16 01:00:00 (6.0h)
+    - 2021-04-01 23:00:00 -> 2021-04-05 01:00:00 (74.0h)
+    - 2021-05-31 19:00:00 -> 2021-06-01 01:00:00 (6.0h)
+    - 2021-07-05 19:00:00 -> 2021-07-06 01:00:00 (6.0h)
+    - 2021-09-06 19:00:00 -> 2021-09-07 01:00:00 (6.0h)
+    - 2021-11-25 19:00:00 -> 2021-11-26 01:00:00 (6.0h)
+    - 2021-12-23 23:00:00 -> 2021-12-27 01:00:00 (74.0h)
+    - 2022-04-14 23:00:00 -> 2022-04-18 01:00:00 (74.0h)
+    - 2022-12-23 23:00:00 -> 2022-12-27 01:00:00 (74.0h)
+    - 2022-12-30 23:00:00 -> 2023-01-03 01:00:00 (74.0h)
+    - 2023-04-06 23:00:00 -> 2023-04-10 01:00:00 (74.0h)
+    - 2023-12-22 23:00:00 -> 2023-12-26 01:00:00 (74.0h)
+    - 2023-12-29 23:00:00 -> 2024-01-02 01:00:00 (74.0h)
+    - 2024-03-28 23:00:00 -> 2024-04-01 01:00:00 (74.0h)
+    - 2024-12-24 20:00:00 -> 2024-12-26 01:00:00 (29.0h)
+    - 2024-12-31 23:00:00 -> 2025-01-02 01:00:00 (26.0h)
+    - 2025-04-17 23:00:00 -> 2025-04-21 01:00:00 (74.0h)
+    - 2025-12-24 20:00:00 -> 2025-12-26 01:00:00 (29.0h)
+    - 2025-12-31 23:00:00 -> 2026-01-02 01:00:00 (26.0h)
+    - 2026-04-02 23:00:00 -> 2026-04-06 01:00:00 (74.0h)
+- bars_by_server_hour: {1: 2035, 2: 2035, 3: 2035, 4: 2035, 5: 2035, 6: 2035, 7: 2035, 8: 2035, 9: 2035, 10: 2035, 11: 2034, 12: 2035, 13: 2035, 14: 2034, 15: 2034, 16: 2034, 17: 2034, 18: 2034, 19: 2034, 20: 2022, 21: 1997, 22: 1970, 23: 1969}
+
+## H4
+
+- rows: 16550
+- columns: ['ts', 'open', 'high', 'low', 'close', 'tickvol', 'vol', 'spread']
+- first: 2016-01-04 00:00:00
+- last: 2026-11-18 12:00:00
+- sorted: True
+- dup_ts: 0
+- ohlc_invalid: 0
+- nonpositive: 0
+- flat_bars_OHLC_equal: 3
+- identical_consecutive_rows: 1
+- vol_all_zero: True
+- spread_zero_share: 0.35
+- spread_points_median_nonzero: 40.0
+- first_nonzero_spread_ts: 2019-04-29 16:00:00
+- weekday_counts: {0: 3267, 1: 3311, 2: 3297, 3: 3303, 4: 3243, 5: 115, 6: 14}
+- range_gt_15x_median: 1
+- top_outliers: [{'ts': '2020-03-13 16:00:00', 'range': 91.97, 'x_median': 16.1}, {'ts': '2020-03-16 12:00:00', 'range': 86.54, 'x_median': 14.9}, {'ts': '2026-01-29 16:00:00', 'range': 452.63, 'x_median': 14.2}, {'ts': '2021-08-09 00:00:00', 'range': 93.77, 'x_median': 13.1}, {'ts': '2023-12-04 00:00:00', 'range': 76.49, 'x_median': 12.8}]
+- open_gap_gt_1pct: 11
+- gaps_total: 655
+- gaps_weekend: 435
+- gaps_daily_break_00_01_server: 0
+- gaps_holiday_or_long(>=6h,non-weekend): 220
+- gaps_short_unexplained: 0
+- short_gap_minutes_distribution: {}
+- long_nonweekend_gaps:
+    - 2016-01-04 00:00:00 -> 2016-01-05 00:00:00 (24.0h)
+    - 2016-01-05 00:00:00 -> 2016-01-06 00:00:00 (24.0h)
+    - 2016-01-06 00:00:00 -> 2016-01-07 00:00:00 (24.0h)
+    - 2016-01-07 00:00:00 -> 2016-01-08 00:00:00 (24.0h)
+    - 2016-01-11 00:00:00 -> 2016-01-12 00:00:00 (24.0h)
+    - 2016-01-12 00:00:00 -> 2016-01-13 00:00:00 (24.0h)
+    - 2016-01-13 00:00:00 -> 2016-01-14 00:00:00 (24.0h)
+    - 2016-01-14 00:00:00 -> 2016-01-15 00:00:00 (24.0h)
+    - 2016-01-18 00:00:00 -> 2016-01-19 00:00:00 (24.0h)
+    - 2016-01-19 00:00:00 -> 2016-01-20 00:00:00 (24.0h)
+    - 2016-01-20 00:00:00 -> 2016-01-21 00:00:00 (24.0h)
+    - 2016-01-21 00:00:00 -> 2016-01-22 00:00:00 (24.0h)
+    - 2016-01-25 00:00:00 -> 2016-01-26 00:00:00 (24.0h)
+    - 2016-01-26 00:00:00 -> 2016-01-27 00:00:00 (24.0h)
+    - 2016-01-27 00:00:00 -> 2016-01-28 00:00:00 (24.0h)
+    - 2016-01-28 00:00:00 -> 2016-01-29 00:00:00 (24.0h)
+    - 2016-02-01 00:00:00 -> 2016-02-02 00:00:00 (24.0h)
+    - 2016-02-02 00:00:00 -> 2016-02-03 00:00:00 (24.0h)
+    - 2016-02-03 00:00:00 -> 2016-02-04 00:00:00 (24.0h)
+    - 2016-02-04 00:00:00 -> 2016-02-05 00:00:00 (24.0h)
+    - 2016-02-08 00:00:00 -> 2016-02-09 00:00:00 (24.0h)
+    - 2016-02-09 00:00:00 -> 2016-02-10 00:00:00 (24.0h)
+    - 2016-02-10 00:00:00 -> 2016-02-11 00:00:00 (24.0h)
+    - 2016-02-11 00:00:00 -> 2016-02-12 00:00:00 (24.0h)
+    - 2016-02-15 00:00:00 -> 2016-02-16 00:00:00 (24.0h)
+    - 2016-02-16 00:00:00 -> 2016-02-17 00:00:00 (24.0h)
+    - 2016-02-17 00:00:00 -> 2016-02-18 00:00:00 (24.0h)
+    - 2016-02-18 00:00:00 -> 2016-02-19 00:00:00 (24.0h)
+    - 2016-02-22 00:00:00 -> 2016-02-23 00:00:00 (24.0h)
+    - 2016-02-23 00:00:00 -> 2016-02-24 00:00:00 (24.0h)
+    - 2016-02-24 00:00:00 -> 2016-02-25 00:00:00 (24.0h)
+    - 2016-02-25 00:00:00 -> 2016-02-26 00:00:00 (24.0h)
+    - 2016-02-29 00:00:00 -> 2016-03-01 00:00:00 (24.0h)
+    - 2016-03-01 00:00:00 -> 2016-03-02 00:00:00 (24.0h)
+    - 2016-03-02 00:00:00 -> 2016-03-03 00:00:00 (24.0h)
+    - 2016-03-03 00:00:00 -> 2016-03-04 00:00:00 (24.0h)
+    - 2016-03-07 00:00:00 -> 2016-03-08 00:00:00 (24.0h)
+    - 2016-03-08 00:00:00 -> 2016-03-09 00:00:00 (24.0h)
+    - 2016-03-09 00:00:00 -> 2016-03-10 00:00:00 (24.0h)
+    - 2016-03-10 00:00:00 -> 2016-03-11 00:00:00 (24.0h)
+- bars_by_server_hour: {0: 2929, 4: 2725, 8: 2725, 12: 2725, 16: 2724, 20: 2722}
+
+## D1
+
+- rows: 4548
+- columns: ['ts', 'open', 'high', 'low', 'close', 'tickvol', 'vol', 'spread']
+- first: 2010-01-03 00:00:00
+- last: 2026-11-18 00:00:00
+- sorted: True
+- dup_ts: 0
+- ohlc_invalid: 0
+- nonpositive: 0
+- flat_bars_OHLC_equal: 1
+- identical_consecutive_rows: 1
+- vol_all_zero: True
+- spread_zero_share: 0.646
+- spread_points_median_nonzero: 40.0
+- first_nonzero_spread_ts: 2019-04-30 00:00:00
+- weekday_counts: {0: 873, 1: 878, 2: 875, 3: 876, 4: 862, 5: 115, 6: 69}
+- range_gt_15x_median: 1
+- top_outliers: [{'ts': '2026-01-30 00:00:00', 'range': 765.27, 'x_median': 18.4}, {'ts': '2014-11-26 00:00:00', 'range': 264.7, 'x_median': 14.9}, {'ts': '2026-01-29 00:00:00', 'range': 501.47, 'x_median': 12.2}, {'ts': '2026-02-02 00:00:00', 'range': 482.52, 'x_median': 11.5}, {'ts': '2020-03-16 00:00:00', 'range': 124.41, 'x_median': 10.5}]
+- open_gap_gt_1pct: 15
+
+## tz_check
+
+- first_bar_hour_on_days_in_US_EU_DST_mismatch_weeks(March): {1: 45}
+- first_bar_hour_all_weekdays: {1: 882}
+- conclusion: Daily break stays at 00:00-01:00 server in all seasons incl. the US/EU DST mismatch weeks -> server clock follows US DST: server = New York + 7h (UTC+2 winter / UTC+3 US summer). Trading-day boundary = 17:00 New York.
+
+## price_type
+
+- assessment: MT5 chart bars are built from BID prices (MT5 standard for CFD/FX symbols). <VOL>=0 everywhere -> no exchange volume; <TICKVOL> = number of price updates (tick activity), not traded ounces. <SPREAD> = minimum spread inside the bar, in points; 0 for older history (not recorded).
+
+## spread_units
+
+- M1_spread_points_quantiles: {0.05: 40.0, 0.25: 40.0, 0.5: 40.0, 0.75: 80.0, 0.95: 360.0, 0.99: 360.0}
+- note: Prices have 3 decimals -> 1 point = 0.001 USD if broker point=0.001, or 0.01 if 2-digit point. Median 40 points = $0.04 (point 0.001) or $0.40 (point 0.01). Bar <SPREAD> is the *minimum* in the bar. A realistic retail all-in cost is modelled as scenarios ($0.15-$1.00 per oz round-trip), not taken from this column.
+
+## cross_tf
+
+- M1->M5: {'period': '2026-08-07 18:35:00 -> 2026-11-18 12:35:00', 'bars_compared': 20047, 'open_match_share(<=0.011)': 1.0, 'open_max_absdiff': 0.0, 'high_match_share(<=0.011)': 1.0, 'high_max_absdiff': 0.0, 'low_match_share(<=0.011)': 1.0, 'low_max_absdiff': 0.0, 'close_match_share(<=0.011)': 1.0, 'close_max_absdiff': 0.0, 'coarse_bars_missing_in_resample': 0}
+- M1->M15: {'period': '2026-08-07 18:45:00 -> 2026-11-18 12:15:00', 'bars_compared': 6681, 'open_match_share(<=0.011)': 1.0, 'open_max_absdiff': 0.0, 'high_match_share(<=0.011)': 1.0, 'high_max_absdiff': 0.0, 'low_match_share(<=0.011)': 1.0, 'low_max_absdiff': 0.0, 'close_match_share(<=0.011)': 1.0, 'close_max_absdiff': 0.0, 'coarse_bars_missing_in_resample': 0}
+- M1->H1: {'period': '2026-08-07 19:00:00 -> 2026-11-18 11:00:00', 'bars_compared': 1670, 'open_match_share(<=0.011)': 1.0, 'open_max_absdiff': 0.0, 'high_match_share(<=0.011)': 1.0, 'high_max_absdiff': 0.0, 'low_match_share(<=0.011)': 1.0, 'low_max_absdiff': 0.0, 'close_match_share(<=0.011)': 1.0, 'close_max_absdiff': 0.0, 'coarse_bars_missing_in_resample': 0}
+- M1->H4: {'period': '2026-08-07 20:00:00 -> 2026-11-18 08:00:00', 'bars_compared': 436, 'open_match_share(<=0.011)': 1.0, 'open_max_absdiff': 0.0, 'high_match_share(<=0.011)': 1.0, 'high_max_absdiff': 0.0, 'low_match_share(<=0.011)': 1.0, 'low_max_absdiff': 0.0, 'close_match_share(<=0.011)': 1.0, 'close_max_absdiff': 0.0, 'coarse_bars_missing_in_resample': 0}
+- M5->M15: {'period': '2025-06-23 16:00:00 -> 2026-11-18 12:15:00', 'bars_compared': 33335, 'open_match_share(<=0.011)': 1.0, 'open_max_absdiff': 0.0, 'high_match_share(<=0.011)': 1.0, 'high_max_absdiff': 0.0, 'low_match_share(<=0.011)': 1.0, 'low_max_absdiff': 0.0, 'close_match_share(<=0.011)': 1.0, 'close_max_absdiff': 0.0, 'coarse_bars_missing_in_resample': 0}
+- M5->H1: {'period': '2025-06-23 16:00:00 -> 2026-11-18 11:00:00', 'bars_compared': 8338, 'open_match_share(<=0.011)': 1.0, 'open_max_absdiff': 0.0, 'high_match_share(<=0.011)': 1.0, 'high_max_absdiff': 0.0, 'low_match_share(<=0.011)': 1.0, 'low_max_absdiff': 0.0, 'close_match_share(<=0.011)': 1.0, 'close_max_absdiff': 0.0, 'coarse_bars_missing_in_resample': 0}
+- M15->H1: {'period': '2022-08-16 02:00:00 -> 2026-11-18 12:00:00', 'bars_compared': 25203, 'open_match_share(<=0.011)': 1.0, 'open_max_absdiff': 0.0, 'high_match_share(<=0.011)': 1.0, 'high_max_absdiff': 0.0, 'low_match_share(<=0.011)': 1.0, 'low_max_absdiff': 0.0, 'close_match_share(<=0.011)': 1.0, 'close_max_absdiff': 0.0, 'coarse_bars_missing_in_resample': 0}
+- M15->H4: {'period': '2022-08-16 04:00:00 -> 2026-11-18 08:00:00', 'bars_compared': 6593, 'open_match_share(<=0.011)': 1.0, 'open_max_absdiff': 0.0, 'high_match_share(<=0.011)': 1.0, 'high_max_absdiff': 0.0, 'low_match_share(<=0.011)': 1.0, 'low_max_absdiff': 0.0, 'close_match_share(<=0.011)': 1.0, 'close_max_absdiff': 0.0, 'coarse_bars_missing_in_resample': 0}
+- H1->H4: {'period': '2019-01-02 04:00:00 -> 2026-11-18 08:00:00', 'bars_compared': 12194, 'open_match_share(<=0.011)': 1.0, 'open_max_absdiff': 0.0, 'high_match_share(<=0.011)': 1.0, 'high_max_absdiff': 0.0, 'low_match_share(<=0.011)': 1.0, 'low_max_absdiff': 0.0, 'close_match_share(<=0.011)': 1.0, 'close_max_absdiff': 0.0, 'coarse_bars_missing_in_resample': 0}
+- M15->D1: {'period': '2022-08-17 00:00:00 -> 2026-11-16 00:00:00', 'bars_compared': 1097, 'open_match_share(<=0.011)': 1.0, 'open_max_absdiff': 0.0, 'high_match_share(<=0.011)': 1.0, 'high_max_absdiff': 0.0, 'low_match_share(<=0.011)': 1.0, 'low_max_absdiff': 0.0, 'close_match_share(<=0.011)': 1.0, 'close_max_absdiff': 0.0, 'coarse_bars_missing_in_resample': 1}
+- H1->D1: {'period': '2019-01-03 00:00:00 -> 2026-11-16 00:00:00', 'bars_compared': 2032, 'open_match_share(<=0.011)': 1.0, 'open_max_absdiff': 0.0, 'high_match_share(<=0.011)': 1.0, 'high_max_absdiff': 0.0, 'low_match_share(<=0.011)': 1.0, 'low_max_absdiff': 0.0, 'close_match_share(<=0.011)': 1.0, 'close_max_absdiff': 0.0, 'coarse_bars_missing_in_resample': 1}
+- M1->D1: {'period': '2026-08-10 00:00:00 -> 2026-11-16 00:00:00', 'bars_compared': 71, 'open_match_share(<=0.011)': 1.0, 'open_max_absdiff': 0.0, 'high_match_share(<=0.011)': 1.0, 'high_max_absdiff': 0.0, 'low_match_share(<=0.011)': 1.0, 'low_max_absdiff': 0.0, 'close_match_share(<=0.011)': 1.0, 'close_max_absdiff': 0.0, 'coarse_bars_missing_in_resample': 1}
+
+## H4_open_hours_server
+
+- 0: 2929
+- 4: 2725
+- 8: 2725
+- 12: 2725
+- 16: 2724
+- 20: 2722

@@ -1,0 +1,9 @@
+{
+ "written_at_utc": "2026-11-18T13:35:08Z",
+ "note": "Frozen BEFORE any 2026 (test) trade was simulated. Test split = 2026-01-01..2026-11-17.",
+ "hypotheses_tested_before_lock": {"event_study": 72, "strategy_grid": 152, "nyorb_cost_aware_extension": 9, "session_hour_scans": "8 years x 4 segments + 24 hours (descriptive)"},
+ "selection_rule": "net expectancy > 0 in BOTH dev and val after historical spreads+commission, dev gross > 0, >=300 trades dev+val, choose centre of a positive parameter plateau",
+ "F1_primary": {"family": "NYORB2", "params": {"or_start": 8.5, "R": 3.0, "min_w": 0.15}, "plateau_neighbours": "min_w 0.15/0.20 x R 3/4/none"},
+ "F2_baseline_london": {"family": "ARB", "params": {"sl_mode": "opp", "R": 1.5, "width": "all", "trend": "none"}},
+ "F3_asia_drift": {"family": "ADRIFT", "params": {"trend": "none", "exit_ldn": 7.0, "start_ny": 20.0}}
+}
